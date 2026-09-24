@@ -1825,12 +1825,14 @@
   }
   const isEquipped = w => eq.ranged === w.id || eq.axe === w.id;
   const NEXT_GRADE = { rare: 'unique', unique: 'legend', legend: 'ancient' };
+  const MERGE_N = { rare: 3, unique: 3, legend: 5 };   // 레전드 → 에인션트는 5개
   const mergeable = g => weapons.filter(w => w.grade === g && !w.shop && !isEquipped(w)).sort((a, b) => a.lv - b.lv);
   let lastMerge = null;
   function merge(g) {
     const c = mergeable(g);
-    if (c.length < 3 || !NEXT_GRADE[g]) return;
-    const used = c.slice(0, 3);
+    const need = MERGE_N[g];
+    if (!need || c.length < need) return;
+    const used = c.slice(0, need);
     weapons = weapons.filter(w => !used.includes(w));
     lastPull = lastPull.filter(w => !used.includes(w));
     const nw = makeGachaWeapon(NEXT_GRADE[g]);
@@ -1890,9 +1892,9 @@
     } else if (shopTab === 'inv') {
       const r = eqW('ranged'), a = eqW('axe');
       h += `<p class="note">원거리: <b>${r ? esc(r.name) : '없음'}</b> · 도끼: <b>${a ? esc(a.name) : '기본 도끼'}</b> — 장착·해제·분해는 어디서나, 강화는 무기점에서 할 수 있습니다.</p>`;
-      h += '<div class="card normal"><div class="nm"><span>무기 합성</span><span class="st">같은 등급 3개 → 윗등급 1개 (종류·스킬 무작위, 장착 중인 무기 제외)</span></div><div class="acts">' +
-        ['rare', 'unique', 'legend'].map(g => { const n = mergeable(g).length; return `<button class="box btn ${n >= 3 ? 'primary' : ''}" data-act="merge" data-g="${g}" ${n >= 3 ? '' : 'disabled'}>${GRADES[g].name} 3개 → ${GRADES[NEXT_GRADE[g]].name} (보유 ${n})</button>` +
-          (n >= 6 ? `<button class="box btn" data-act="mergeAll" data-g="${g}">${GRADES[g].name} 한번에 ${Math.floor(n / 3)}회 합성</button>` : ''); }).join('') + '</div></div>';
+      h += '<div class="card normal"><div class="nm"><span>무기 합성</span><span class="st">레어·유니크 3개, 레전드 5개 → 윗등급 1개 (종류·스킬 무작위, 장착 중인 무기 제외)</span></div><div class="acts">' +
+        ['rare', 'unique', 'legend'].map(g => { const n = mergeable(g).length; const k = MERGE_N[g]; return `<button class="box btn ${n >= k ? 'primary' : ''}" data-act="merge" data-g="${g}" ${n >= k ? '' : 'disabled'}>${GRADES[g].name} ${k}개 → ${GRADES[NEXT_GRADE[g]].name} (보유 ${n})</button>` +
+          (n >= k * 2 ? `<button class="box btn" data-act="mergeAll" data-g="${g}">${GRADES[g].name} 한번에 ${Math.floor(n / k)}회 합성</button>` : ''); }).join('') + '</div></div>';
       if (lastMerge && weapons.includes(lastMerge)) h += '<p class="note">방금 합성한 무기</p><div class="cards">' + weaponCard(lastMerge, { reveal: true }) + '</div>';
       if (!weapons.length) h += '<p class="note">아직 무기가 없습니다. 무기점에서 사거나 뽑기로 얻으세요.</p>';
       const list = weapons.slice().sort((x, y) => (isEquipped(y) - isEquipped(x)) || GRADE_ORDER.indexOf(y.grade) - GRADE_ORDER.indexOf(x.grade) || y.lv - x.lv);
@@ -1939,7 +1941,7 @@
       armedScrap = 0; gold += scrapValue(w); weapons = weapons.filter(x => x !== w); lastPull = lastPull.filter(x => x !== w); SFX.cash(); bumpGold();
     } else if (act === 'pull') pull(+b.dataset.n);
     else if (act === 'merge') merge(b.dataset.g);
-    else if (act === 'mergeAll') { let k = 0; while (mergeable(b.dataset.g).length >= 3 && k++ < 40) merge(b.dataset.g); }
+    else if (act === 'mergeAll') { let k = 0; while (mergeable(b.dataset.g).length >= MERGE_N[b.dataset.g] && k++ < 40) merge(b.dataset.g); }
     else if (act === 'buySkin') {
       const i = +b.dataset.i, s = SKINS[i];
       if (!shopAtPad || gold < s.price || skinsOwned.includes(i)) return;
