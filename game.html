@@ -1,0 +1,490 @@
+<title>들판 수비대</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;600;800&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #1b1f1c;
+    --panel: #262b27;
+    --line: #3a423b;
+    --ink: #ece6d6;
+    --muted: #a39d8c;
+    --accent: #f0a53a;
+    --danger: #d9553f;
+    --good: #7fb069;
+    --frost: #8cc7e0;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    padding-inline: 16px;
+    padding-block: 12px;
+    box-sizing: border-box;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+  h1 { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 1.7rem; margin: 0; letter-spacing: .02em; color: var(--accent); }
+  .stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-variant-numeric: tabular-nums; font-size: .95rem; }
+  .stats b { font-weight: 800; }
+  .stats span.lbl { color: var(--muted); font-size: .72rem; letter-spacing: .08em; margin-right: 4px; }
+  .board { position: relative; width: 100%; aspect-ratio: 16 / 10; max-width: 100%; border: 2px solid var(--line); border-radius: 6px; overflow: hidden; background: #3d5236; touch-action: manipulation; }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(20,22,20,.78); text-align: center; padding: 16px; }
+  .overlay h2 { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 2.2rem; margin: 0; }
+  .overlay p { margin: 0; color: var(--muted); }
+  .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+  .towers { display: flex; flex-wrap: wrap; gap: 8px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  button {
+    font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #1b1f1c; border-color: var(--accent); font-weight: 800; }
+  .tbtn { display: flex; align-items: center; gap: 8px; text-align: left; min-width: 118px; }
+  .tbtn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tbtn i { width: 22px; height: 22px; border-radius: 50%; flex: none; border: 2px solid #1b1f1c; }
+  .tbtn small { display: block; color: var(--muted); font-size: .72rem; }
+  .tbtn .cost { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
+  .info { min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; font-size: .88rem; }
+  .info .muted { color: var(--muted); }
+  .help { color: var(--muted); font-size: .8rem; line-height: 1.6; margin: 0; }
+  @media (max-width: 640px) {
+    .controls { grid-template-columns: 1fr; }
+    .actions { justify-content: flex-start; }
+    .tbtn { min-width: 0; flex: 1 1 30%; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>들판 수비대</h1>
+    <div class="stats">
+      <div><span class="lbl">생명</span><b id="sLives">20</b></div>
+      <div><span class="lbl">골드</span><b id="sGold">0</b></div>
+      <div><span class="lbl">웨이브</span><b id="sWave">0</b></div>
+      <div><span class="lbl">최고</span><b id="sBest">0</b></div>
+    </div>
+  </header>
+
+  <div class="board" id="board">
+    <canvas id="cv" width="960" height="600" aria-label="게임 맵"></canvas>
+    <div class="overlay" id="over" hidden>
+      <h2 id="overTitle">성문 함락</h2>
+      <p id="overText"></p>
+      <button class="primary" id="btnRestart">다시 하기</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="towers" id="towerBtns"></div>
+    <div class="actions">
+      <button class="primary" id="btnWave">웨이브 시작</button>
+      <button id="btnSpeed">1배속</button>
+      <button id="btnPause">일시정지</button>
+    </div>
+  </div>
+
+  <div class="info" id="info"><span class="muted">타워를 고르고 풀밭을 눌러 설치하세요. 설치된 타워를 누르면 강화·판매할 수 있습니다.</span></div>
+  <p class="help">키보드: 1·2·3 타워 선택, Space 웨이브 시작, P 일시정지, F 배속, Esc 선택 해제. 5웨이브마다 보스가 나옵니다.</p>
+</div>
+
+<script>
+(() => {
+  const COLS = 16, ROWS = 10;
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  let TS = 60;
+
+  // 경로 (타일 좌표, 중심 기준)
+  const WAY = [[-1,2],[4,2],[4,7],[9,7],[9,1],[13,1],[13,8],[16,8]];
+  const pathSet = new Set();
+  for (let i = 0; i < WAY.length - 1; i++) {
+    let [x, y] = WAY[i]; const [tx, ty] = WAY[i+1];
+    const dx = Math.sign(tx - x), dy = Math.sign(ty - y);
+    while (x !== tx || y !== ty) { if (x >= 0 && x < COLS) pathSet.add(x + ',' + y); x += dx; y += dy; }
+    if (tx >= 0 && tx < COLS) pathSet.add(tx + ',' + ty);
+  }
+  const segLen = []; let totalLen = 0;
+  for (let i = 0; i < WAY.length - 1; i++) {
+    const l = Math.abs(WAY[i+1][0]-WAY[i][0]) + Math.abs(WAY[i+1][1]-WAY[i][1]);
+    segLen.push(l); totalLen += l;
+  }
+  function posAt(d) {
+    for (let i = 0; i < segLen.length; i++) {
+      if (d <= segLen[i]) {
+        const t = d / segLen[i];
+        return [WAY[i][0] + (WAY[i+1][0]-WAY[i][0]) * t, WAY[i][1] + (WAY[i+1][1]-WAY[i][1]) * t];
+      }
+      d -= segLen[i];
+    }
+    return WAY[WAY.length-1];
+  }
+
+  const TOWERS = {
+    arrow:  { name: '궁수탑', desc: '빠른 단일 공격', cost: 50, range: 2.6, dmg: 11, rate: 0.45, color: '#d8c38a', key: '1' },
+    cannon: { name: '대포탑', desc: '범위 폭발',     cost: 90, range: 2.3, dmg: 28, rate: 1.4, splash: 0.95, color: '#8a8f96', key: '2' },
+    frost:  { name: '얼음탑', desc: '적 감속',       cost: 70, range: 2.2, dmg: 5,  rate: 0.8, slow: 0.5, slowT: 1.6, color: '#8cc7e0', key: '3' },
+  };
+  const MAX_LV = 3;
+
+  let S;
+  function fresh() {
+    return {
+      lives: 20, gold: 180, wave: 0, running: false, paused: false, speed: 1, over: false,
+      towers: [], enemies: [], shots: [], fx: [], spawnQ: [], spawnT: 0,
+      pick: 'arrow', sel: null, hover: null,
+    };
+  }
+  let best = 0;
+  try { best = +localStorage.getItem('fieldDefenseBest') || 0; } catch (e) {}
+
+  function stat(t) {
+    const d = TOWERS[t.type], k = t.lv - 1;
+    return {
+      dmg: d.dmg * Math.pow(1.6, k),
+      range: d.range + 0.3 * k,
+      rate: d.rate * Math.pow(0.87, k),
+      splash: d.splash ? d.splash + 0.15 * k : 0,
+      slow: d.slow ? Math.max(0.3, d.slow - 0.08 * k) : 0,
+      slowT: d.slowT || 0,
+    };
+  }
+  const upCost = t => Math.round(TOWERS[t.type].cost * 0.8 * t.lv);
+  const sellVal = t => Math.round(t.spent * 0.7);
+
+  function buildWave(n) {
+    const q = [];
+    const hp = 32 * Math.pow(1.19, n - 1);
+    const count = 7 + n * 2;
+    for (let i = 0; i < count; i++) {
+      let type = 'norm';
+      if (n >= 3 && i % 4 === 1) type = 'fast';
+      if (n >= 4 && i % 5 === 3) type = 'tank';
+      q.push(makeEnemy(type, hp, n));
+    }
+    if (n % 5 === 0) q.push(makeEnemy('boss', hp, n));
+    return q;
+  }
+  function makeEnemy(type, hp, n) {
+    const T = {
+      norm: { hp: 1,   spd: 1.25, r: 0.26, gold: 5,  color: '#c96b3c' },
+      fast: { hp: 0.6, spd: 2.3,  r: 0.2,  gold: 4,  color: '#e2c14a' },
+      tank: { hp: 2.8, spd: 0.75, r: 0.34, gold: 11, color: '#7a4c8a' },
+      boss: { hp: 16,  spd: 0.6,  r: 0.44, gold: 60, color: '#b8322a' },
+    }[type];
+    const h = hp * T.hp;
+    return { type, hp: h, max: h, spd: T.spd, r: T.r, gold: T.gold + Math.floor(n / 4), color: T.color, d: 0, slowUntil: 0, slowF: 1, x: -1, y: 2 };
+  }
+
+  function startWave() {
+    if (S.over || S.running) return;
+    S.wave++; S.running = true;
+    S.spawnQ = buildWave(S.wave); S.spawnT = 0;
+    ui();
+  }
+
+  let clock = 0;
+  function update(dt) {
+    clock += dt;
+    if (S.running && S.spawnQ.length) {
+      S.spawnT -= dt;
+      if (S.spawnT <= 0) { S.enemies.push(S.spawnQ.shift()); S.spawnT = Math.max(0.35, 0.9 - S.wave * 0.03); }
+    }
+    for (const e of S.enemies) {
+      const f = clock < e.slowUntil ? e.slowF : 1;
+      e.d += e.spd * f * dt;
+      [e.x, e.y] = posAt(e.d);
+      if (e.d >= totalLen) {
+        e.dead = true; e.leaked = true;
+        S.lives -= e.type === 'boss' ? 5 : 1;
+        S.fx.push({ kind: 'flash', t: 0, life: 0.3 });
+      }
+    }
+    for (const t of S.towers) {
+      t.cd -= dt;
+      const st = stat(t);
+      let target = null, far = -1;
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        const dx = e.x - t.x, dy = e.y - t.y;
+        if (dx*dx + dy*dy <= st.range*st.range && e.d > far) { far = e.d; target = e; }
+      }
+      if (target) {
+        t.ang = Math.atan2(target.y - t.y, target.x - t.x);
+        if (t.cd <= 0) {
+          t.cd = st.rate;
+          S.shots.push({ x: t.x, y: t.y, target, type: t.type, st, spd: t.type === 'cannon' ? 7 : 13 });
+        }
+      }
+    }
+    for (const s of S.shots) {
+      const tg = s.target;
+      const dx = tg.x - s.x, dy = tg.y - s.y, dist = Math.hypot(dx, dy);
+      const step = s.spd * dt;
+      if (dist <= step || tg.dead) {
+        s.done = true;
+        if (tg.dead && s.type !== 'cannon') continue;
+        hit(s, tg.dead ? { x: s.x + dx, y: s.y + dy } : tg);
+      } else { s.x += dx / dist * step; s.y += dy / dist * step; }
+    }
+    for (const f of S.fx) f.t += dt;
+    S.fx = S.fx.filter(f => f.t < f.life);
+    S.shots = S.shots.filter(s => !s.done);
+    for (const e of S.enemies) if (e.dead && !e.leaked && !e.paid) { e.paid = true; S.gold += e.gold; S.fx.push({ kind: 'coin', x: e.x, y: e.y, v: e.gold, t: 0, life: 0.8 }); }
+    S.enemies = S.enemies.filter(e => !e.dead);
+
+    if (S.lives <= 0 && !S.over) return gameOver();
+    if (S.running && !S.spawnQ.length && !S.enemies.length) {
+      S.running = false;
+      const bonus = 20 + S.wave * 3;
+      S.gold += bonus;
+      if (S.wave > best) { best = S.wave; try { localStorage.setItem('fieldDefenseBest', best); } catch (e) {} }
+      toast(`웨이브 ${S.wave} 방어 성공 · 보너스 ${bonus}G`);
+    }
+  }
+
+  function hit(s, at) {
+    const st = s.st;
+    if (s.type === 'cannon') {
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        if (Math.hypot(e.x - at.x, e.y - at.y) <= st.splash) damage(e, st.dmg);
+      }
+      S.fx.push({ kind: 'boom', x: at.x, y: at.y, r: st.splash, t: 0, life: 0.35 });
+    } else {
+      damage(at, st.dmg);
+      if (s.type === 'frost') { at.slowUntil = clock + st.slowT; at.slowF = st.slow; }
+    }
+  }
+  function damage(e, d) { e.hp -= d; if (e.hp <= 0) e.dead = true; }
+
+  function gameOver() {
+    S.over = true; S.running = false;
+    if (S.wave - 1 > best) { best = S.wave - 1; try { localStorage.setItem('fieldDefenseBest', best); } catch (e) {} }
+    document.getElementById('overTitle').textContent = '성문 함락';
+    document.getElementById('overText').textContent = `웨이브 ${S.wave}에서 무너졌습니다. 최고 기록 ${best}웨이브.`;
+    document.getElementById('over').hidden = false;
+    ui();
+  }
+
+  // ---------- 그리기 ----------
+  const grassA = '#44603b', grassB = '#3f5937', pathC = '#c7ab72', pathEdge = '#a88d58';
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+      const p = pathSet.has(x + ',' + y);
+      ctx.fillStyle = p ? pathC : ((x + y) % 2 ? grassA : grassB);
+      ctx.fillRect(x * TS, y * TS, TS, TS);
+      if (p) { ctx.fillStyle = pathEdge; ctx.fillRect(x*TS + TS*0.45, y*TS + TS*0.45, TS*0.1, TS*0.1); }
+    }
+    // 성문
+    const g = WAY[WAY.length-2];
+    ctx.fillStyle = '#5b4632'; ctx.fillRect((COLS-1)*TS + TS*0.55, g[1]*TS - TS*0.1, TS*0.45, TS*1.2);
+    ctx.fillStyle = '#f0a53a'; ctx.fillRect((COLS-1)*TS + TS*0.62, g[1]*TS + TS*0.15, TS*0.3, TS*0.7);
+
+    // 호버 미리보기
+    if (S.hover && !S.over) {
+      const [hx, hy] = S.hover;
+      const free = canBuild(hx, hy);
+      const d = TOWERS[S.pick];
+      if (S.pick && !towerAt(hx, hy)) {
+        ctx.fillStyle = free && S.gold >= d.cost ? 'rgba(240,165,58,.25)' : 'rgba(217,85,63,.3)';
+        ctx.fillRect(hx*TS, hy*TS, TS, TS);
+        if (free) ring(hx + .5, hy + .5, d.range, 'rgba(255,255,255,.35)');
+      }
+    }
+    if (S.sel) ring(S.sel.x, S.sel.y, stat(S.sel).range, 'rgba(240,165,58,.8)');
+
+    for (const t of S.towers) drawTower(t);
+    for (const e of S.enemies) drawEnemy(e);
+    for (const s of S.shots) {
+      ctx.fillStyle = s.type === 'cannon' ? '#2b2b2b' : s.type === 'frost' ? '#cdeaf5' : '#fff2c8';
+      ctx.beginPath(); ctx.arc(s.x*TS, s.y*TS, TS*(s.type === 'cannon' ? .1 : .06), 0, 7); ctx.fill();
+    }
+    for (const f of S.fx) {
+      const k = f.t / f.life;
+      if (f.kind === 'boom') {
+        ctx.fillStyle = `rgba(240,140,50,${0.5 * (1-k)})`;
+        ctx.beginPath(); ctx.arc(f.x*TS, f.y*TS, f.r*TS*(0.5+k*0.5), 0, 7); ctx.fill();
+      } else if (f.kind === 'coin') {
+        ctx.fillStyle = `rgba(240,165,58,${1-k})`;
+        ctx.font = `800 ${TS*0.28}px "Noto Sans KR", sans-serif`; ctx.textAlign = 'center';
+        ctx.fillText('+' + f.v, f.x*TS, f.y*TS - k*TS*0.6);
+      } else if (f.kind === 'flash') {
+        ctx.fillStyle = `rgba(217,85,63,${0.3*(1-k)})`; ctx.fillRect(0, 0, cv.width, cv.height);
+      }
+    }
+    if (S.paused && !S.over) {
+      ctx.fillStyle = 'rgba(20,22,20,.55)'; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = '#ece6d6'; ctx.font = `${TS*0.7}px "Black Han Sans", sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText('일시정지', cv.width/2, cv.height/2);
+    }
+    if (toastT > 0) {
+      ctx.fillStyle = `rgba(27,31,28,${Math.min(1, toastT)*0.85})`;
+      const w = TS*6.4; ctx.fillRect(cv.width/2 - w/2, TS*0.25, w, TS*0.7);
+      ctx.fillStyle = `rgba(236,230,214,${Math.min(1, toastT)})`;
+      ctx.font = `600 ${TS*0.3}px "Noto Sans KR", sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText(toastMsg, cv.width/2, TS*0.7);
+    }
+  }
+  function ring(x, y, r, c) {
+    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.arc(x*TS, y*TS, r*TS, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+  }
+  function drawTower(t) {
+    const d = TOWERS[t.type], cx = t.x*TS, cy = t.y*TS;
+    ctx.fillStyle = '#2d2a24'; ctx.fillRect(cx - TS*.4, cy - TS*.4, TS*.8, TS*.8);
+    ctx.fillStyle = d.color; ctx.beginPath(); ctx.arc(cx, cy, TS*.3, 0, 7); ctx.fill();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(t.ang || 0);
+    ctx.fillStyle = '#1b1f1c';
+    if (t.type === 'cannon') ctx.fillRect(0, -TS*.09, TS*.42, TS*.18);
+    else if (t.type === 'frost') { ctx.beginPath(); ctx.moveTo(TS*.38, 0); ctx.lineTo(TS*.1, -TS*.1); ctx.lineTo(TS*.1, TS*.1); ctx.fill(); }
+    else ctx.fillRect(0, -TS*.04, TS*.38, TS*.08);
+    ctx.restore();
+    for (let i = 0; i < t.lv; i++) { ctx.fillStyle = '#f0a53a'; ctx.fillRect(cx - TS*.33 + i*TS*.14, cy + TS*.28, TS*.1, TS*.08); }
+  }
+  function drawEnemy(e) {
+    const cx = e.x*TS, cy = e.y*TS, r = e.r*TS;
+    ctx.fillStyle = e.color; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+    if (clock < e.slowUntil) { ctx.strokeStyle = '#8cc7e0'; ctx.lineWidth = 3; ctx.stroke(); }
+    ctx.fillStyle = '#1b1f1c'; ctx.fillRect(cx - r, cy - r - 8, r*2, 4);
+    ctx.fillStyle = e.hp / e.max > .4 ? '#7fb069' : '#d9553f';
+    ctx.fillRect(cx - r, cy - r - 8, r*2 * Math.max(0, e.hp / e.max), 4);
+  }
+
+  // ---------- 입력 ----------
+  const towerAt = (x, y) => S.towers.find(t => t.gx === x && t.gy === y);
+  const canBuild = (x, y) => x >= 0 && y >= 0 && x < COLS && y < ROWS && !pathSet.has(x + ',' + y) && !towerAt(x, y);
+  function cellFrom(ev) {
+    const r = cv.getBoundingClientRect();
+    return [Math.floor((ev.clientX - r.left) / r.width * COLS), Math.floor((ev.clientY - r.top) / r.height * ROWS)];
+  }
+  cv.addEventListener('pointermove', ev => { S.hover = cellFrom(ev); });
+  cv.addEventListener('pointerleave', () => { S.hover = null; });
+  cv.addEventListener('pointerdown', ev => {
+    if (S.over) return;
+    const [x, y] = cellFrom(ev);
+    S.hover = [x, y];
+    const t = towerAt(x, y);
+    if (t) { S.sel = t; ui(); return; }
+    if (S.pick && canBuild(x, y)) {
+      const d = TOWERS[S.pick];
+      if (S.gold < d.cost) { toast('골드가 부족합니다'); return; }
+      S.gold -= d.cost;
+      S.towers.push({ type: S.pick, gx: x, gy: y, x: x + .5, y: y + .5, lv: 1, cd: 0, spent: d.cost, ang: 0 });
+      S.sel = null; ui();
+    } else { S.sel = null; ui(); }
+  });
+
+  let toastMsg = '', toastT = 0;
+  function toast(m) { toastMsg = m; toastT = 2.2; }
+
+  // ---------- UI ----------
+  const $ = id => document.getElementById(id);
+  const tb = $('towerBtns');
+  for (const [k, d] of Object.entries(TOWERS)) {
+    const b = document.createElement('button');
+    b.className = 'tbtn'; b.id = 'tb-' + k; b.dataset.k = k;
+    b.innerHTML = `<i style="background:${d.color}"></i><span>${d.name} <span class="cost">${d.cost}G</span><small>${d.key} · ${d.desc}</small></span>`;
+    b.onclick = () => { S.pick = S.pick === k ? null : k; S.sel = null; ui(); };
+    tb.appendChild(b);
+  }
+  $('btnWave').onclick = startWave;
+  $('btnSpeed').onclick = () => { S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 3 : 1; ui(); };
+  $('btnPause').onclick = () => { S.paused = !S.paused; ui(); };
+  $('btnRestart').onclick = () => { S = fresh(); $('over').hidden = true; ui(); };
+  addEventListener('keydown', ev => {
+    if (ev.target.tagName === 'INPUT') return;
+    const m = { '1': 'arrow', '2': 'cannon', '3': 'frost' }[ev.key];
+    if (m) { S.pick = m; S.sel = null; ui(); }
+    else if (ev.key === ' ') { ev.preventDefault(); startWave(); }
+    else if (ev.key === 'p' || ev.key === 'P') $('btnPause').click();
+    else if (ev.key === 'f' || ev.key === 'F') $('btnSpeed').click();
+    else if (ev.key === 'Escape') { S.pick = null; S.sel = null; ui(); }
+  });
+
+  function ui() {
+    $('sLives').textContent = Math.max(0, S.lives);
+    $('sGold').textContent = S.gold;
+    $('sWave').textContent = S.wave;
+    $('sBest').textContent = best;
+    $('btnWave').disabled = S.running || S.over;
+    $('btnWave').textContent = S.running ? `웨이브 ${S.wave} 진행 중` : `웨이브 ${S.wave + 1} 시작`;
+    $('btnSpeed').textContent = S.speed + '배속';
+    $('btnPause').textContent = S.paused ? '계속하기' : '일시정지';
+    for (const b of tb.children) {
+      b.setAttribute('aria-pressed', S.pick === b.dataset.k);
+      b.disabled = S.gold < TOWERS[b.dataset.k].cost && S.pick !== b.dataset.k;
+    }
+    const info = $('info');
+    const t = S.sel;
+    if (t) {
+      const st = stat(t), d = TOWERS[t.type];
+      const canUp = t.lv < MAX_LV;
+      info.innerHTML = `<b>${d.name} Lv.${t.lv}</b>
+        <span class="muted">공격력 ${st.dmg.toFixed(0)} · 사거리 ${st.range.toFixed(1)} · 공격간격 ${st.rate.toFixed(2)}초${st.splash ? ' · 폭발반경 ' + st.splash.toFixed(2) : ''}${st.slow ? ' · 감속 ' + Math.round((1-st.slow)*100) + '%' : ''}</span>
+        <button id="btnUp" ${!canUp || S.gold < upCost(t) ? 'disabled' : ''}>${canUp ? `강화 ${upCost(t)}G` : '최대 레벨'}</button>
+        <button id="btnSell">판매 +${sellVal(t)}G</button>`;
+      $('btnUp').onclick = () => { if (t.lv < MAX_LV && S.gold >= upCost(t)) { S.gold -= upCost(t); t.spent += upCost(t); t.lv++; ui(); } };
+      $('btnSell').onclick = () => { S.gold += sellVal(t); S.towers = S.towers.filter(x => x !== t); S.sel = null; ui(); };
+    } else if (S.pick) {
+      const d = TOWERS[S.pick];
+      info.innerHTML = `<b>${d.name}</b><span class="muted">${d.desc} · 비용 ${d.cost}G · 사거리 ${d.range}. 길이 아닌 풀밭 칸을 눌러 설치하세요.</span>`;
+    } else {
+      info.innerHTML = `<span class="muted">타워를 고르고 풀밭을 눌러 설치하세요. 설치된 타워를 누르면 강화·판매할 수 있습니다.</span>`;
+    }
+  }
+
+  // ---------- 루프 ----------
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(320, Math.round(r.width * dpr));
+    cv.width = w; cv.height = Math.round(w * ROWS / COLS);
+    TS = cv.width / COLS;
+  }
+  addEventListener('resize', resize);
+
+  let last = performance.now(), uiTick = 0;
+  function frame(now) {
+    const raw = Math.min(0.05, (now - last) / 1000); last = now;
+    toastT = Math.max(0, toastT - raw);
+    if (!S.paused && !S.over) {
+      const steps = S.speed;
+      for (let i = 0; i < steps; i++) update(raw);
+    }
+    draw();
+    uiTick += raw;
+    if (uiTick > 0.15) { uiTick = 0; $('sLives').textContent = Math.max(0, S.lives); $('sGold').textContent = S.gold; refreshAfford(); }
+    requestAnimationFrame(frame);
+  }
+  let lastGold = -1, lastRunning = null;
+  function refreshAfford() {
+    if (S.running !== lastRunning) { lastRunning = S.running; lastGold = S.gold; ui(); return; }
+    if (S.gold === lastGold) return;
+    lastGold = S.gold;
+    // 정보 패널은 다시 그리지 않고 버튼 상태만 갱신 (클릭 도중 버튼 교체 방지)
+    for (const b of tb.children) b.disabled = S.gold < TOWERS[b.dataset.k].cost && S.pick !== b.dataset.k;
+    const up = $('btnUp');
+    if (up && S.sel) up.disabled = S.sel.lv >= MAX_LV || S.gold < upCost(S.sel);
+  }
+
+  S = fresh();
+  // 첫 화면 예시 배치 (시작 골드에서 차감됨)
+  for (const [type, x, y] of [['arrow', 3, 3], ['frost', 5, 5]]) {
+    S.towers.push({ type, gx: x, gy: y, x: x + .5, y: y + .5, lv: 1, cd: 0, spent: TOWERS[type].cost, ang: 0 });
+    S.gold -= TOWERS[type].cost;
+  }
+  S.gold += 120;
+  resize(); ui();
+  requestAnimationFrame(frame);
+})();
+</script>
