@@ -248,6 +248,13 @@
     <p class="msg" id="codeMsg" aria-live="polite"></p>
   </div>
 </div>
+<div class="backup" id="offline" hidden>
+  <div class="box panel">
+    <h2>다녀오셨어요!</h2>
+    <p id="offTxt"></p>
+    <div class="row"><button class="box btn primary" id="offTake">받기</button></div>
+  </div>
+</div>
 <div id="loading">숲을 불러오는 중…</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -683,7 +690,7 @@
   const DEFAULT_L = { axeCount: 0, axeDmg: 0, spin: 0, bag: 0, speed: 0, price: 0, magnet: 0, pick: 0,
     worker: 0, hunter: 0, miner: 0, cashier: 0, lane2: 0, bank: 0, beltSpeed: 0,
     beltForest: 0, beltBear: 0, beltQuarry: 0, gateBear: 0, gateQuarry: 0, armor: 0, gateDino: 0, gateBoss: 0 };
-  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0, dino: 0, deaths: 0, pulls: 0, boss: 0 };
+  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0, dino: 0, deaths: 0, pulls: 0, boss: 0, pity: 0, merges: 0 };
   const L = { ...DEFAULT_L };
   const stats = { ...DEFAULT_STATS };
   const padPaid = {};
@@ -1783,6 +1790,7 @@
   let shopOpen = false, shopTab = 'inv', shopAtPad = false, lastPull = [], armedScrap = 0;
   const WEAPON_PREFIX = { rare: ['단단한', '날렵한', '푸른'], unique: ['폭풍의', '서리의', '맹독의', '번개의'], legend: ['용사의', '불사조의', '천둥신의', '심연의'], ancient: ['태초의', '창세의', '무한의', '신성한'] };
   const WEAPON_NOUN = { bow: ['활', '장궁', '석궁'], gun: ['권총', '소총', '대포총'], axe: ['도끼', '전투도끼', '쌍날도끼'] };
+  const PITY = 50;
   function rollGrade() { const r = Math.random() * 100; return r < 3 ? 'ancient' : r < 8 ? 'legend' : r < 18 ? 'unique' : 'rare'; }
   function makeGachaWeapon(grade) {
     const type = pick(['bow', 'gun', 'axe']);
@@ -1796,7 +1804,14 @@
     if (!shopAtPad || gems < 5 * n) return;
     gems -= 5 * n; stats.pulls += n;
     lastPull = [];
-    for (let i = 0; i < n; i++) { const w = makeGachaWeapon(rollGrade()); weapons.push(w); lastPull.push(w); }
+    for (let i = 0; i < n; i++) {
+      // 천장: 레전드 이상 없이 50회째가 되면 레전드 이상 확정 (레전드:에인션트 = 5:3)
+      stats.pity++;
+      let g = rollGrade();
+      if (g !== 'legend' && g !== 'ancient' && stats.pity >= PITY) g = Math.random() < 5 / 8 ? 'legend' : 'ancient';
+      if (g === 'legend' || g === 'ancient') stats.pity = 0;
+      const w = makeGachaWeapon(g); weapons.push(w); lastPull.push(w);
+    }
     // 가방이 넘치면 장착하지 않은 가장 약한 레어부터 자동 분해
     while (weapons.length > 60) {
       const cand = weapons.filter(w => !isEquipped(w) && w.grade === 'rare').sort((a, b) => a.lv - b.lv)[0];
@@ -1811,6 +1826,20 @@
     renderShop();
   }
   const isEquipped = w => eq.ranged === w.id || eq.axe === w.id;
+  const NEXT_GRADE = { rare: 'unique', unique: 'legend', legend: 'ancient' };
+  const mergeable = g => weapons.filter(w => w.grade === g && !w.shop && !isEquipped(w)).sort((a, b) => a.lv - b.lv);
+  let lastMerge = null;
+  function merge(g) {
+    const c = mergeable(g);
+    if (c.length < 3 || !NEXT_GRADE[g]) return;
+    const used = c.slice(0, 3);
+    weapons = weapons.filter(w => !used.includes(w));
+    lastPull = lastPull.filter(w => !used.includes(w));
+    const nw = makeGachaWeapon(NEXT_GRADE[g]);
+    weapons.push(nw); lastMerge = nw; stats.merges++;
+    SFX.gacha(); setTimeout(() => SFX.grade(nw.grade), 350);
+    if (nw.grade === 'ancient') { flashT = 1.2; toast('합성 대성공! 에인션트!!'); } else toast(GRADES[nw.grade].name + ' 합성 완료!');
+  }
   function equip(w) {
     if (w.type === 'axe') eq.axe = eq.axe === w.id ? null : w.id; else eq.ranged = w.id;
     syncTools(); buildPlayer(); SFX.buy();
@@ -1856,12 +1885,17 @@
     } else if (shopTab === 'gacha') {
       h += `<p class="note">보석 5개로 한 번 뽑습니다. 활·총·도끼가 나오고, 등급이 높을수록 스킬이 많이 붙습니다. 에인션트는 스킬 6개(메테오·신성 오라 포함)에 능력치 9배입니다.</p>` + padNote('뽑기');
       h += `<table class="tbl"><tr><td><span class="grade ancient">에인션트</span></td><td>3%</td><td>스킬 6개 · 피해 ×9</td></tr><tr><td><span class="grade legend">레전드</span></td><td>5%</td><td>스킬 3개 · 피해 ×3.6</td></tr><tr><td><span class="grade unique">유니크</span></td><td>10%</td><td>스킬 2개 · 피해 ×2.3</td></tr><tr><td><span class="grade rare">레어</span></td><td>82%</td><td>스킬 1개 · 피해 ×1.5</td></tr></table>`;
+      h += `<p class="note"><b>천장</b> · 레전드 이상이 안 나오면 <b>${PITY - stats.pity}회</b> 안에 레전드 이상 확정</p>`;
       h += `<div class="pulls"><span><i class="gemi"></i> 보석 ${gems}개</span><button class="box btn primary" data-act="pull" data-n="1" ${shopAtPad && gems >= 5 ? '' : 'disabled'}>1회 뽑기 (보석 5)</button><button class="box btn primary" data-act="pull" data-n="10" ${shopAtPad && gems >= 50 ? '' : 'disabled'}>10회 뽑기 (보석 50)</button></div>`;
       if (lastPull.length) h += '<div class="cards">' + lastPull.slice().sort((a, b) => GRADE_ORDER.indexOf(b.grade) - GRADE_ORDER.indexOf(a.grade)).map((w, i) => weaponCard(w, { reveal: true, delay: i * 0.06 })).join('') + '</div>';
       else h += '<p class="note">보석은 채석장의 보라색 수정 바위에서 주로 나오고, 일반 바위·티라노·최종 보스에게서도 얻을 수 있습니다.</p>';
     } else if (shopTab === 'inv') {
       const r = eqW('ranged'), a = eqW('axe');
       h += `<p class="note">원거리: <b>${r ? esc(r.name) : '없음'}</b> · 도끼: <b>${a ? esc(a.name) : '기본 도끼'}</b> — 장착·해제·분해는 어디서나, 강화는 무기점에서 할 수 있습니다.</p>`;
+      h += '<div class="card normal"><div class="nm"><span>무기 합성</span><span class="st">같은 등급 3개 → 윗등급 1개 (종류·스킬 무작위, 장착 중인 무기 제외)</span></div><div class="acts">' +
+        ['rare', 'unique', 'legend'].map(g => { const n = mergeable(g).length; return `<button class="box btn ${n >= 3 ? 'primary' : ''}" data-act="merge" data-g="${g}" ${n >= 3 ? '' : 'disabled'}>${GRADES[g].name} 3개 → ${GRADES[NEXT_GRADE[g]].name} (보유 ${n})</button>` +
+          (n >= 6 ? `<button class="box btn" data-act="mergeAll" data-g="${g}">${GRADES[g].name} 한번에 ${Math.floor(n / 3)}회 합성</button>` : ''); }).join('') + '</div></div>';
+      if (lastMerge && weapons.includes(lastMerge)) h += '<p class="note">방금 합성한 무기</p><div class="cards">' + weaponCard(lastMerge, { reveal: true }) + '</div>';
       if (!weapons.length) h += '<p class="note">아직 무기가 없습니다. 무기점에서 사거나 뽑기로 얻으세요.</p>';
       const list = weapons.slice().sort((x, y) => (isEquipped(y) - isEquipped(x)) || GRADE_ORDER.indexOf(y.grade) - GRADE_ORDER.indexOf(x.grade) || y.lv - x.lv);
       h += '<div class="cards">' + list.map(w => weaponCard(w)).join('') + '</div>';
@@ -1906,6 +1940,8 @@
       if (armedScrap !== w.id) { armedScrap = w.id; renderShop(); return; }
       armedScrap = 0; gold += scrapValue(w); weapons = weapons.filter(x => x !== w); lastPull = lastPull.filter(x => x !== w); SFX.cash(); bumpGold();
     } else if (act === 'pull') pull(+b.dataset.n);
+    else if (act === 'merge') merge(b.dataset.g);
+    else if (act === 'mergeAll') { let k = 0; while (mergeable(b.dataset.g).length >= 3 && k++ < 40) merge(b.dataset.g); }
     else if (act === 'buySkin') {
       const i = +b.dataset.i, s = SKINS[i];
       if (!shopAtPad || gold < s.price || skinsOwned.includes(i)) return;
@@ -2014,7 +2050,7 @@
     return {
       v: 3, gold, cashPile, goal, gems, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
       stock: stock.concat(beltItems.map(b => b.type)), carry: player.carry.slice(), npcCarry: npcs.flatMap(n => n.carry),
-      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, skinsOwned: skinsOwned.slice(), skin,
+      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
     };
   }
   function saveLocal() {
@@ -2148,6 +2184,7 @@
       cloudRef = ref;
       if (cs && progressOf(cs) > progressOf(snapshot())) {
         applyState(cs); saveLocal();
+        if (!offlinePending || $('offline').hidden) showOffline(cs);
         lastCloudBody = JSON.stringify(snapshot());
         toast('계정에 저장된 진행을 불러왔습니다');
         setStatus('자동 저장 · 계정');
@@ -2183,12 +2220,46 @@
     $('backup').hidden = true; toast('백업 코드로 불러왔습니다');
   });
 
+  // 오프라인 수익: 자리를 비운 동안(최대 8시간) 일꾼·사냥꾼·광부가 번 돈과 보석
+  const OFFLINE_CAP = 8 * 3600;
+  let offlinePending = null;
+  function offlineCalc(st) {
+    if (!st || !st.lastSeen || !st.L) return null;
+    const secs = Math.min(OFFLINE_CAP, (Date.now() - st.lastSeen) / 1000);
+    if (secs < 60) return null;
+    const l = st.L;
+    const belts = (l.beltForest ? 1 : 0) + (l.beltBear ? 1 : 0) + (l.beltQuarry ? 1 : 0);
+    const rate = ((l.worker | 0) * 1.2 + (l.hunter | 0) * 3 + (l.miner | 0) * 1.5) * (1 + 0.2 * (l.price | 0)) * (l.cashier ? 1 : 0.5) * (1 + 0.05 * belts);
+    const g = Math.round(rate * secs), gm = Math.floor((l.miner | 0) * secs / 300);
+    if (g <= 0 && gm <= 0) return null;
+    return { secs, gold: g, gems: gm, capped: (Date.now() - st.lastSeen) / 1000 > OFFLINE_CAP };
+  }
+  function showOffline(st) {
+    const r = offlineCalc(st);
+    if (!r) return;
+    offlinePending = r;
+    const h = Math.floor(r.secs / 3600), m = Math.floor(r.secs % 3600 / 60);
+    $('offTxt').innerHTML = `자리를 비운 <b>${h ? h + '시간 ' : ''}${m}분</b> 동안 일꾼들이 일했습니다.<br>` +
+      `<span style="color:var(--gold)">+${fmt(r.gold)}G</span>${r.gems ? ` · <span style="color:var(--gem)">보석 +${r.gems}</span>` : ''}` +
+      (r.capped ? '<br><small>최대 8시간까지만 쌓입니다.</small>' : '');
+    $('offline').hidden = false;
+  }
+  $('offTake').addEventListener('click', () => {
+    if (offlinePending) {
+      gold += offlinePending.gold; gems += offlinePending.gems; offlinePending = null;
+      SFX.cash(); bumpGold(); saveLocal(); saveCloud(true);
+      for (let i = 0; i < 16; i++) flyCoin(player.x + rand(-3, 3), 3, player.z + rand(-3, 3), player.x, 1.4, player.z, i * 0.04);
+    }
+    $('offline').hidden = true;
+  });
+
   // ================= 시작 =================
   let shownCarry = 0, clock = 0, flashT = 0;
   applyState(localState);
+  showOffline(localState);
   if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
     get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
-    get cashPile() { return cashPile; }, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
+    get cashPile() { return cashPile; }, merge, offlineCalc, showOffline, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
   let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
   const camGoal = new THREE.Vector3(), camPos = new THREE.Vector3(player.x, 30 * zoom, player.z + 22 * zoom), camLook = new THREE.Vector3(player.x, 0, player.z);
