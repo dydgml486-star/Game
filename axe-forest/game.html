@@ -39,6 +39,7 @@
   .bag .rank { font-family: "Do Hyeon", sans-serif; font-size: 14px; color: var(--gold); }
   .bar { height: 6px; background: var(--edge); }
   .bar > i { display: block; height: 100%; width: 0; background: var(--leaf); }
+  .bar.hp > i { background: var(--danger); }
   .goal { font-family: "Do Hyeon", sans-serif; font-size: 17px; padding: 6px 12px; max-width: min(40vw, 420px); text-align: center; line-height: 1.3; }
   .goal small { display: block; font-family: "Silkscreen", "Do Hyeon", sans-serif; font-size: 10px; color: var(--muted); letter-spacing: .08em; }
   .right { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
@@ -105,6 +106,8 @@
       <div class="rank" id="hRank">견습 나무꾼</div>
       <div class="row"><span>BAG</span><span id="hBag">0/10</span></div>
       <div class="bar"><i id="hBagBar"></i></div>
+      <div class="row"><span>HP</span><span id="hHp">10/10</span></div>
+      <div class="bar hp"><i id="hHpBar"></i></div>
     </div>
   </div>
   <div class="box goal" id="goal"><small id="goalNo">GOAL 1</small><span id="goalTxt"></span></div>
@@ -135,9 +138,9 @@
 
   // ================= 상수 =================
   const V = 0.2;                                  // 복셀 한 칸(월드 단위)
-  const BEAR_Z = -22, QX = 36, QZ = 4, GAP = 2.2; // 곰 숲 울타리(z), 채석장 울타리(x)와 문 위치
-  const PRICE = { w: 2, m: 8, s: 3, g: 15 };
-  const NAMES = { w: '나무', m: '고기', s: '돌', g: '보석' };
+  const BEAR_Z = -22, DINO_Z = -47, QX = 36, QZ = 4, GAP = 2.2; // 곰 숲·공룡 계곡 울타리(z), 채석장 울타리(x)와 문 위치
+  const PRICE = { w: 2, m: 8, s: 3, g: 15, d: 40 };
+  const NAMES = { w: '나무', m: '고기', s: '돌', g: '보석', d: '공룡 고기' };
   const STALL = { x: 0, z: 6 };
   const DEPOSIT = { x: 0, z: 4.1 };
   const CASH = { x: 0, z: 2.0 };
@@ -203,6 +206,12 @@
       roar: () => play('roar', 0.9, () => { tone(95, 0.45, 'sawtooth', 0.09, 0.6); nz(0.4, 0.15, 260, 0.7); }),
       bump: () => play('bump', 0.3, () => { tone(160, 0.18, 'sawtooth', 0.08, 0.4); nz(0.12, 0.25, 500, 1); }),
       step: () => play('step', 0.2, () => nz(0.03, 0.05, 700, 1.5)),
+      shoot: () => play('shoot', 0.08, () => { tone(520, 0.08, 'triangle', 0.08, 2.2); nz(0.05, 0.12, 2500, 2); }),
+      whoosh: () => play('whoosh', 0.3, () => { nz(0.3, 0.35, 900, 0.6); tone(300, 0.25, 'sawtooth', 0.04, 2.5); }),
+      trex: () => play('trex', 1.2, () => { tone(70, 0.9, 'sawtooth', 0.14, 0.55); tone(105, 0.7, 'square', 0.05, 0.6, 0.05); nz(0.8, 0.25, 180, 0.6); }),
+      stomp: () => play('stomp', 0.35, () => { tone(55, 0.2, 'sine', 0.2, 0.6); nz(0.12, 0.15, 120, 0.8); }),
+      hurt: () => play('hurt', 0.2, () => { tone(260, 0.16, 'sawtooth', 0.07, 0.45); }),
+      die: () => play('die', 1, () => { [440, 370, 311, 247, 196].forEach((f, i) => tone(f, 0.22, 'square', 0.05, 0.9, i * 0.13)); }),
     };
   })();
   const unlockAudio = () => SFX.init();
@@ -281,8 +290,9 @@
   }
 
   // ================= 지형 =================
-  flat(130, 100, 12, -14, 0, noiseTex(['#5f9e4a', '#5a9746', '#64a54e', '#578f43', '#6aab52'], 48, [11, 8.5]));
-  flat(71, 24, 0.5, -34, 0.01, noiseTex(['#3f7040', '#3a683c', '#447744', '#36613a'], 48, [8, 3]));
+  flat(130, 124, 12, -26, 0, noiseTex(['#5f9e4a', '#5a9746', '#64a54e', '#578f43', '#6aab52'], 48, [11, 10.5]));
+  flat(71, 33, 0.5, -63.5, 0.012, noiseTex(['#5a5a36', '#51522f', '#63623c', '#4a4a2a', '#6b5a3a'], 48, [8, 4]));
+  flat(71, 25, 0.5, -34.5, 0.01, noiseTex(['#3f7040', '#3a683c', '#447744', '#36613a'], 48, [8, 3]));
   flat(24, 40, 48, -2, 0.01, noiseTex(['#8d8574', '#857d6c', '#958d7b', '#7d7565', '#9a927f'], 32, [3, 5]));
   const SAND = ['#c9ad74', '#c2a56c', '#cfb47d', '#bb9f66'];
   flat(26, 22, 0, 5, 0.02, noiseTex(SAND, 32, [4, 3.5]));
@@ -332,6 +342,7 @@
   }
   const gateBearG = fence('x', BEAR_Z, -35, QX, 0);
   const gateQuarryG = fence('z', QX, BEAR_Z, 18, QZ);
+  const gateDinoG = fence('x', DINO_Z, -35, 35, 0);
 
   // ================= 모델 =================
   const ITEM = {
@@ -339,6 +350,7 @@
     m: () => [[-0.9, 0, -0.8, 1.8, 1.2, 1.6, '#c94c4c'], [-0.5, 1.2, -0.6, 1, 0.3, 1.2, '#e57b6f'], [0.9, 0.3, -0.3, 1.1, 0.6, 0.6, '#f2eadb']],
     s: () => [[-1, 0, -0.9, 2, 1.2, 1.8, '#8d8f93'], [-0.6, 1.2, -0.5, 1.2, 0.3, 1, '#a9abb0']],
     g: () => [[-0.6, 0, -0.6, 1.2, 1.4, 1.2, '#9b6cf0'], [-0.3, 1.4, -0.3, 0.6, 0.4, 0.6, '#e2d2ff'], [-0.9, 0, -0.3, 0.3, 0.8, 0.6, '#7b4fd0']],
+    d: () => [[-1.3, 0, -1, 2.4, 1.5, 2, '#b8432f'], [-0.9, 1.5, -0.7, 1.6, 0.3, 1.4, '#d8654f'], [1.1, 0.4, -0.35, 1.6, 0.7, 0.7, '#f2eadb'], [2.7, 0.2, -0.55, 0.6, 1.1, 1.1, '#f2eadb']],
   };
   const itemMesh = t => vmesh(cgeo('i' + t, ITEM[t]), false);
 
@@ -392,6 +404,7 @@
   const TREE_COL = [['#3f7d3a', '#4f9a45', '#62b04f'], ['#4b8c3c', '#5ea84b', '#74bf5a'], ['#c46a2c', '#d98a3a', '#e8b95a']];
   const stumpGeo = cgeo('stump', () => [[-1.1, 0, -1.1, 2.2, 1.4, 2.2, '#6b4a2b'], [-0.9, 1.4, -0.9, 1.8, 0.1, 1.8, '#c9a066']]);
   const topGeo = v => cgeo('top' + v, () => {
+    if (v === 'jungle') return [[-0.8, 1.4, -0.8, 1.6, 9, 1.6, '#7a5a34'], [-0.6, 10.4, -0.6, 1.2, 0.6, 1.2, '#6b4a2b'], [-5, 10.6, -1, 10, 0.8, 2, '#3f8a3a'], [-1, 10.6, -5, 2, 0.8, 10, '#3f8a3a'], [-3.5, 10.2, -3.5, 2, 0.6, 2, '#4f9a45'], [1.5, 10.2, 1.5, 2, 0.6, 2, '#4f9a45'], [-1.2, 11.4, -1.2, 2.4, 0.8, 2.4, '#5aa84b'], [0.6, 9.4, 0.6, 0.8, 0.8, 0.8, '#8a5a32']];
     if (v === 'big') return [[-1, 1.4, -1, 2, 4, 2, '#6b4a2b'], [-4, 5, -4, 8, 2.5, 8, '#2e5b3c'], [-3, 7.5, -3, 6, 2.5, 6, '#356b45'], [-2, 10, -2, 4, 2.5, 4, '#3f7a4f'], [-1, 12.5, -1, 2, 2, 2, '#4a8a5a']];
     const [a, b, c] = TREE_COL[v];
     return [[-1, 1.4, -1, 2, 4, 2, '#6b4a2b'], [-3.5, 5, -3.5, 7, 3, 7, a], [-2.5, 8, -2.5, 5, 2, 5, b], [-1.5, 10, -1.5, 3, 1.5, 3, c], [1.5, 6, 3.4, 1, 1, 0.3, '#e86a6a']];
@@ -405,6 +418,26 @@
       [-1.8, 6.2, 8, 0.7, 0.7, 0.2, '#1d1a16'], [1.1, 6.2, 8, 0.7, 0.7, 0.2, '#1d1a16'],
       [-2.5, 8, 5, 1.5, 1.5, 1, C], [1, 8, 5, 1.5, 1.5, 1, C],
     ];
+  });
+  // 티라노사우루스 (몸통 / 다리 / 턱을 나눠 움직임)
+  const TC = '#5f7f3f', TC2 = '#4f6a33', TC3 = '#3f5a2a';
+  const trexBodyGeo = cgeo('trex', () => [
+    [-3, 5, -4, 6, 6, 9, TC], [-2.5, 5, -3, 5, 1, 7, '#c9b27a'],
+    [-2, 8.5, 4.5, 4, 3, 2, TC],
+    [-2.5, 9.5, 5.5, 5, 3.4, 6, TC], [-2.3, 9.5, 10.6, 4.6, 0.5, 0.5, '#f4efe2'],
+    [-2.6, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'], [2.3, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'],
+    [-2.6, 12.9, 6.5, 5.2, 0.5, 3, TC3],
+    [-3.2, 7, 4, 0.8, 2, 0.8, TC2], [2.4, 7, 4, 0.8, 2, 0.8, TC2],
+    [-2, 6.5, -8, 4, 4, 4, TC], [-1.5, 7, -12, 3, 3, 4, TC], [-1, 7.5, -15, 2, 2, 3, TC2],
+    [-3.1, 10.2, -3, 6.2, 0.6, 1, TC3], [-3.1, 10.2, 0, 6.2, 0.6, 1, TC3], [-2.1, 10.2, -7, 4.2, 0.6, 1, TC3],
+  ]);
+  const trexLegGeo = cgeo('trexleg', () => [[-1.3, -4, -1.5, 2.6, 4, 3, TC], [-1, -7, -0.8, 2, 3, 2, TC2], [-1.3, -7, 0.8, 2.6, 0.8, 2, TC2]]);
+  const trexJawGeo = cgeo('trexjaw', () => [[-2.2, -1.4, 0, 4.4, 1.4, 5, '#4f6a3a'], [-2, 0, 4.5, 4, 0.4, 0.4, '#f4efe2'], [-1.6, -1.2, 0.5, 3.2, 0.3, 4, '#a8453a']]);
+  const arrowGeo = cgeo('arrow', () => [[-0.25, -0.25, -2.5, 0.5, 0.5, 5, '#8a5a32'], [-0.5, -0.5, 2.5, 1, 1, 1, '#c7d0d6'], [-0.6, -0.1, -3, 1.2, 0.2, 1, '#f4efe2']]);
+  const bowGeo = cgeo('bow', () => [[-0.3, -4, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.3, -3, 0.3, 0.6, 2, 0.6, '#a0693a'], [-0.3, -1, 0.9, 0.6, 2, 0.6, '#a0693a'], [-0.3, 1, 0.3, 0.6, 2, 0.6, '#a0693a'], [-0.3, 3, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.1, -3.5, -0.3, 0.2, 7, 0.2, '#f4efe2']]);
+  const swordGeo = t => cgeo('sword' + t, () => {
+    const [h, e] = TOOL_COL[t];
+    return [[-2.5, -0.5, -0.5, 2.5, 1, 1, '#5a3a22'], [0, -1.8, -0.7, 0.8, 3.6, 1.4, '#e0b040'], [0.8, -0.8, -0.3, 11, 1.6, 0.6, h], [0.8, -0.2, -0.35, 11, 0.4, 0.7, e], [11.8, -0.4, -0.3, 1.2, 0.8, 0.6, e]];
   });
   const rockGeo = cgeo('rock', () => [[-3, 0, -2.5, 6, 3, 5, '#7d7f84'], [-2, 3, -1.5, 4, 1.5, 3.5, '#8f9196'], [1, 0, 1, 2.5, 2, 2.5, '#6c6e73'], [-3.5, 0, -3, 2, 1.5, 2, '#74767b']]);
   const crystalGeo = cgeo('crystal', () => [[-3, 0, -2.5, 6, 2.5, 5, '#6f7176'], [-1, 2.5, -1, 1.4, 4.5, 1.4, '#9b6cf0'], [0.8, 2, 0, 1.1, 3.2, 1.1, '#b48cff'], [-2.5, 2, 0.5, 1, 2.6, 1, '#7b4fd0'], [-0.7, 7, -0.7, 0.8, 0.8, 0.8, '#e2d2ff']]);
@@ -447,14 +480,14 @@
   // ================= 상태 =================
   const DEFAULT_L = { axeCount: 0, axeDmg: 0, spin: 0, bag: 0, speed: 0, price: 0, magnet: 0, pick: 0,
     worker: 0, hunter: 0, miner: 0, cashier: 0, lane2: 0, bank: 0, beltSpeed: 0,
-    beltForest: 0, beltBear: 0, beltQuarry: 0, gateBear: 0, gateQuarry: 0 };
-  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0 };
+    beltForest: 0, beltBear: 0, beltQuarry: 0, gateBear: 0, gateQuarry: 0, armor: 0, bow: 0, sword: 0, gateDino: 0 };
+  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0, dino: 0, deaths: 0 };
   const L = { ...DEFAULT_L };
   const stats = { ...DEFAULT_STATS };
   const padPaid = {};
   let gold = 0, cashPile = 0, goal = 0;
   const stock = [];
-  const player = { x: 0, z: 1.5, face: 0, carry: [], reserved: 0, fullMsgT: 0, depT: 0, kx: 0, kz: 0, stun: 0, hurtT: 0 };
+  const player = { x: 0, z: 1.5, face: 0, carry: [], reserved: 0, fullMsgT: 0, depT: 0, kx: 0, kz: 0, stun: 0, hurtT: 0, hp: 10, calm: 0, dead: 0, inv: 0 };
 
   function derived() {
     return {
@@ -464,9 +497,12 @@
       cap: 10 + 5 * L.bag, speed: 4.6 * (1 + 0.1 * L.speed), magnet: 2.6 + 0.8 * L.magnet,
       price: 1 + 0.2 * L.price, custEvery: 1.25 / (1 + 0.25 * L.price),
       beltSpeed: 2.2 + 0.9 * L.beltSpeed,
+      maxHp: 10 + 5 * L.armor + 3 * Math.max(0, curTier),
+      bowEvery: Math.max(0.25, 1.1 - 0.1 * (L.bow - 1)), bowDmg: 4 + 3 * (L.bow - 1),
+      swordEvery: Math.max(1.2, 3.2 - 0.25 * (L.sword - 1)), swordDmg: 12 + 8 * (L.sword - 1), swordR: 3.2 + 0.2 * (L.sword - 1),
     };
   }
-  const power = () => L.axeCount + L.axeDmg + L.spin + L.bag + L.speed + L.pick + L.magnet;
+  const power = () => L.axeCount + L.axeDmg + L.spin + L.bag + L.speed + L.pick + L.magnet + L.armor + L.bow + L.sword;
   const tierOf = () => { let t = 0; TIER_AT.forEach((v, i) => { if (power() >= v) t = i; }); return t; };
 
   // ================= 나무 / 바위 =================
@@ -485,16 +521,17 @@
       pts.push([x, z]); make(x, z, r);
     }
   }
-  function addTree(x, z, variant, big) {
+  function addTree(x, z, variant, big, jungle) {
     const g = new THREE.Group(); g.add(vmesh(stumpGeo));
     const top = new THREE.Group(); top.add(vmesh(topGeo(variant))); g.add(top);
-    g.position.set(x, 0, z); if (big) g.scale.setScalar(1.25);
+    g.position.set(x, 0, z); if (big) g.scale.setScalar(jungle ? 1.4 : 1.25);
     scene.add(g);
-    const hp = big ? 6 : 3;
-    trees.push({ g, top, x, z, big, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(8).fill(0), shake: 0, dir: 1, claimed: null });
+    const hp = jungle ? 9 : big ? 6 : 3;
+    trees.push({ g, top, x, z, big, jungle, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(8).fill(0), shake: 0, dir: 1, claimed: null });
   }
   scatter(100, -34, 34, -20.5, 17.5, 2.05, blocked, 11, (x, z, r) => addTree(x, z, r() < 0.14 ? 2 : (r() < 0.5 ? 1 : 0), false));
-  scatter(46, -33, 33, -45, -24, 2.8, (x, z) => Math.abs(x) < 3 && z > -28, 29, (x, z) => addTree(x, z, 'big', true));
+  scatter(46, -33, 33, -45, -24, 2.8, (x, z) => Math.abs(x) < 3 && (z > -28 || z < -40), 29, (x, z) => addTree(x, z, 'big', true));
+  scatter(30, -33, 33, -77, -50, 4.2, (x, z) => Math.abs(x) < 3.5 && z > -54, 31, (x, z) => addTree(x, z, 'jungle', true, true));
   function addRock(x, z, crystal) {
     const m = vmesh(crystal ? crystalGeo : rockGeo);
     m.position.set(x, 0, z); m.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2; m.scale.setScalar(crystal ? 1.15 : 1);
@@ -532,7 +569,7 @@
     tr.alive = false; tr.state = 'fall'; tr.t = 0; tr.dir = Math.random() < 0.5 ? 1 : -1;
     spawnChips(tr.x, 1.8, tr.z, tr.big ? '#356b45' : '#4f9a45', 8);
     stats.chopped++;
-    return tr.big ? 3 : 2;
+    return tr.jungle ? 4 : tr.big ? 3 : 2;
   }
   function hitRock(rk, dmg) {
     if (!rk.alive) return null;
@@ -575,69 +612,122 @@
   }
 
   // ================= 곰 =================
+  let shake = 0;
+  const shots = [];   // 화살
+  // 곰과 티라노사우루스를 같은 규칙으로 다룬다
+  const BEAST = {
+    bear: { hp: 14, wander: 1.1, chase: 2.7, aggro: 8, reach: 1.6, hitR: 1.25, dmg: 1, cd: 1.3, knock: 9, drops: ['m', 'm', 'm'], respawn: 14, scale: 1.25, barY: 2.6,
+            zone: () => [rand(-31, 31), rand(-43, -25)], zMin: -45, zMax: BEAR_Z - 1, inZone: z => z < BEAR_Z && z >= DINO_Z },
+    dino: { hp: 220, wander: 1.3, chase: 3.7, aggro: 12, reach: 2.9, hitR: 2.3, dmg: 4, cd: 1.6, knock: 15, drops: ['d', 'd', 'd', 'd'], respawn: 35, scale: 1.7, barY: 5.2,
+            zone: () => [rand(-30, 30), rand(-75, -52)], zMin: -77, zMax: DINO_Z - 1.5, inZone: z => z < DINO_Z },
+  };
   const bears = [];
-  const randForest = () => [rand(-31, 31), rand(-43, -25)];
-  for (let i = 0; i < 16; i++) {
-    const [x, z] = randForest();
-    const g = new THREE.Group(), body = vmesh(bearGeo); g.add(body); g.scale.setScalar(1.25); scene.add(g);
-    const bar = new THREE.Group();
-    const bg = new THREE.Mesh(BOX, M('#1d1a16')); bg.scale.set(1.1, 0.12, 0.12); bar.add(bg);
-    const fill = new THREE.Mesh(BOX, M('#d9573b')); fill.scale.set(1, 0.14, 0.14); bar.add(fill);
+  function addBeast(kind) {
+    const def = BEAST[kind], [x, z] = def.zone();
+    const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+    let legL = null, legR = null, jaw = null;
+    if (kind === 'bear') body.add(vmesh(bearGeo));
+    else {
+      body.add(vmesh(trexBodyGeo));
+      legL = vmesh(trexLegGeo); legL.position.set(-2.3 * V, 7 * V, 0);
+      legR = vmesh(trexLegGeo); legR.position.set(2.3 * V, 7 * V, 0);
+      jaw = vmesh(trexJawGeo); jaw.position.set(0, 9.5 * V, 5.8 * V);
+      body.add(legL, legR, jaw);
+    }
+    g.scale.setScalar(def.scale); scene.add(g);
+    const bar = new THREE.Group(), w = kind === 'dino' ? 2.4 : 1.1;
+    const bg = new THREE.Mesh(BOX, M('#1d1a16')); bg.scale.set(w, 0.14, 0.12); bar.add(bg);
+    const fill = new THREE.Mesh(BOX, M('#d9573b')); fill.scale.set(w - 0.1, 0.16, 0.14); bar.add(fill);
     bar.visible = false; scene.add(bar);
-    bears.push({ g, body, bar, fill, x, z, face: rand(0, 6), hp: 14, maxHp: 14, alive: true, tx: x, tz: z, t: rand(0, 5), atkCd: 0, hitCd: new Array(8).fill(0), bump: 0, respawnT: 0, walk: 0, claimed: null });
+    bears.push({ kind, def, g, body, legL, legR, jaw, bite: 0, bar, fill, barW: w - 0.1, x, z, face: rand(0, 6), hp: def.hp, maxHp: def.hp, alive: true, tx: x, tz: z, t: rand(0, 5), atkCd: 0, hitCd: new Array(8).fill(0), bump: 0, respawnT: 0, walk: 0, claimed: null, angry: false });
   }
+  for (let i = 0; i < 16; i++) addBeast('bear');
+  for (let i = 0; i < 6; i++) addBeast('dino');
   function hitBear(b, dmg, fromX, fromZ) {
     if (!b.alive) return 0;
     b.hp -= dmg; b.bump = 0.15;
-    const a = Math.atan2(b.z - fromZ, b.x - fromX);
-    b.x += Math.cos(a) * 0.4; b.z += Math.sin(a) * 0.4;
-    spawnChips(b.x, 1, b.z, '#6e4526', 3);
-    SFX.bear();
+    const a = Math.atan2(b.z - fromZ, b.x - fromX), kb = b.kind === 'dino' ? 0.12 : 0.4;
+    b.x += Math.cos(a) * kb; b.z += Math.sin(a) * kb;
+    spawnChips(b.x, b.kind === 'dino' ? 2 : 1, b.z, b.kind === 'dino' ? '#5f7f3f' : '#6e4526', 3);
+    if (b.kind === 'dino') SFX.stomp(); else SFX.bear();
     if (b.hp > 0) return 0;
-    b.alive = false; b.g.visible = false; b.bar.visible = false; b.respawnT = 14;
-    spawnChips(b.x, 1, b.z, '#c94c4c', 10);
-    floatText('곰 사냥!', b.x, 2, b.z, 'note');
-    return 3;
+    b.alive = false; b.g.visible = false; b.bar.visible = false; b.respawnT = b.def.respawn;
+    spawnChips(b.x, 1, b.z, '#c94c4c', b.kind === 'dino' ? 24 : 10);
+    if (b.kind === 'dino') { stats.dino++; floatText('티라노 사냥!', b.x, 3, b.z, 'note big'); shake = 0.4; SFX.trex(); }
+    else floatText('곰 사냥!', b.x, 2, b.z, 'note');
+    return b.def.drops.length;
   }
   function updateBears(dt) {
     for (const b of bears) {
+      const def = b.def;
       for (let i = 0; i < 8; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
       if (!b.alive) {
         b.respawnT -= dt;
-        if (b.respawnT <= 0) { [b.x, b.z] = randForest(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; }
+        if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
         continue;
       }
       const dx = player.x - b.x, dz = player.z - b.z, d = Math.hypot(dx, dz);
-      const chase = player.z < BEAR_Z && d < 8;
+      const chase = !player.dead && def.inZone(player.z) && d < def.aggro;
       let mx = 0, mz = 0, sp = 0;
       if (chase) {
-        if (d > 1.3) { mx = dx / d; mz = dz / d; sp = 2.7; }
+        if (!b.angry && b.kind === 'dino') { SFX.trex(); floatText('크아앙!', b.x, 4.5, b.z, 'bad big'); }
+        b.angry = true;
+        if (d > def.reach - 0.3) { mx = dx / d; mz = dz / d; sp = def.chase; }
         b.atkCd -= dt;
-        if (d < 1.6 && b.atkCd <= 0) {
-          b.atkCd = 1.3;
-          // 캐릭터는 죽지 않는다: 밀려나고 잠깐 멈출 뿐
+        if (d < def.reach && b.atkCd <= 0) {
+          b.atkCd = def.cd; b.bite = 0.3;
           const k = d > 0.01 ? 1 / d : 0;
-          player.kx = dx * k * 9; player.kz = dz * k * 9; player.stun = 0.3; player.hurtT = 0.35; shake = 0.3;
-          SFX.roar(); SFX.bump();
-          floatText('쿵!', player.x, 2.4, player.z, 'bad');
+          damagePlayer(def.dmg, dx * k * def.knock, dz * k * def.knock, b.kind === 'dino' ? '콱!' : '쿵!');
+          if (b.kind === 'dino') SFX.trex(); else SFX.roar();
         }
       } else {
+        b.angry = false;
         b.t += dt;
         const tx = b.tx - b.x, tz = b.tz - b.z, td = Math.hypot(tx, tz);
-        if (td < 0.5 || b.t > 8) { [b.tx, b.tz] = randForest(); b.t = 0; }
-        else if (b.t > 1.5) { mx = tx / td; mz = tz / td; sp = 1.1; }
+        if (td < 0.5 || b.t > 8) { [b.tx, b.tz] = def.zone(); b.t = 0; }
+        else if (b.t > 1.5) { mx = tx / td; mz = tz / td; sp = def.wander; }
       }
       b.x += mx * sp * dt; b.z += mz * sp * dt;
-      b.x = Math.max(-33, Math.min(33, b.x)); b.z = Math.max(-45, Math.min(BEAR_Z - 1, b.z));
+      b.x = Math.max(-33, Math.min(33, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z));
       if (sp > 0) b.face = lerpAngle(b.face, Math.atan2(mx, mz), dt * 8);
       b.walk += sp * dt;
       if (b.bump > 0) b.bump -= dt;
+      if (b.bite > 0) b.bite -= dt;
       b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
-      b.body.position.y = sp > 0 ? Math.abs(Math.sin(b.walk * 4)) * 0.06 : 0;
-      b.g.scale.setScalar(1.25 * (1 + Math.max(0, b.bump)));
+      if (b.kind === 'dino') {
+        const s = sp > 0 ? Math.sin(b.walk * 2.2) : 0;
+        b.legL.rotation.x = s * 0.5; b.legR.rotation.x = -s * 0.5;
+        b.body.position.y = sp > 0 ? Math.abs(Math.cos(b.walk * 2.2)) * 0.08 : 0;
+        b.jaw.rotation.x = b.bite > 0 ? 0.6 : (b.angry ? 0.25 + Math.sin(b.walk * 6) * 0.1 : 0.05);
+      } else b.body.position.y = sp > 0 ? Math.abs(Math.sin(b.walk * 4)) * 0.06 : 0;
+      b.g.scale.setScalar(def.scale * (1 + Math.max(0, b.bump) * (b.kind === 'dino' ? 0.3 : 1)));
       b.bar.visible = b.hp < b.maxHp;
-      if (b.bar.visible) { b.bar.position.set(b.x, 2.6, b.z); const k = Math.max(0, b.hp / b.maxHp); b.fill.scale.x = k; b.fill.position.x = -(1 - k) / 2; }
+      if (b.bar.visible) { b.bar.position.set(b.x, def.barY, b.z); const k = Math.max(0, b.hp / b.maxHp); b.fill.scale.x = b.barW * k; b.fill.position.x = -b.barW * (1 - k) / 2; }
     }
+  }
+
+  // ================= 체력 / 기절 =================
+  function damagePlayer(n, kx, kz, label) {
+    if (player.dead || player.inv > 0) return;
+    player.hp -= n; player.calm = 0;
+    player.kx = kx; player.kz = kz; player.stun = 0.3; player.hurtT = 0.4; shake = Math.max(shake, n >= 3 ? 0.45 : 0.25);
+    SFX.hurt(); SFX.bump();
+    floatText(label + ' -' + n, player.x, 2.4, player.z, 'bad');
+    if (player.hp <= 0) killPlayer();
+  }
+  function killPlayer() {
+    player.hp = 0; player.dead = 2.2; stats.deaths++;
+    const lost = player.carry.length;
+    for (const it of player.carry) spawnDrop(it, player.x, player.z);
+    player.carry = []; player.reserved = 0;
+    for (const o of drops) if (o.state === 'fly') o.state = 'ground';
+    SFX.die();
+    toast(lost ? `기절했습니다! 가방의 ${lost}개를 그 자리에 떨어뜨렸어요` : '기절했습니다!');
+  }
+  function revivePlayer() {
+    player.dead = 0; player.x = 0; player.z = 1.5; player.kx = player.kz = 0;
+    player.hp = derived().maxHp; player.inv = 2;
+    pg.rotation.x = 0;
   }
 
   // ================= 플레이어 (강해질수록 외형 변화) =================
@@ -667,6 +757,8 @@
     pg = person({ shirt: look.shirt, pants: look.pants, arm: look.arm, hair: '#4a2f1b', extra: tierExtras(t) });
     pg.scale.setScalar(1 + 0.06 * t);
     stackG.position.set(0, 0.8, -0.62); pg.add(stackG);
+    if (L.bow) { const bw = vmesh(bowGeo); bw.position.set(0, -0.5, 0.25); pg.userData.armL.add(bw); }
+    if (L.sword) { const sw = vmesh(swordGeo(Math.min(3, Math.floor((L.sword - 1) / 2)))); sw.scale.setScalar(0.55); sw.position.set(0.35, 1.4, -0.45); sw.rotation.set(0, Math.PI / 2, 2.3); pg.add(sw); }
     if (aura) { scene.remove(aura); aura = null; }
     if (t >= 3) {
       aura = new THREE.Group();
@@ -767,6 +859,10 @@
     { k: 'beltSpeed', name: '벨트 속도', x: 10.5, z: 9.5, base: 150, mul: 1.8, max: 5, req: () => L.beltForest || L.beltBear || L.beltQuarry },
     { k: 'magnet', name: '자석', x: -10.5, z: 12.5, base: 60, mul: 1.8, max: 5 },
     { k: 'bank', name: '자동 입금', x: 10.5, z: 12.5, base: 300, mul: 1, max: 1, once: true },
+    { k: 'armor', name: '갑옷 강화', x: -7.5, z: 12.5, base: 80, mul: 1.6, max: 10 },
+    { k: 'bow', name: '활', buyName: '활 구매', x: -4.5, z: 12.5, base: 500, mul: 1.7, max: 8, req: () => L.gateBear },
+    { k: 'sword', name: '대검', buyName: '대검 구매', x: 4.5, z: 12.5, base: 1500, mul: 1.7, max: 8, req: () => L.gateBear },
+    { k: 'gateDino', name: '공룡 계곡 개방', x: 0, z: DINO_Z + 2.4, base: 3000, mul: 1, max: 1, once: true, req: () => L.gateBear },
     { k: 'beltForest', name: '숲 컨베이어', x: -12, z: 6, base: 200, mul: 1, max: 1, once: true },
     { k: 'gateBear', name: '곰 숲 개방', x: 0, z: -19.5, base: 250, mul: 1, max: 1, once: true },
     { k: 'beltBear', name: '곰숲 컨베이어', x: -6, z: -19.5, base: 600, mul: 1, max: 1, once: true, req: () => L.gateBear },
@@ -796,6 +892,11 @@
     if (k === 'gateQuarry') { gateQuarryG.visible = false; toast('채석장이 열렸습니다. 곡괭이가 함께 돕니다!'); }
     if (k.startsWith('belt') && k !== 'beltSpeed') { syncBelts(); toast('컨베이어 설치! 투입구에 올라서면 자동으로 판매대로 갑니다'); }
     if (k === 'bank') toast('자동 입금: 쌓인 돈이 알아서 들어옵니다');
+    if (k === 'gateDino') { gateDinoG.visible = false; toast('공룡 계곡이 열렸습니다. 티라노를 조심하세요!'); SFX.trex(); }
+    if (k === 'bow' && L.bow === 1) toast('활 획득! 가까운 곰·공룡을 자동으로 쏩니다');
+    if (k === 'sword' && L.sword === 1) toast('대검 획득! 주기적으로 주변을 크게 벱니다');
+    if (k === 'armor') player.hp = derived().maxHp;
+    if (k === 'bow' || k === 'sword') buildPlayer(tierOf());
     const t = tierOf();
     if (t !== curTier) { buildPlayer(t); SFX.level(); toast('더 강해졌다! ' + RANKS[t]); spawnChips(player.x, 1.5, player.z, '#f2c14e', 18); }
   }
@@ -817,7 +918,7 @@
           paid = 0; L[p.k]++; p.cool = 0.5;
           SFX.buy();
           spawnChips(p.x, 0.5, p.z, '#f2c14e', 12);
-          if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + 1), p.x, 1.4, p.z, 'note');
+          if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + (p.buyName ? 0 : 1)), p.x, 1.4, p.z, 'note');
           applyUpgrade(p.k);
         }
         padPaid[p.k] = paid;
@@ -825,7 +926,7 @@
       setPadFill(p.pad, maxed ? 0 : paid / c);
       const html = maxed
         ? `${p.name}<div class="c">MAX</div>`
-        : `${p.name}<div class="c">${p.once ? '' : '<small>Lv.' + (L[p.k] + 1) + '</small>'}<i class="coin"></i>${c - paid}</div>`;
+        : `${p.buyName && !L[p.k] ? p.buyName : p.name}<div class="c">${p.once || (p.buyName && !L[p.k]) ? '' : '<small>Lv.' + (L[p.k] + (p.buyName ? 0 : 1)) + '</small>'}<i class="coin"></i>${c - paid}</div>`;
       if (html !== p.html) { p.tag.innerHTML = html; p.html = html; }
       p.tag.classList.toggle('max', maxed);
       p.tag.classList.toggle('poor', !maxed && gold + paid < c);
@@ -960,7 +1061,7 @@
         else {
           let best = null, bd = 1e9;
           for (const o of pool) {
-            if (!o.alive || o.claimed || (n.kind === 'lumber' && o.big)) continue;
+            if (!o.alive || o.claimed || (n.kind === 'lumber' && o.big) || (n.kind === 'hunter' && o.kind === 'dino')) continue;
             const d = dist(o.x, o.z, n.x, n.z);
             if (d < bd) { bd = d; best = o; }
           }
@@ -1085,11 +1186,16 @@
     { txt: '일꾼을 고용해 벌목을 맡기세요', done: () => L.worker >= 1, target: () => padOf('worker') },
     { txt: '숲 컨베이어를 설치하세요', done: () => L.beltForest >= 1, target: () => padOf('beltForest') },
     { txt: '곰 숲을 여세요 (고기 한 개 8G)', done: () => L.gateBear >= 1, target: () => padOf('gateBear') },
-    { txt: '곰을 사냥해 고기 5개를 모으세요', done: () => stats.meat >= 5, target: () => nearest(bears, b => b.alive) },
+    { txt: '곰을 사냥해 고기 5개를 모으세요', done: () => stats.meat >= 5, target: () => nearest(bears, b => b.alive && b.kind === 'bear') },
     { txt: '사냥꾼을 고용하세요', done: () => L.hunter >= 1, target: () => padOf('hunter') },
+    { txt: '활을 사세요. 곰을 멀리서 자동으로 쏩니다', done: () => L.bow >= 1, target: () => padOf('bow') },
     { txt: '채석장을 여세요 (보석 한 개 15G)', done: () => L.gateQuarry >= 1, target: () => padOf('gateQuarry') },
     { txt: '보라색 수정 바위에서 보석 3개를 캐세요', done: () => stats.gem >= 3, target: () => nearest(rocks, r => r.alive && r.crystal) },
     { txt: '광부를 고용하세요', done: () => L.miner >= 1, target: () => padOf('miner') },
+    { txt: '대검을 사세요', done: () => L.sword >= 1, target: () => padOf('sword') },
+    { txt: '갑옷을 3단계까지 강화하세요', done: () => L.armor >= 3, target: () => padOf('armor') },
+    { txt: '공룡 계곡을 여세요 (공룡 고기 한 개 40G)', done: () => L.gateDino >= 1, target: () => padOf('gateDino') },
+    { txt: '티라노사우루스를 쓰러뜨리세요', done: () => stats.dino >= 1, target: () => nearest(bears, b => b.alive && b.kind === 'dino') },
     { txt: '모든 강화를 MAX로 만들어 보세요', done: () => PADS.every(p => L[p.k] >= p.max), target: () => null },
     { txt: '숲의 주인이 되었습니다!', done: () => false, target: () => null },
   ];
@@ -1200,8 +1306,9 @@
     for (let i = 0; i < L.hunter; i++) addNpc('hunter', -7.5, 9.5);
     for (let i = 0; i < L.miner; i++) addNpc('miner', -4.5, 9.5);
     syncCashiers(); syncBelts(); syncTools();
-    gateBearG.visible = !L.gateBear; gateQuarryG.visible = !L.gateQuarry;
+    gateBearG.visible = !L.gateBear; gateQuarryG.visible = !L.gateQuarry; gateDinoG.visible = !L.gateDino;
     buildPlayer(tierOf());
+    player.dead = 0; player.hp = derived().maxHp;
     rebuildStack(stackG, player.carry, 60); shownCarry = player.carry.length;
     stockDirty = true; cashShown = -1; goalShown = -1;
   }
@@ -1262,9 +1369,11 @@
   // ================= 시작 =================
   let shownCarry = 0;
   applyState(localState);
-  if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, get gold() { return gold; }, set gold(v) { gold = v; }, get cashPile() { return cashPile; }, get tier() { return curTier; } };
+  if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, get gold() { return gold; }, set gold(v) { gold = v; }, get cashPile() { return cashPile; }, get tier() { return curTier; }, damagePlayer, shots };
 
-  let spinA = 0, clock = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, shake = 0, stepT = 0;
+  let spinA = 0, clock = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, bowT = 0, swordT = 1, slashT = 0, slashM = null;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 32), new THREE.MeshBasicMaterial({ color: '#fff2b0', transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
   const camGoal = new THREE.Vector3(), camPos = new THREE.Vector3(player.x, 30 * zoom, player.z + 22 * zoom);
 
   function tryMove(nx, nz) {
@@ -1275,7 +1384,10 @@
     if ((x >= QX) !== (nx >= QX) && nz > BEAR_Z) {
       if (!(L.gateQuarry && Math.abs(nz - QZ) < GAP - 0.3)) nx = x;
     }
-    nx = Math.max(-34, Math.min(59, nx)); nz = Math.max(-45, Math.min(18, nz));
+    if ((z >= DINO_Z) !== (nz >= DINO_Z) && Math.min(x, nx) < QX) {
+      if (!(L.gateDino && Math.abs(nx) < GAP - 0.3)) nz = z;
+    }
+    nx = Math.max(-34, Math.min(59, nx)); nz = Math.max(-78, Math.min(18, nz));
     if (nz < BEAR_Z) nx = Math.min(nx, 34);
     if (nx > QX) nz = Math.max(nz, BEAR_Z + 0.5);
     if (Math.abs(nx - STALL.x) < 1.9 && Math.abs(nz - STALL.z) < 0.95) {
@@ -1298,6 +1410,16 @@
     if (joy && Math.hypot(joy.dx, joy.dy) > 0.15) { mx = joy.dx; mz = joy.dy; }
     let ml = Math.hypot(mx, mz);
     if (player.stun > 0) { player.stun -= dt; ml = 0; }
+    if (player.dead > 0) {
+      ml = 0; player.dead -= dt;
+      pg.rotation.x = -Math.min(1, (2.2 - player.dead) * 4) * Math.PI / 2;
+      if (player.dead <= 0) revivePlayer();
+    } else {
+      if (player.inv > 0) player.inv -= dt;
+      player.calm += dt;
+      if (player.calm > 4) player.hp = Math.min(D.maxHp, player.hp + dt * 2);
+      player.hp = Math.min(player.hp, D.maxHp);
+    }
     const moving = ml > 0.01;
     if (moving) {
       if (ml > 1) { mx /= ml; mz /= ml; }
@@ -1327,12 +1449,12 @@
           if (got) { SFX.fell(); for (let k = 0; k < got; k++) spawnDrop('w', tr.x, tr.z); } else SFX.chop();
         }
       }
-      if (player.z < BEAR_Z + 3) for (const b of bears) {
-        if (!b.alive || b.hitCd[i] > 0) continue;
-        if (dist(b.x, b.z, x, z) < 1.25) {
+      if (player.z < BEAR_Z + 3 && !player.dead) for (const b of bears) {
+        if (!b.alive || b.hitCd[i] > 0 || Math.abs(b.x - x) > 3 || Math.abs(b.z - z) > 3) continue;
+        if (dist(b.x, b.z, x, z) < b.def.hitR) {
           b.hitCd[i] = 0.3;
           const got = hitBear(b, D.dmg, player.x, player.z);
-          for (let k = 0; k < got; k++) spawnDrop('m', b.x, b.z);
+          for (const it of b.def.drops.slice(0, got)) spawnDrop(it, b.x, b.z);
         }
       }
     });
@@ -1352,6 +1474,65 @@
       }
     });
 
+    // 활: 가까운 짐승 자동 조준
+    if (L.bow && !player.dead) {
+      bowT -= dt;
+      if (bowT <= 0) {
+        const tg = nearest(bears, b => b.alive && dist(b.x, b.z, player.x, player.z) < 10);
+        if (tg) {
+          bowT = D.bowEvery;
+          const m = vmesh(arrowGeo, false); m.scale.setScalar(1.3); scene.add(m);
+          shots.push({ m, x: player.x, y: 1.3, z: player.z, tg, dmg: D.bowDmg, t: 0 });
+          SFX.shoot();
+        } else bowT = 0.2;
+      }
+    }
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const a = shots[i]; a.t += dt;
+      const ty = a.tg.kind === 'dino' ? 2.2 : 0.9;
+      const dx = a.tg.x - a.x, dy = ty - a.y, dz = a.tg.z - a.z, d = Math.hypot(dx, dy, dz), st = 22 * dt;
+      if (!a.tg.alive || a.t > 1.5) { scene.remove(a.m); shots.splice(i, 1); continue; }
+      if (d <= st + 0.3) {
+        const got = hitBear(a.tg, a.dmg, player.x, player.z);
+        for (const it of a.tg.def.drops.slice(0, got)) spawnDrop(it, a.tg.x, a.tg.z);
+        scene.remove(a.m); shots.splice(i, 1); continue;
+      }
+      a.x += dx / d * st; a.y += dy / d * st; a.z += dz / d * st;
+      a.m.position.set(a.x, a.y, a.z); a.m.rotation.y = Math.atan2(dx, dz);
+    }
+    // 대검: 주기적으로 360도 베기
+    if (L.sword && !player.dead) {
+      swordT -= dt;
+      if (swordT <= 0) {
+        const near = bears.some(b => b.alive && dist(b.x, b.z, player.x, player.z) < D.swordR + 1.5) ||
+                     trees.some(t => t.alive && dist(t.x, t.z, player.x, player.z) < D.swordR);
+        if (near) {
+          swordT = D.swordEvery; slashT = 0.32; SFX.whoosh();
+          for (const b of bears) if (b.alive && dist(b.x, b.z, player.x, player.z) < D.swordR + (b.kind === 'dino' ? 1.2 : 0)) {
+            const got = hitBear(b, D.swordDmg, player.x, player.z);
+            for (const it of b.def.drops.slice(0, got)) spawnDrop(it, b.x, b.z);
+          }
+          for (const tr of trees) if (tr.alive && dist(tr.x, tr.z, player.x, player.z) < D.swordR) {
+            const got = hitTree(tr, 2);
+            if (got) for (let k = 0; k < got; k++) spawnDrop('w', tr.x, tr.z);
+          }
+        } else swordT = 0.3;
+      }
+    }
+    if (slashT > 0) {
+      slashT -= dt;
+      const st = Math.min(3, Math.floor((L.sword - 1) / 2));
+      if (!slashM || slashM.userData.t !== st) {
+        if (slashM) scene.remove(slashM);
+        slashM = vmesh(swordGeo(st), false); slashM.userData.t = st; scene.add(slashM);
+      }
+      const k = 1 - slashT / 0.32, a = player.face + k * Math.PI * 2;
+      slashM.visible = true; slashM.scale.setScalar(D.swordR / 2.5);
+      slashM.position.set(player.x, 1.1, player.z); slashM.rotation.set(0, a, 0);
+      ring.visible = true; ring.position.set(player.x, 0.08, player.z);
+      ring.scale.setScalar(D.swordR * (0.4 + k * 0.6)); ring.material.opacity = 0.6 * (1 - k);
+    } else { if (slashM) slashM.visible = false; ring.visible = false; }
+
     updateWorld(dt, clock);
     updateBears(dt);
 
@@ -1363,7 +1544,7 @@
           o.vy -= 18 * dt; o.x += o.vx * dt; o.y += o.vy * dt; o.z += o.vz * dt;
           if (o.y <= 0.02) { o.y = 0.02; o.state = 'ground'; }
         }
-        if (o.t > 0.3 && dist(o.x, o.z, player.x, player.z) < D.magnet) {
+        if (o.t > 0.3 && !player.dead && dist(o.x, o.z, player.x, player.z) < D.magnet) {
           if (player.carry.length + player.reserved < D.cap) { o.state = 'fly'; player.reserved++; }
           else if (player.fullMsgT <= 0) { floatText('가방 가득!', player.x, 2.6, player.z, 'bad'); player.fullMsgT = 2.5; }
         }
@@ -1462,6 +1643,8 @@
     $('hBag').textContent = player.carry.length + '/' + D.cap;
     $('hBagBar').style.width = Math.min(100, player.carry.length / D.cap * 100) + '%';
     $('hRank').textContent = RANKS[curTier] + ' · 힘 ' + power();
+    $('hHp').textContent = Math.ceil(player.hp) + '/' + D.maxHp;
+    $('hHpBar').style.width = Math.max(0, player.hp / D.maxHp * 100) + '%';
     if (goldBumpT > 0) { goldBumpT -= dt; if (goldBumpT <= 0) $('goldBox').classList.remove('bump'); }
     if (player.hurtT > 0) player.hurtT -= dt;
     $('hurt').style.opacity = Math.max(0, player.hurtT / 0.35);
