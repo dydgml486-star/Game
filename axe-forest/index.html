@@ -371,11 +371,14 @@
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.BasicShadowMap;
   $('game').appendChild(renderer.domElement);
+  const allPS = [];   // 발광 파티클 시스템 목록 (해상도 변경 시 크기 보정)
   function resize() {
     const w = innerWidth, h = innerHeight;
     const px = Math.max(2, Math.min(4, Math.round(Math.min(w, h) / 250)));
     renderer.setSize(Math.ceil(w / px), Math.ceil(h / px), false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    const sc = Math.ceil(h / px) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    for (const ps of allPS) ps.mat.uniforms.scale.value = sc;
   }
   addEventListener('resize', resize); resize();
 
@@ -802,7 +805,7 @@
   scatter(58, 38.5, 58, -20, 16, 2.1, (x, z) => x < 41 && Math.abs(z - QZ) < 3, 47, (x, z, r) => addRock(x, z, r() < 0.3));
 
   // ================= 파편 / 떨어진 아이템 / 코인 / 이펙트 =================
-  const drops = [], chips = [], coins = [], fxParts = [];
+  const drops = [], chips = [], coins = [];
   function spawnDrop(type, x, z) {
     if (drops.length > 160) { if (type === 'g') gems++; return; }
     const m = itemMesh(type); scene.add(m);
@@ -821,25 +824,108 @@
     const m = vmesh(coinGeo, false); m.visible = false; scene.add(m);
     coins.push({ m, ax, ay, az, bx, by, bz, t: -(delay || 0), dur: 0.45 });
   }
-  function emit(c, x, y, z, vx, vy, vz, life, size) {
-    if (fxParts.length > 260) return;
-    const m = new THREE.Mesh(BOX, FX(c)); m.scale.setScalar(size); m.position.set(x, y, z); scene.add(m);
-    fxParts.push({ m, x, y, z, vx, vy, vz, t: 0, life, size });
+  // ---- 발광 파티클 (포인트 스프라이트, 가산 합성으로 빛이 겹칠수록 밝아짐) ----
+  const PS_VS = `attribute float size; attribute float alpha; varying vec3 vC; varying float vA; uniform float scale;
+    void main() { vC = color; vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = max(1.0, 1.6 * size * scale / -mv.z); gl_Position = projectionMatrix * mv; }`;
+  const PS_FS = `varying vec3 vC; varying float vA; uniform float soft;
+    void main() { float d = length(gl_PointCoord - 0.5) * 2.0; if (d > 1.0 || vA <= 0.0) discard;
+      float a = vA * (soft > 0.5 ? pow(1.0 - d, 1.6) : (1.0 - d * d * d)); gl_FragColor = vec4(vC, a); }`;
+  function makePS(max, additive) {
+    const g = new THREE.BufferGeometry();
+    const pos = new Float32Array(max * 3), col = new Float32Array(max * 3), siz = new Float32Array(max), alp = new Float32Array(max);
+    const A = (arr, n) => new THREE.BufferAttribute(arr, n).setUsage(THREE.DynamicDrawUsage);
+    g.setAttribute('position', A(pos, 3)); g.setAttribute('color', A(col, 3)); g.setAttribute('size', A(siz, 1)); g.setAttribute('alpha', A(alp, 1));
+    const mat = new THREE.ShaderMaterial({ uniforms: { scale: { value: 300 }, soft: { value: additive ? 1 : 0 } }, vertexShader: PS_VS, fragmentShader: PS_FS,
+      vertexColors: true, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
+    const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.renderOrder = additive ? 3 : 2; scene.add(pts);
+    const F = () => new Float32Array(max);
+    const ps = { max, head: 0, alive: 0, g, pos, col, siz, alp, mat, x: F(), y: F(), z: F(), vx: F(), vy: F(), vz: F(), t: F(), life: F(), s0: F(), s1: F(), grav: F(), drag: F(), peak: F() };
+    ps.life.fill(0); ps.t.fill(1);
+    ps.spawn = (c, x, y, z, vx, vy, vz, life, s0, s1, grav, drag, peak) => {
+      const i = ps.head; ps.head = (ps.head + 1) % max;
+      ps.x[i] = x; ps.y[i] = y; ps.z[i] = z; ps.vx[i] = vx; ps.vy[i] = vy; ps.vz[i] = vz;
+      ps.t[i] = 0; ps.life[i] = life; ps.s0[i] = s0; ps.s1[i] = s1 == null ? 0 : s1; ps.grav[i] = grav || 0; ps.drag[i] = drag || 0; ps.peak[i] = peak == null ? 1 : peak;
+      _c.set(c); col[i * 3] = _c.r; col[i * 3 + 1] = _c.g; col[i * 3 + 2] = _c.b;
+    };
+    ps.update = dt => {
+      let alive = 0;
+      for (let i = 0; i < max; i++) {
+        if (ps.t[i] >= ps.life[i]) { if (alp[i] !== 0) { alp[i] = 0; siz[i] = 0; } continue; }
+        alive++;
+        ps.t[i] += dt; const k = Math.min(1, ps.t[i] / ps.life[i]);
+        ps.vy[i] -= ps.grav[i] * dt;
+        const f = 1 - Math.min(1, ps.drag[i] * dt); ps.vx[i] *= f; ps.vy[i] *= f; ps.vz[i] *= f;
+        ps.x[i] += ps.vx[i] * dt; ps.y[i] += ps.vy[i] * dt; ps.z[i] += ps.vz[i] * dt;
+        pos[i * 3] = ps.x[i]; pos[i * 3 + 1] = ps.y[i]; pos[i * 3 + 2] = ps.z[i];
+        siz[i] = ps.s0[i] + (ps.s1[i] - ps.s0[i]) * k;
+        alp[i] = ps.peak[i] * (k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88);
+      }
+      ps.alive = alive;
+      for (const n of ['position', 'color', 'size', 'alpha']) g.attributes[n].needsUpdate = true;
+    };
+    allPS.push(ps);
+    return ps;
+  }
+  const glow = makePS(3500, true), dust = makePS(900, false);
+  resize();
+  // 폭발·타격 때 번쩍이는 빛
+  const fxLight = new THREE.PointLight(0xffb060, 0, 14); scene.add(fxLight);
+  function flashAt(x, y, z, c, k) { fxLight.position.set(x, y, z); fxLight.color.set(c); fxLight.intensity = Math.max(fxLight.intensity, k); }
+
+  function emit(c, x, y, z, vx, vy, vz, life, size) { glow.spawn(c, x, y, z, vx, vy, vz, life, size * 2.4, size * 0.4, 0, 0.6); }
+  function sparks(x, y, z, c, n, sp) {
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, 6.28), u = rand(0.3, 1) * (sp || 5);
+      glow.spawn(i % 3 ? c : '#ffffff', x, y, z, Math.cos(a) * u, rand(1, 4), Math.sin(a) * u, rand(0.2, 0.42), rand(0.28, 0.45), 0.02, 14, 2.5);
+    }
+  }
+  function puff(x, y, z, c, n, size, rise) {
+    for (let i = 0; i < n; i++) dust.spawn(c, x + rand(-0.3, 0.3), y, z + rand(-0.3, 0.3), rand(-0.6, 0.6), rise == null ? rand(0.3, 1) : rise, rand(-0.6, 0.6), rand(0.5, 0.9), size * 0.6, size * 1.6, -0.2, 1.5, 0.55);
   }
   function boomFx(x, z, r, c) {
-    for (let i = 0; i < 14; i++) { const a = rand(0, 6.28), s = rand(0.5, 1) * r * 2.5; emit(i % 2 ? c : '#fff2b0', x, 0.6, z, Math.cos(a) * s, rand(1, 4), Math.sin(a) * s, 0.45, 0.25); }
-    rings.push({ x, z, r0: 0.2, r1: r, t: 0, life: 0.35, c });
+    flashAt(x, 1.5, z, c, 5);
+    glow.spawn('#ffffff', x, 0.9, z, 0, 0, 0, 0.18, r * 1.4, r * 2.2, 0, 0, 1);
+    glow.spawn(c, x, 0.8, z, 0, 0, 0, 0.35, r * 1.2, r * 2.6, 0, 0, 0.8);
+    for (let i = 0; i < 26; i++) {
+      const a = rand(0, 6.28), u = rand(0.6, 1) * r * 4;
+      glow.spawn(pick([c, c, '#ffd84a', '#fff2b0']), x, 0.7, z, Math.cos(a) * u, rand(0.5, 3), Math.sin(a) * u, rand(0.3, 0.55), rand(0.5, 0.9), 0.05, 2, 3.5);
+    }
+    for (let i = 0; i < 10; i++) { const a = rand(0, 6.28); glow.spawn('#ffcf6a', x, 0.6, z, Math.cos(a) * rand(2, 6), rand(4, 8), Math.sin(a) * rand(2, 6), rand(0.5, 0.9), 0.22, 0.05, 16, 0.5); }
+    puff(x, 0.5, z, '#4a4038', 8, r * 0.9, 0.8);
+    rings.push({ x, z, r0: 0.3, r1: r * 1.1, t: 0, life: 0.32, c });
   }
-  function boltFx(ax, ay, az, bx, by, bz) {
-    const n = 7;
-    for (let i = 0; i <= n; i++) { const k = i / n; emit(i % 2 ? '#bfe8ff' : '#ffffff', ax + (bx - ax) * k + rand(-0.25, 0.25), ay + (by - ay) * k + rand(-0.25, 0.25), az + (bz - az) * k + rand(-0.25, 0.25), 0, 0, 0, 0.15, 0.18); }
+  // 번개: 지그재그 선 + 빛 번짐
+  const boltPool = [], bolts = [];
+  function boltFx(ax, ay, az, bx, by, bz, c) {
+    let ln = boltPool.pop();
+    if (!ln) {
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(10 * 3), 3));
+      ln = new THREE.Line(g, new THREE.LineBasicMaterial({ color: '#dff4ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      ln.frustumCulled = false;
+    }
+    const arr = ln.geometry.attributes.position.array;
+    for (let i = 0; i < 10; i++) {
+      const k = i / 9, j = i === 0 || i === 9 ? 0 : 0.45;
+      const x = ax + (bx - ax) * k + rand(-j, j), y = ay + (by - ay) * k + rand(-j, j), z = az + (bz - az) * k + rand(-j, j);
+      arr[i * 3] = x; arr[i * 3 + 1] = y; arr[i * 3 + 2] = z;
+      if (i % 2) glow.spawn(c || '#8fd8ff', x, y, z, 0, 0, 0, 0.16, 0.9, 0.3, 0, 0, 1.2);
+    }
+    ln.geometry.attributes.position.needsUpdate = true;
+    ln.material.color.set(c ? '#ffffff' : '#dff4ff'); ln.material.opacity = 1; scene.add(ln);
+    bolts.push({ ln, t: 0 });
+    flashAt((ax + bx) / 2, (ay + by) / 2 + 0.5, (az + bz) / 2, c || '#8fd8ff', 2.5);
+  }
+  function hitColor(sk) { return sk && sk.includes('fire') ? '#ff7a2a' : sk && sk.includes('poison') ? '#7cf05a' : sk && sk.includes('freeze') ? '#9fe8ff' : '#ffe6a0'; }
+  function sparkleColumn(x, z, c, n) {
+    for (let i = 0; i < n; i++) { const a = rand(0, 6.28), r = rand(0.2, 1); glow.spawn(i % 2 ? c : '#ffffff', x + Math.cos(a) * r, rand(0, 0.5), z + Math.sin(a) * r, 0, rand(2, 5), 0, rand(0.6, 1.1), rand(0.3, 0.5), 0.05, -0.5, 1, 1.8); }
+    flashAt(x, 1.5, z, c, 2.5);
   }
   // 퍼지는 고리 (폭발, 보스 충격파 예고)
   const rings = [];
   const ringPool = [];
   function ringMesh(c) {
     let m = ringPool.pop();
-    if (!m) { m = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; }
+    if (!m) { m = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 48), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false })); m.rotation.x = -Math.PI / 2; }
     m.material.color.set(c); m.visible = true; scene.add(m); return m;
   }
 
@@ -852,6 +938,7 @@
     if (tr.hp > 0) return 0;
     tr.alive = false; tr.state = 'fall'; tr.t = 0; tr.dir = Math.random() < 0.5 ? 1 : -1;
     spawnChips(tr.x, 1.8, tr.z, tr.big ? '#356b45' : '#4f9a45', 8);
+    puff(tr.x, 0.3, tr.z, '#b8a888', 5, 0.9);
     stats.chopped++;
     return tr.jungle ? 4 : tr.big ? 3 : 2;
   }
@@ -862,6 +949,7 @@
     if (rk.hp > 0) return null;
     rk.alive = false; rk.state = 'dead'; rk.t = 0; rk.m.visible = false;
     spawnChips(rk.x, 0.8, rk.z, '#8d8f93', 10);
+    puff(rk.x, 0.4, rk.z, '#9a9aa0', 7, 1.1); if (rk.crystal) sparkleColumn(rk.x, rk.z, '#c9a8ff', 14);
     if (rk.crystal) return ['s', 'g', 'g', ...(Math.random() < 0.4 ? ['g'] : [])];
     return ['s', 's', ...(Math.random() < 0.15 ? ['g'] : [])];
   }
@@ -914,6 +1002,8 @@
     if (!o.alive) return;
     if (sk.includes('crit') && Math.random() < 0.25) { dmg *= 3; if (Math.random() < 0.4) floatText('치명타!', o.x, 2.6, o.z, 'bad'); }
     const beast = o.kind2 === 'beast';
+    const hy = o.kind === 'boss' ? 3.5 : o.kind === 'dino' ? 2 : beast ? 1 : o.kind2 === 'tree' ? 1.2 : 0.8;
+    sparks(o.x + rand(-0.3, 0.3), hy, o.z + rand(-0.3, 0.3), hitColor(sk), beast ? 5 : 3, beast ? 5 : 3.5);
     dealDirect(o, dmg, sk);
     if (beast && o.alive) {
       if (sk.includes('poison')) addDot(o, 'p', dmg * 0.35, 4);
@@ -992,6 +1082,7 @@
     if (b.kind === 'dino' || b.kind === 'boss') SFX.stomp(); else SFX.bear();
     if (b.hp > 0) return 0;
     b.alive = false; b.g.visible = false; if (b.bar) b.bar.visible = false; b.respawnT = b.def.respawn; b.dots = []; b.wave = null;
+    sparks(b.x, 1.2, b.z, '#ffd0a0', b.kind === 'bear' ? 16 : 30, 7); puff(b.x, 0.4, b.z, '#6a5a4a', b.kind === 'bear' ? 6 : 14, 1.2); flashAt(b.x, 1.5, b.z, '#ffc080', 3);
     spawnChips(b.x, 1, b.z, '#c94c4c', b.kind === 'bear' ? 10 : 24);
     if (b.kind === 'dino') {
       stats.dino++; floatText('티라노 사냥!', b.x, 3, b.z, 'note big'); shake = 0.4; SFX.trex();
@@ -1071,6 +1162,7 @@
           if (b.jump <= 0) {
             b.body.position.y = 0; b.waveT = enraged ? 4.2 : 6.5;
             b.wave = { r: 1, hit: false, m: ringMesh('#ff4f8a') };
+            boomFx(b.x, b.z, 4, '#ff4f8a'); puff(b.x, 0.3, b.z, '#5a4050', 16, 2.5, 0.6);
             shake = Math.max(shake, 0.5); SFX.quake();
           }
         }
@@ -1079,6 +1171,7 @@
           w.m.position.set(b.x, 0.1, b.z); w.m.scale.setScalar(w.r); w.m.material.opacity = Math.max(0, 0.9 - w.r / 14);
           const pd = dist(player.x, player.z, b.x, b.z);
           if (!w.hit && Math.abs(pd - w.r) < 0.9 && !player.dead) { w.hit = true; const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(24, (player.x - b.x) * k * 14, (player.z - b.z) * k * 14, '충격파!'); }
+          if (Math.random() < 0.6) { const a = rand(0, 6.28); dust.spawn('#6a5060', b.x + Math.cos(a) * w.r, 0.2, b.z + Math.sin(a) * w.r, 0, 0.8, 0, 0.6, 1, 2, 0, 1, 0.5); }
           if (w.r > 13) { scene.remove(w.m); ringPool.push(w.m); b.wave = null; }
         }
       }
@@ -1304,7 +1397,7 @@
   const chkPads = CHECK.map(c => { const p = makePad('#8fd06a'); p.g.position.set(c.x, 0, c.z); return p; });
   const depTag = mkTag('info'), chkTag = mkTag('info'), stockTag = mkTag('info'), cashTag = mkTag('info');
   depTag.innerHTML = '판매대<small> 내려놓기</small>'; chkTag.textContent = '계산대';
-  const hopTags = BELTS.map(() => { const t = mkTag('info'); t.innerHTML = '투입구'; return t; });
+  const hopTags = BELTS.map(() => { const t = mkTag('info'); t.innerHTML = '투입구<small> 근처로 오세요</small>'; return t; });
 
   const cost = p => Math.round(p.base * Math.pow(p.mul, L[p.k]));
   const onPad = (x, z, px, pz) => Math.abs(px - x) < 0.95 && Math.abs(pz - z) < 0.95;
@@ -1319,7 +1412,7 @@
     if (k === 'gateQuarry') { gateQuarryG.visible = false; toast('채석장이 열렸습니다. 곡괭이가 함께 돕니다!'); }
     if (k === 'gateDino') { gateDinoG.visible = false; toast('공룡 계곡이 열렸습니다. 티라노를 조심하세요!'); SFX.trex(); }
     if (k === 'gateBoss') { gateBossG.visible = false; toast('최종 보스 뿌잉뿌잉의 경기장이 열렸습니다'); SFX.puing(); }
-    if (k.startsWith('belt') && k !== 'beltSpeed') { syncBelts(); toast('컨베이어 설치! 이 구역에서 줍는 채집품은 자동으로 판매대로 갑니다'); }
+    if (k.startsWith('belt') && k !== 'beltSpeed') { syncBelts(); toast('컨베이어 설치! 투입구 근처로 가면 가방 속 채집품이 벨트로 들어갑니다'); }
     if (k === 'bank') toast('자동 입금: 쌓인 돈이 알아서 들어옵니다');
     if (k === 'armor') player.hp = derived().maxHp;
     const t = tierOf();
@@ -1329,8 +1422,8 @@
     axeCount: '회전 도끼 +1개', axeDmg: '도끼 피해 +1', spin: '도끼 회전 속도·반경 증가', bag: '나무 +5 · 고기 +3 · 광물 +4칸',
     speed: '이동 속도 +10%', price: '판매가 +20%, 손님 증가', worker: '나무를 베어 납품하는 일꾼', hunter: '곰을 잡아 납품하는 일꾼',
     miner: '바위를 캐서 납품하는 일꾼', cashier: '계산대 자동 판매', lane2: '계산대 한 줄 추가(계산원 포함)', beltSpeed: '컨베이어 속도 증가',
-    magnet: '줍는 범위 +1.6', bank: '금괴 더미 자동 수거', beltForest: '숲에서 줍는 채집품이 자동으로 판매대로', beltBear: '곰 숲·공룡 계곡·경기장 채집품 자동 운반',
-    beltQuarry: '채석장 채집품 자동 운반', gateBear: '곰 숲 입장 (고기 8G)', gateQuarry: '채석장 입장, 곡괭이 획득', gateDino: '공룡 계곡 입장 (공룡 고기 40G)',
+    magnet: '줍는 범위 +1.6', bank: '금괴 더미 자동 수거', beltForest: '투입구에 넣으면 판매대로 자동 운반', beltBear: '곰 숲 입구 투입구 → 판매대 자동 운반',
+    beltQuarry: '채석장 입구 투입구 → 판매대 자동 운반', gateBear: '곰 숲 입장 (고기 8G)', gateQuarry: '채석장 입장, 곡괭이 획득', gateDino: '공룡 계곡 입장 (공룡 고기 40G)',
     gateBoss: '최종 보스 뿌잉뿌잉과 결투', pick: '곡괭이 피해 +1, 2단계마다 +1개', armor: '최대 체력 +8, 받는 피해 -4%',
     shopWeapon: '활·총 구매와 강화', shopGacha: '보석 5개로 무기 뽑기', shopSkin: '외형 10종 구매·착용',
   };
@@ -1344,7 +1437,7 @@
     if (gold < r) { SFX.hurt(); floatText(`${fmt(r - gold)}G 부족`, player.x, 2.6, player.z, 'bad'); return; }
     gold -= r; padPaid[p.k] = 0; L[p.k]++;
     SFX.buy();
-    spawnChips(p.x, 0.5, p.z, '#f2c14e', 12);
+    spawnChips(p.x, 0.5, p.z, '#f2c14e', 12); sparkleColumn(p.x, p.z, '#f2c14e', 26);
     if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + 1), p.x, 1.4, p.z, 'note');
     applyUpgrade(p.k);
     buyHtml = '';
@@ -1601,7 +1694,7 @@
     const n = Math.min(18, cashShown);
     for (let i = 0; i < n; i++) flyCoin(CASH.x + rand(-0.8, 0.8), 0.3 + rand(0, 1), CASH.z + rand(-0.4, 0.4), player.x, 1.4, player.z, i * 0.03);
     floatText('+' + fmt(amt), auto ? CASH.x : player.x, 2.4, auto ? CASH.z : player.z, 'big');
-    SFX.cash(); bumpGold();
+    SFX.cash(); bumpGold(); sparkleColumn(player.x, player.z, '#ffd84a', 14);
   }
   let goldBumpT = 0;
   function bumpGold() { $('goldBox').classList.add('bump'); goldBumpT = 0.15; }
@@ -1630,7 +1723,7 @@
 
   // ================= 원거리 무기 / 메테오 / 오라 =================
   const shots = [], meteors = [];
-  let fireT = 0, meteorT = 2, auraT = 0;
+  let fireT = 0, meteorT = 2, auraT = 0, q0 = 0;
   const bulletGeo = c => cgeo('bullet' + c, () => [[-0.4, -0.4, -1.2, 0.8, 0.8, 2.4, c], [-0.2, -0.2, 1.2, 0.4, 0.4, 0.6, '#ffffff']]);
   function pickTargets(range, n) {
     const found = [];
@@ -1666,10 +1759,10 @@
             const m = w.type === 'bow' && !c ? vmesh(arrowGeo, false) : vmesh(bulletGeo(c || '#ffe08a'), false);
             m.scale.setScalar(w.type === 'bow' ? 1.3 : 0.9); scene.add(m);
             const a = (i - (tg.length - 1) / 2) * 0.25;
-            shots.push({ m, x: player.x + Math.cos(player.face + a) * 0.4, y: 1.3, z: player.z + Math.sin(player.face + a) * 0.4, tg, dmg: st.dmg, sk, left: st.pierce, speed: st.speed, t: 0, hit: [] });
+            shots.push({ m, x: player.x + Math.cos(player.face + a) * 0.4, y: 1.3, z: player.z + Math.sin(player.face + a) * 0.4, tg, dmg: st.dmg, sk, left: st.pierce, speed: st.speed, t: 0, hit: [], tc: c, big: w.grade === 'ancient' || w.grade === 'legend' });
           });
           player.aimT = 0.25; player.aimFace = Math.atan2(tg[0].x - player.x, tg[0].z - player.z);
-          if (w.type === 'gun') SFX.gun(); else SFX.bow();
+          if (w.type === 'gun') { SFX.gun(); flashAt(player.x, 1.4, player.z, '#ffd080', 1.4); glow.spawn('#fff2b0', player.x + Math.sin(player.face) * 0.6, 1.3, player.z + Math.cos(player.face) * 0.6, 0, 0, 0, 0.07, 1.2, 0.3, 0, 0, 1.5); } else SFX.bow();
         } else fireT = 0.15;
       }
     }
@@ -1691,7 +1784,7 @@
       }
       s.x += dx / d * stp; s.y += dy / d * stp; s.z += dz / d * stp;
       s.m.position.set(s.x, s.y, s.z); s.m.rotation.y = Math.atan2(dx, dz);
-      if (s.sk.includes('fire') && Math.random() < 0.3) emit('#ff9a3a', s.x, s.y, s.z, 0, 0.5, 0, 0.25, 0.14);
+      glow.spawn(s.tc || hitColor(s.sk), s.x, s.y, s.z, 0, 0, 0, 0.14, s.big ? 0.8 : 0.45, 0.05, 0, 0, 0.9);
     }
     // 메테오 / 신성 오라 (에인션트 스킬)
     const baseDmg = Math.max(D.dmg, w ? rStats(w).dmg : 0);
@@ -1713,9 +1806,11 @@
       const mt = meteors[i]; mt.t += dt;
       const k = Math.min(1, mt.t / 0.5);
       mt.m.position.set(mt.x + (1 - k) * 6, 16 * (1 - k) + 0.5, mt.z - (1 - k) * 4); mt.m.rotation.x += dt * 8;
-      emit(pick(['#ff5a1a', '#ffd84a', '#fff2b0']), mt.m.position.x, mt.m.position.y, mt.m.position.z, rand(-1, 1), rand(0, 2), rand(-1, 1), 0.35, 0.3);
+      for (let q = 0; q < 4; q++) glow.spawn(pick(['#ff5a1a', '#ff8a2a', '#ffd84a', '#fff2b0']), mt.m.position.x + rand(-0.4, 0.4), mt.m.position.y + rand(-0.4, 0.4), mt.m.position.z + rand(-0.4, 0.4), rand(-1, 1), rand(0, 2), rand(-1, 1), rand(0.3, 0.55), rand(0.9, 1.6), 0.1, 0, 1, 1.4);
+      if (q0++ % 3 === 0) puff(mt.m.position.x, mt.m.position.y, mt.m.position.z, '#3a3030', 1, 1.2, 0.5);
+      flashAt(mt.m.position.x, mt.m.position.y, mt.m.position.z, '#ff8a3a', 1.5);
       if (k >= 1) {
-        boomFx(mt.x, mt.z, 3.8, '#ff5a1a'); shake = Math.max(shake, 0.35);
+        boomFx(mt.x, mt.z, 3.8, '#ff5a1a'); boomFx(mt.x, mt.z, 2, '#ffd84a'); shake = Math.max(shake, 0.45);
         const sk = D.sk.filter(s => s !== 'explode');
         for (const b of bears) if (b.alive && dist(b.x, b.z, mt.x, mt.z) < 3.8 + (b.kind === 'boss' ? 4 : 0)) dealDirect(b, mt.dmg, sk);
         for (const t of trees) if (t.alive && dist(t.x, t.z, mt.x, mt.z) < 3.8) dealDirect(t, mt.dmg, sk);
@@ -1727,6 +1822,7 @@
     auraRing.visible = nAura > 0 && !player.dead;
     if (auraRing.visible) {
       auraRing.position.set(player.x, 0.1, player.z); auraRing.rotation.y += dt * 1.2;
+      if (Math.random() < dt * 30) { const a = rand(0, 6.28); glow.spawn('#' + new THREE.Color().setHSL(rand(0, 1), 1, 0.65).getHexString(), player.x + Math.cos(a) * 4.8, 0.2, player.z + Math.sin(a) * 4.8, 0, rand(1, 2.5), 0, 0.6, 0.6, 0.05, 0, 0, 1); }
       auraRing.children.forEach((c, i) => c.material.color.setHSL((clock * 0.25 + i / auraRing.children.length) % 1, 1, 0.6));
       auraT -= dt;
       if (auraT <= 0) {
@@ -1734,12 +1830,13 @@
         for (const b of bears) if (b.alive && dist(b.x, b.z, player.x, player.z) < 4.8 + (b.kind === 'boss' ? 4 : 0)) {
           dealDirect(b, baseDmg * 0.8 * nAura, D.sk, player.x, player.z, true);
           emit('#fff2b0', b.x, 1.5, b.z, 0, 2, 0, 0.4, 0.2);
+          boltFx(player.x, 1.2, player.z, b.x, 1.2, b.z, '#fff2b0');
         }
       }
     }
   }
   const auraRing = new THREE.Group();
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff' })); m.scale.set(0.3, 0.08, 0.3); m.position.set(Math.cos(a) * 4.8, 0, Math.sin(a) * 4.8); auraRing.add(m); }
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); m.scale.set(0.3, 0.08, 0.3); m.position.set(Math.cos(a) * 4.8, 0, Math.sin(a) * 4.8); auraRing.add(m); }
   auraRing.visible = false; scene.add(auraRing);
 
   // 외형·에인션트 이펙트
@@ -1751,13 +1848,13 @@
     const fx = player.dead ? null : s.fx;
     const px = player.x, pz = player.z;
     fxAcc += dt;
-    const rate = fx === 'salas' ? 55 : fx === 'gold' ? 14 : fx === 'sparkle' ? 10 : 0;
+    const rate = fx === 'salas' ? 70 : fx === 'gold' ? 14 : fx === 'sparkle' ? 10 : 0;
     let n = Math.floor(fxAcc * rate); if (rate) fxAcc -= n / rate; else fxAcc = 0;
     while (n-- > 0) {
       const a = rand(0, 6.28);
       if (fx === 'salas') {
         const r = rand(0.35, 0.85);
-        emit(pick(['#ffe14a', '#fff07a', '#ffffff', '#ffb52e', '#ffe14a']), px + Math.cos(a) * r, rand(0.1, 1.2), pz + Math.sin(a) * r, Math.cos(a) * 0.4, rand(3, 5.5), Math.sin(a) * 0.4, rand(0.35, 0.6), rand(0.12, 0.24));
+        glow.spawn(pick(['#ffe14a', '#fff07a', '#ffffff', '#ffb52e', '#ffd000']), px + Math.cos(a) * r, rand(0.1, 1.4), pz + Math.sin(a) * r, Math.cos(a) * 0.5, rand(3, 6), Math.sin(a) * 0.5, rand(0.35, 0.65), rand(0.5, 0.9), 0.05, -1, 0.5, 1.3);
       } else if (fx === 'gold') {
         emit(pick(['#f2c14e', '#fff2b0']), px + Math.cos(a) * 0.9, rand(0.1, 0.5), pz + Math.sin(a) * 0.9, 0, rand(1, 2), 0, 0.7, 0.1);
       } else if (fx === 'sparkle') {
@@ -2328,7 +2425,7 @@
     if (player.aimT > 0) { player.aimT -= dt; }
     if (moving) player.face = lerpAngle(player.face, Math.atan2(player.vx, player.vz), dt * 12);
     else if (player.aimT > 0) player.face = lerpAngle(player.face, player.aimFace, dt * 10);
-    if (moving) { walkT += dt * Math.min(1.3, spd / 4.6); stepT += dt; if (stepT > 0.32) { stepT = 0; SFX.step(); } }
+    if (moving) { walkT += dt * Math.min(1.3, spd / 4.6); stepT += dt; if (stepT > 0.32) { stepT = 0; SFX.step(); puff(player.x, 0.1, player.z, '#d8ccb0', 2, 0.45, 0.4); } }
     pg.position.set(player.x, 0, player.z); if (!player.dead) pg.rotation.y = player.face;
     pg.userData.aim = player.aimT > 0 && !!eqW('ranged');
     if (pg.userData.aim) pg.userData.armL.rotation.x = -1.4;
@@ -2342,6 +2439,8 @@
       const x = player.x + Math.cos(a) * D.radius, z = player.z + Math.sin(a) * D.radius;
       ax.position.set(x, 0.9, z); ax.rotation.set(0, -a, 0.25);
       if (player.dead) return;
+      { const hr = D.radius + 0.45, awp = eqW('axe'), tc = awp ? (awp.grade === 'ancient' ? '#' + new THREE.Color().setHSL((clock * 0.5 + i / axes.length) % 1, 1, 0.6).getHexString() : GRADES[awp.grade].col) : '#cfe0ff';
+        glow.spawn(tc, player.x + Math.cos(a) * hr, 1.05, player.z + Math.sin(a) * hr, 0, 0, 0, 0.2, awp ? 0.7 : 0.45, 0.08, 0, 0, awp ? 1 : 0.6); }
       const ci = i % 12;
       for (const tr of trees) {
         if (!tr.alive || tr.hitCd[ci] > 0 || Math.abs(tr.x - x) > 1.6 || Math.abs(tr.z - z) > 1.6) continue;
@@ -2369,7 +2468,7 @@
     updateBears(dt);
 
     // ---- 아이템 줍기 (컨베이어가 있는 구역이면 벨트로 바로) ----
-    const zb = zoneBelt(player.x, player.z), beltOn = !!L[zb.k];
+    const beltOn = false;   // 컨베이어는 투입구에 넣어야 동작 (자동 흡수 없음)
     for (let i = drops.length - 1; i >= 0; i--) {
       const o = drops[i]; o.t += dt;
       if (o.state === 'pop' || o.state === 'ground') {
@@ -2393,8 +2492,7 @@
           if (o.type === 'g') { gems++; stats.gem++; SFX.gem(); floatText('+1', player.x, 2.4, player.z, 'gem'); }
           else {
             if (o.type === 'm' || o.type === 'd') stats.meat++;
-            if (L[zoneBelt(player.x, player.z).k]) { beltPush(zoneBelt(player.x, player.z), o.type); stats.deposited++; if (noteT <= 0) { floatText('→ 컨베이어', player.x, 2.6, player.z, 'note'); noteT = 3; } }
-            else if (catCount(CAT[o.type]) < D.caps[CAT[o.type]]) player.carry.push(o.type);
+            if (catCount(CAT[o.type]) < D.caps[CAT[o.type]]) player.carry.push(o.type);
             else { o.state = 'ground'; o.t = 0; continue; }
             SFX.pick();
           }
@@ -2412,9 +2510,7 @@
       if (onPad(DEPOSIT.x, DEPOSIT.z, player.x, player.z)) {
         stock.push(player.carry.pop()); stats.deposited++; stockDirty = true; player.depT = 0.05; SFX.drop();
       } else {
-        let done = false;
-        for (const b of BELTS) if (L[b.k] && dist(b.hop.x, b.hop.z, player.x, player.z) < 2.6) { beltPush(b, player.carry.pop()); stats.deposited++; player.depT = 0.05; SFX.drop(); done = true; break; }
-        if (!done && beltOn) { beltPush(zb, player.carry.pop()); stats.deposited++; player.depT = 0.08; }
+        for (const b of BELTS) if (L[b.k] && dist(b.hop.x, b.hop.z, player.x, player.z) < 3) { beltPush(b, player.carry.pop()); stats.deposited++; player.depT = 0.05; SFX.drop(); sparks(b.hop.x, 1, b.hop.z, '#f2c14e', 2, 2); break; }
       }
     }
     if (shownCarry !== player.carry.length) { shownCarry = player.carry.length; rebuildStack(stackG, player.carry, 60); }
@@ -2449,12 +2545,11 @@
       c.m.rotation.y += dt * 12;
       if (k >= 1) { scene.remove(c.m); coins.splice(i, 1); }
     }
-    for (let i = fxParts.length - 1; i >= 0; i--) {
-      const p = fxParts[i]; p.t += dt;
-      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
-      const k = 1 - p.t / p.life;
-      if (k <= 0) { scene.remove(p.m); fxParts.splice(i, 1); continue; }
-      p.m.position.set(p.x, p.y, p.z); p.m.scale.setScalar(p.size * k);
+    glow.update(dt); dust.update(dt);
+    fxLight.intensity *= Math.exp(-9 * dt);
+    for (let i = bolts.length - 1; i >= 0; i--) {
+      const b = bolts[i]; b.t += dt; b.ln.material.opacity = Math.max(0, 1 - b.t / 0.14);
+      if (b.t > 0.14) { scene.remove(b.ln); boltPool.push(b.ln); bolts.splice(i, 1); }
     }
     for (let i = rings.length - 1; i >= 0; i--) {
       const r = rings[i]; r.t += dt;
