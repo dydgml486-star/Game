@@ -8,11 +8,16 @@
     --ink: #f6ecd2;
     --muted: #c9b99a;
     --panel: #2a2119;
+    --panel2: #362b21;
     --edge: #110d09;
     --gold: #f2c14e;
     --danger: #d9573b;
     --leaf: #8fd06a;
     --gem: #b48cff;
+    --rare: #5aa0ff;
+    --unique: #b36bff;
+    --legend: #ff9a2e;
+    --ancient: #ff4fd8;
   }
   [hidden] { display: none !important; }
   html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); }
@@ -31,25 +36,37 @@
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
   }
   .left { display: flex; flex-direction: column; gap: 6px; }
-  .gold { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; font-size: 22px; color: var(--gold); font-variant-numeric: tabular-nums; transition: transform .12s; }
-  .gold.bump { transform: scale(1.15); }
+  .gold { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; font-size: 20px; color: var(--gold); font-variant-numeric: tabular-nums; transition: transform .12s; transform-origin: left center; }
+  .gold.bump { transform: scale(1.12); }
+  .gold .gemc { color: var(--gem); margin-left: 6px; display: flex; align-items: center; gap: 6px; }
   .coin { display: inline-block; width: 14px; height: 14px; background: var(--gold); box-shadow: inset -3px -3px 0 #b8862a, inset 2px 2px 0 #fff0b0; flex: none; }
-  .bag { padding: 5px 10px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; min-width: 136px; }
-  .bag .row { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
-  .bag .rank { font-family: "Do Hyeon", sans-serif; font-size: 14px; color: var(--gold); }
-  .bar { height: 6px; background: var(--edge); }
+  .gemi { display: inline-block; width: 12px; height: 12px; background: var(--gem); transform: rotate(45deg); box-shadow: inset -2px -2px 0 #7b4fd0; flex: none; }
+  .bag { padding: 5px 10px; font-size: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 3px 8px; align-items: center; min-width: 150px; font-family: "Do Hyeon", sans-serif; }
+  .bag .rank { grid-column: 1 / -1; font-size: 14px; color: var(--gold); }
+  .bag .num { font-family: "Silkscreen", sans-serif; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
+  .bar { height: 6px; background: var(--edge); min-width: 50px; }
   .bar > i { display: block; height: 100%; width: 0; background: var(--leaf); }
+  .bar.m > i { background: #e57b6f; }
+  .bar.s > i { background: #a9abb0; }
   .bar.hp > i { background: var(--danger); }
-  .goal { font-family: "Do Hyeon", sans-serif; font-size: 17px; padding: 6px 12px; max-width: min(40vw, 420px); text-align: center; line-height: 1.3; }
+  .goal { font-family: "Do Hyeon", sans-serif; font-size: 16px; padding: 6px 12px; max-width: min(36vw, 400px); text-align: center; line-height: 1.3; }
   .goal small { display: block; font-family: "Silkscreen", "Do Hyeon", sans-serif; font-size: 10px; color: var(--muted); letter-spacing: .08em; }
   .right { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .btns { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; max-width: 330px; }
   .btn { font: inherit; font-family: "Do Hyeon", sans-serif; font-size: 15px; color: var(--ink); padding: 5px 10px; cursor: pointer; }
   .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .btn.warn { background: var(--danger); }
+  .btn.primary { background: var(--gold); color: #1d1a16; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
   .status { font-family: "Do Hyeon", sans-serif; font-size: 12px; color: var(--muted); text-shadow: 0 1px 0 var(--edge); }
   .zoom { position: fixed; right: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; }
   .zoom .btn { width: 40px; height: 40px; padding: 0; font-family: "Silkscreen", sans-serif; font-size: 20px; }
+
+  .bossbar { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); width: min(520px, calc(100vw - 32px)); padding: 6px 10px; font-family: "Do Hyeon", sans-serif; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+  .bossbar .top { display: flex; justify-content: space-between; font-size: 16px; }
+  .bossbar b { font-weight: 400; color: #ff8ac4; letter-spacing: .04em; }
+  .bossbar .bar { height: 10px; }
+  .bossbar .bar > i { background: linear-gradient(90deg, #ff4f8a, #ffb0d0); }
 
   .hint {
     position: fixed; left: 16px; right: 72px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
@@ -69,6 +86,7 @@
   .tag.max .c { color: var(--leaf); }
   .tag.poor .c { color: var(--muted); }
   .tag.info { background: rgba(17,13,9,.72); }
+  .tag.shop { background: rgba(60,30,80,.9); color: #f1dcff; }
   .float {
     position: absolute; left: 0; top: 0;
     font-family: "Silkscreen", "Do Hyeon", sans-serif; font-size: 15px; color: var(--gold);
@@ -76,11 +94,13 @@
   }
   .float.bad { color: #ff9b85; }
   .float.note { color: var(--ink); font-family: "Do Hyeon", sans-serif; font-size: 17px; }
+  .float.gem { color: var(--gem); }
   .float.big { font-size: 22px; }
 
   #joy { position: fixed; width: 96px; height: 96px; margin: -48px 0 0 -48px; border: 3px solid rgba(246,236,210,.45); border-radius: 50%; pointer-events: none; }
   #joy i { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; background: rgba(246,236,210,.55); border-radius: 50%; }
   #hurt { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 90px 30px rgba(217,87,59,.7); opacity: 0; }
+  #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, #fff 0%, #ff4fd8 30%, #5aa0ff 60%, transparent 80%); mix-blend-mode: screen; }
   .buy {
     position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(66px + env(safe-area-inset-bottom, 0px));
     display: flex; align-items: center; gap: 14px; padding: 8px 10px 8px 14px; font-family: "Do Hyeon", sans-serif;
@@ -91,8 +111,45 @@
   .buy .bd { font-size: 13px; color: var(--muted); }
   .buy .bc { display: flex; align-items: center; gap: 5px; font-family: "Silkscreen", sans-serif; font-size: 14px; color: var(--gold); }
   .buy .bc small { font-family: "Do Hyeon", sans-serif; color: #ff9b85; font-size: 13px; }
-  .btn.primary { background: var(--gold); color: #1d1a16; font-size: 18px; padding: 8px 18px; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .buy .btn.primary { font-size: 18px; padding: 8px 18px; }
+
+  .modal { position: fixed; inset: 0; background: rgba(17,13,9,.62); display: flex; align-items: center; justify-content: center; padding-inline: 16px; }
+  .sheet { width: 100%; max-width: 760px; max-height: min(86vh, 760px); display: flex; flex-direction: column; font-family: "Do Hyeon", sans-serif; box-sizing: border-box; }
+  .sheet h2 { margin: 0; font-weight: 400; font-size: 22px; color: var(--gold); }
+  .tabs { display: flex; gap: 4px; padding: 8px 8px 0; flex-wrap: wrap; border-bottom: 2px solid var(--edge); }
+  .tabs button { font: inherit; font-size: 16px; color: var(--muted); background: transparent; border: 2px solid transparent; border-bottom: 0; padding: 6px 12px; cursor: pointer; border-radius: 4px 4px 0 0; }
+  .tabs button.on { color: var(--ink); background: var(--panel2); border-color: var(--edge); }
+  .tabs .sp { flex: 1; }
+  .sheet-body { padding: 12px; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; gap: 10px; user-select: text; -webkit-user-select: text; }
+  .note { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .note.warn { color: #ffb4a0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+  .card { background: var(--panel2); border: 2px solid var(--edge); border-left: 5px solid var(--muted); border-radius: 4px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .card.rare { border-left-color: var(--rare); }
+  .card.unique { border-left-color: var(--unique); }
+  .card.legend { border-left-color: var(--legend); }
+  .card.ancient { border-left-color: var(--ancient); background: linear-gradient(135deg, #3b2140, #1f2a45 60%, #3b2a14); animation: glowc 1.6s linear infinite; }
+  @keyframes glowc { 0% { box-shadow: 0 0 0 2px #ff4fd8; } 33% { box-shadow: 0 0 0 2px #5aa0ff; } 66% { box-shadow: 0 0 0 2px #f2c14e; } 100% { box-shadow: 0 0 0 2px #ff4fd8; } }
+  .card .nm { font-size: 17px; display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+  .grade { font-size: 12px; padding: 0 5px; border-radius: 3px; color: #1d1a16; background: var(--muted); white-space: nowrap; }
+  .grade.rare { background: var(--rare); } .grade.unique { background: var(--unique); color: #fff; } .grade.legend { background: var(--legend); }
+  .grade.ancient { background: linear-gradient(90deg, #ff4fd8, #5aa0ff, #f2c14e); color: #fff; }
+  .card .st { font-size: 13px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font-size: 12px; padding: 1px 6px; border-radius: 10px; background: #4a3b2c; color: var(--ink); }
+  .chip.off { opacity: .45; }
+  .card .acts { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+  .card .acts .btn { font-size: 14px; padding: 4px 9px; }
+  .odds { display: flex; gap: 6px; flex-wrap: wrap; }
+  .odds span { font-size: 14px; }
+  .pulls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pulls .btn { font-size: 17px; padding: 8px 16px; }
+  .reveal { animation: pop .45s ease-out both; }
+  @keyframes pop { 0% { transform: scale(.4) rotateY(90deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  .sw { display: inline-flex; gap: 3px; } .sw i { width: 14px; height: 14px; border: 1px solid var(--edge); display: inline-block; }
+  table.tbl { border-collapse: collapse; font-size: 14px; }
+  table.tbl td { padding: 2px 10px 2px 0; }
+
   .backup { position: fixed; inset: 0; background: rgba(17,13,9,.6); display: flex; align-items: center; justify-content: center; padding-inline: 16px; }
   .backup .panel { width: 100%; max-width: 440px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-family: "Do Hyeon", sans-serif; box-sizing: border-box; }
   .backup h2 { margin: 0; font-weight: 400; font-size: 22px; color: var(--gold); }
@@ -107,39 +164,50 @@
     max-width: calc(100vw - 32px); box-sizing: border-box;
   }
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-family: "Do Hyeon", sans-serif; font-size: 20px; padding-inline: 16px; text-align: center; }
-  @media (max-width: 600px) {
-    .goal { font-size: 13px; max-width: 38vw; padding: 5px 8px; }
-    .gold { font-size: 17px; }
-    .bag { min-width: 104px; font-size: 11px; }
+  @media (prefers-reduced-motion: reduce) { .reveal, .card.ancient { animation: none; } }
+  @media (max-width: 640px) {
+    .goal { font-size: 13px; max-width: 34vw; padding: 5px 8px; }
+    .gold { font-size: 16px; }
+    .bag { min-width: 118px; }
     .btn { font-size: 13px; padding: 4px 7px; }
+    .btns { max-width: 190px; }
+    .bossbar { top: calc(236px + env(safe-area-inset-top, 0px)); }
   }
 </style>
 
 <div id="game"></div>
 <div id="tags"></div>
 <div id="hurt"></div>
+<div id="flash"></div>
 
 <div class="hud">
   <div class="left">
-    <div class="box gold" id="goldBox"><i class="coin"></i><span id="hGold">0</span></div>
+    <div class="box gold" id="goldBox"><i class="coin"></i><span id="hGold">0</span><span class="gemc"><i class="gemi"></i><span id="hGem">0</span></span></div>
     <div class="box bag">
       <div class="rank" id="hRank">견습 나무꾼</div>
-      <div class="row"><span>BAG</span><span id="hBag">0/10</span></div>
-      <div class="bar"><i id="hBagBar"></i></div>
-      <div class="row"><span>HP</span><span id="hHp">10/10</span></div>
-      <div class="bar hp"><i id="hHpBar"></i></div>
+      <span>나무</span><div class="bar"><i id="bW"></i></div><span class="num" id="nW">0/10</span>
+      <span>고기</span><div class="bar m"><i id="bM"></i></div><span class="num" id="nM">0/6</span>
+      <span>광물</span><div class="bar s"><i id="bS"></i></div><span class="num" id="nS">0/8</span>
+      <span>HP</span><div class="bar hp"><i id="hHpBar"></i></div><span class="num" id="hHp">10/10</span>
     </div>
   </div>
   <div class="box goal" id="goal"><small id="goalNo">GOAL 1</small><span id="goalTxt"></span></div>
   <div class="right">
     <div class="btns">
-      <button class="box btn" id="btnSound">소리 켬</button>
+      <button class="box btn primary" id="btnGear">장비</button>
       <button class="box btn" id="btnSave">저장</button>
+      <button class="box btn" id="btnLoad">불러오기</button>
       <button class="box btn" id="btnBackup">백업</button>
+      <button class="box btn" id="btnSound">소리 켬</button>
       <button class="box btn" id="btnReset">처음부터</button>
     </div>
     <div class="status" id="saveStatus">자동 저장 · 이 기기</div>
   </div>
+</div>
+
+<div class="box bossbar" id="bossBar" hidden>
+  <div class="top"><b>뿌잉뿌잉</b><span id="bossHp"></span></div>
+  <div class="bar"><i id="bossFill"></i></div>
 </div>
 
 <div class="zoom">
@@ -150,6 +218,21 @@
 <div class="hint" id="hint">드래그·WASD로 이동 · 발판에 올라가 구매 버튼(E) · 휠이나 +/- 로 시야 조절</div>
 <div id="joy" hidden><i></i></div>
 <div class="box" id="toast" hidden></div>
+
+<div class="modal" id="shop" hidden>
+  <div class="box sheet" role="dialog" aria-label="상점">
+    <div class="tabs" id="shopTabs">
+      <button data-tab="weapon">무기점</button>
+      <button data-tab="gacha">뽑기</button>
+      <button data-tab="inv">장비</button>
+      <button data-tab="skin">의상실</button>
+      <span class="sp"></span>
+      <button id="shopClose">닫기</button>
+    </div>
+    <div class="sheet-body" id="shopBody"></div>
+  </div>
+</div>
+
 <div class="backup" id="backup" hidden>
   <div class="box panel">
     <h2>진행 백업</h2>
@@ -173,9 +256,9 @@
 
   // ================= 상수 =================
   const V = 0.2;                                  // 복셀 한 칸(월드 단위)
-  const BEAR_Z = -22, DINO_Z = -47, QX = 36, QZ = 4, GAP = 2.2; // 곰 숲·공룡 계곡 울타리(z), 채석장 울타리(x)와 문 위치
-  const PRICE = { w: 2, m: 8, s: 3, g: 15, d: 40 };
-  const NAMES = { w: '나무', m: '고기', s: '돌', g: '보석', d: '공룡 고기' };
+  const BEAR_Z = -22, DINO_Z = -47, BOSS_Z = -80, QX = 36, QZ = 4, GAP = 2.2;
+  const PRICE = { w: 2, m: 8, s: 3, d: 40 };      // 보석(g)은 팔지 않고 뽑기에 쓴다
+  const CAT = { w: 'w', m: 'm', d: 'm', s: 's' }; // 가방 칸: 나무 / 고기 / 광물
   const STALL = { x: 0, z: 6 };
   const DEPOSIT = { x: 0, z: 4.1 };
   const CASH = { x: 0, z: 2.0 };
@@ -186,9 +269,13 @@
 
   const $ = id => document.getElementById(id);
   const rand = (a, b) => a + Math.random() * (b - a);
+  const irand = n => (Math.random() * n) | 0;
+  const pick = arr => arr[irand(arr.length)];
   const dist = (a, b, c, d) => Math.hypot(a - c, b - d);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function lerpAngle(a, b, k) { const d = Math.atan2(Math.sin(b - a), Math.cos(b - a)); return a + d * Math.min(1, k); }
+  const fmt = n => Math.round(n).toLocaleString('ko-KR');
 
   // ================= 효과음 (WebAudio 합성) =================
   const SFX = (() => {
@@ -224,6 +311,7 @@
       if (last[name] && now - last[name] < gap) return;
       last[name] = now; try { fn(); } catch (e) {}
     }
+    const arp = (fs, step, vol, type) => fs.forEach((f, i) => tone(f, 0.16, type || 'square', vol || 0.05, 1, i * step));
     return {
       init, toggle() { muted = !muted; return muted; }, get muted() { return muted; },
       chop: () => play('chop', 0.05, () => { nz(0.07, 0.35, 1600, 1.4); tone(150, 0.07, 'triangle', 0.14, 0.5); }),
@@ -231,27 +319,38 @@
       clink: () => play('clink', 0.05, () => { tone(2100 + Math.random() * 300, 0.05, 'square', 0.03); nz(0.05, 0.25, 4200, 3); }),
       crack: () => play('crack', 0.1, () => { nz(0.25, 0.35, 900, 0.9); tone(180, 0.2, 'square', 0.06, 0.4); }),
       pick: () => play('pick', 0.035, () => tone(640 + Math.random() * 120, 0.05, 'square', 0.035, 1.6)),
+      gem: () => play('gem', 0.05, () => { tone(1760, 0.08, 'triangle', 0.06); tone(2637, 0.12, 'triangle', 0.05, 1, 0.05); }),
       drop: () => play('drop', 0.05, () => tone(320, 0.05, 'triangle', 0.08, 0.7)),
       sell: () => play('sell', 0.08, () => { tone(1568, 0.05, 'square', 0.035); tone(2093, 0.16, 'square', 0.035, 1, 0.06); nz(0.04, 0.12, 3200, 2); }),
       cash: () => play('cash', 0.25, () => { for (let i = 0; i < 6; i++) tone(1200 + i * 160, 0.07, 'square', 0.03, 1, i * 0.045); }),
-      pay: () => play('pay', 0.07, () => tone(880, 0.04, 'square', 0.025, 1.2)),
-      buy: () => play('buy', 0.2, () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, 'square', 0.045, 1, i * 0.07)); }),
-      level: () => play('level', 0.5, () => { [392, 523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.16, 'square', 0.05, 1, i * 0.08)); }),
+      buy: () => play('buy', 0.2, () => arp([523, 659, 784, 1046], 0.07, 0.045)),
+      level: () => play('level', 0.5, () => arp([392, 523, 659, 784, 1046, 1318], 0.08)),
       bear: () => play('bear', 0.06, () => { nz(0.09, 0.3, 300, 1); tone(120, 0.1, 'sawtooth', 0.06, 0.6); }),
       roar: () => play('roar', 0.9, () => { tone(95, 0.45, 'sawtooth', 0.09, 0.6); nz(0.4, 0.15, 260, 0.7); }),
       bump: () => play('bump', 0.3, () => { tone(160, 0.18, 'sawtooth', 0.08, 0.4); nz(0.12, 0.25, 500, 1); }),
-      step: () => play('step', 0.2, () => nz(0.03, 0.05, 700, 1.5)),
-      shoot: () => play('shoot', 0.08, () => { tone(520, 0.08, 'triangle', 0.08, 2.2); nz(0.05, 0.12, 2500, 2); }),
-      whoosh: () => play('whoosh', 0.3, () => { nz(0.3, 0.35, 900, 0.6); tone(300, 0.25, 'sawtooth', 0.04, 2.5); }),
+      step: () => play('step', 0.22, () => nz(0.03, 0.05, 700, 1.5)),
+      bow: () => play('bow', 0.07, () => { tone(520, 0.08, 'triangle', 0.07, 2.2); nz(0.05, 0.1, 2500, 2); }),
+      gun: () => play('gun', 0.06, () => { nz(0.08, 0.3, 1800, 0.7); tone(220, 0.06, 'square', 0.05, 0.4); }),
+      boom: () => play('boom', 0.12, () => { nz(0.3, 0.35, 250, 0.7); tone(80, 0.25, 'sine', 0.2, 0.5); }),
+      zap: () => play('zap', 0.1, () => { tone(1800, 0.08, 'sawtooth', 0.04, 0.3); nz(0.08, 0.15, 5000, 2); }),
+      meteor: () => play('meteor', 0.3, () => { tone(900, 0.4, 'sawtooth', 0.05, 0.1); nz(0.5, 0.4, 200, 0.6, 0.35); tone(60, 0.4, 'sine', 0.25, 0.5, 0.35); }),
       trex: () => play('trex', 1.2, () => { tone(70, 0.9, 'sawtooth', 0.14, 0.55); tone(105, 0.7, 'square', 0.05, 0.6, 0.05); nz(0.8, 0.25, 180, 0.6); }),
+      puing: () => play('puing', 1.5, () => { tone(900, 0.25, 'square', 0.07, 1.8); tone(1200, 0.3, 'square', 0.07, 1.8, 0.25); tone(60, 0.8, 'sawtooth', 0.12, 0.6, 0.1); }),
       stomp: () => play('stomp', 0.35, () => { tone(55, 0.2, 'sine', 0.2, 0.6); nz(0.12, 0.15, 120, 0.8); }),
-      hurt: () => play('hurt', 0.2, () => { tone(260, 0.16, 'sawtooth', 0.07, 0.45); }),
-      die: () => play('die', 1, () => { [440, 370, 311, 247, 196].forEach((f, i) => tone(f, 0.22, 'square', 0.05, 0.9, i * 0.13)); }),
+      quake: () => play('quake', 0.5, () => { tone(40, 0.7, 'sine', 0.3, 0.5); nz(0.6, 0.35, 90, 0.5); }),
+      hurt: () => play('hurt', 0.2, () => tone(260, 0.16, 'sawtooth', 0.07, 0.45)),
+      die: () => play('die', 1, () => arp([440, 370, 311, 247, 196], 0.13)),
+      gacha: () => play('gacha', 0.3, () => { for (let i = 0; i < 8; i++) tone(300 + i * 90, 0.06, 'square', 0.035, 1, i * 0.05); }),
+      grade: g => play('grade', 0.2, () => {
+        if (g === 'ancient') { arp([523, 659, 784, 1046, 1318, 1568, 2093], 0.09, 0.06); nz(0.8, 0.12, 6000, 1, 0.1); }
+        else if (g === 'legend') arp([659, 784, 988, 1318], 0.09, 0.055);
+        else if (g === 'unique') arp([587, 740, 880], 0.08, 0.05);
+        else tone(880, 0.12, 'square', 0.04);
+      }),
     };
   })();
-  const unlockAudio = () => SFX.init();
-  addEventListener('pointerdown', unlockAudio, true);
-  addEventListener('keydown', unlockAudio, true);
+  addEventListener('pointerdown', () => SFX.init(), true);
+  addEventListener('keydown', () => SFX.init(), true);
 
   // ================= 렌더러 =================
   const scene = new THREE.Scene();
@@ -277,6 +376,7 @@
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 90 });
   scene.add(sun, sun.target);
+  const auraLight = new THREE.PointLight(0xffd84a, 0, 7); scene.add(auraLight);
 
   // ================= 복셀 지오메트리 (박스를 하나의 메시로 병합) =================
   const BOX = new THREE.BoxGeometry(1, 1, 1);
@@ -304,11 +404,15 @@
     return g;
   }
   const VCM = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const GLOW = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#7a5c00') });
+  const ANCIENT = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#ff00ff') });
   const GC = {};
   const cgeo = (key, fn) => GC[key] || (GC[key] = geo(fn()));
-  function vmesh(g, shadow = true) { const m = new THREE.Mesh(g, VCM); m.castShadow = shadow; m.receiveShadow = true; return m; }
+  function vmesh(g, shadow = true, mat) { const m = new THREE.Mesh(g, mat || VCM); m.castShadow = shadow; m.receiveShadow = true; return m; }
   const MC = {};
   const M = c => MC[c] || (MC[c] = new THREE.MeshLambertMaterial({ color: c }));
+  const FXM = {};
+  const FX = c => FXM[c] || (FXM[c] = new THREE.MeshBasicMaterial({ color: c }));
 
   function noiseTex(cols, n, rep) {
     const c = document.createElement('canvas'); c.width = c.height = n;
@@ -325,15 +429,14 @@
   }
 
   // ================= 지형 =================
-  flat(130, 124, 12, -26, 0, noiseTex(['#5f9e4a', '#5a9746', '#64a54e', '#578f43', '#6aab52'], 48, [11, 10.5]));
+  flat(130, 150, 12, -39, 0, noiseTex(['#5f9e4a', '#5a9746', '#64a54e', '#578f43', '#6aab52'], 48, [11, 12.5]));
   flat(71, 33, 0.5, -63.5, 0.012, noiseTex(['#5a5a36', '#51522f', '#63623c', '#4a4a2a', '#6b5a3a'], 48, [8, 4]));
   flat(71, 25, 0.5, -34.5, 0.01, noiseTex(['#3f7040', '#3a683c', '#447744', '#36613a'], 48, [8, 3]));
+  flat(71, 30, 0.5, -95, 0.014, noiseTex(['#3a2a3f', '#342538', '#402e45', '#2e2233', '#4a3050'], 48, [8, 4]));
   flat(24, 40, 48, -2, 0.01, noiseTex(['#8d8574', '#857d6c', '#958d7b', '#7d7565', '#9a927f'], 32, [3, 5]));
   const SAND = ['#c9ad74', '#c2a56c', '#cfb47d', '#bb9f66'];
   flat(26, 22, 0, 5, 0.02, noiseTex(SAND, 32, [4, 3.5]));
   flat(4, 16, 0, 24, 0.02, noiseTex(SAND, 16, [1, 4]));
-
-  // 장식 (꽃, 풀)
   {
     const r = mulberry32(3), N = 520;
     const deco = new THREE.InstancedMesh(BOX, M('#ffffff'), N);
@@ -350,8 +453,12 @@
     }
     scene.add(deco);
   }
+  // 보스 경기장 장식 (보라 수정 기둥)
+  {
+    const pil = cgeo('pillar', () => [[-2, 0, -2, 4, 14, 4, '#4a3050'], [-1.5, 14, -1.5, 3, 4, 3, '#b48cff'], [-0.8, 18, -0.8, 1.6, 2, 1.6, '#e2d2ff']]);
+    for (const [x, z] of [[-28, -84], [28, -84], [-28, -106], [28, -106], [-14, -108], [14, -108], [0, -109]]) { const m = vmesh(pil); m.position.set(x, 0, z); m.scale.setScalar(1.3); scene.add(m); }
+  }
 
-  // 울타리: along='x' 이면 z=fixed 선을 따라, along='z' 이면 x=fixed 선을 따라
   function fence(along, fixed, from, to, gapC) {
     const posts = [];
     for (let t = from; t <= to; t += 1.1) if (Math.abs(t - gapC) > GAP) posts.push(t);
@@ -378,6 +485,7 @@
   const gateBearG = fence('x', BEAR_Z, -35, QX, 0);
   const gateQuarryG = fence('z', QX, BEAR_Z, 18, QZ);
   const gateDinoG = fence('x', DINO_Z, -35, 35, 0);
+  const gateBossG = fence('x', BOSS_Z, -35, 35, 0);
 
   // ================= 모델 =================
   const ITEM = {
@@ -395,10 +503,10 @@
     const list = () => {
       const L = [
         [-2.5, 3, -1.5, 5, 4, 3, o.shirt],
-        [-2, 7, -2, 4, 4, 4, '#f1c27d'],
+        [-2, 7, -2, 4, 4, 4, o.skin || '#f1c27d'],
         [-2.2, 10, -2.2, 4.4, 1.2, 4.4, o.hair],
         [-2.2, 8, -2.2, 4.4, 2, 1, o.hair],
-        [-1.3, 8.4, 2, 0.8, 0.9, 0.2, '#1d1a16'], [0.5, 8.4, 2, 0.8, 0.9, 0.2, '#1d1a16'],
+        [-1.3, 8.4, 2, 0.8, 0.9, 0.2, o.eye || '#1d1a16'], [0.5, 8.4, 2, 0.8, 0.9, 0.2, o.eye || '#1d1a16'],
       ];
       if (o.hat) L.push([-2.6, 10.8, -2.6, 5.2, 0.8, 5.2, o.hat], [-1.9, 11.6, -1.9, 3.8, 1, 3.8, o.hat]);
       if (o.apron) L.push([-2.6, 3, 1.5, 5.2, 4, 0.3, '#f4efe2']);
@@ -406,6 +514,7 @@
       return L;
     };
     body.add(vmesh(cgeo(key, list)));
+    if (o.glow) body.add(vmesh(cgeo(key + 'g', () => o.glow), true, GLOW));
     const leg = cgeo('leg' + o.pants, () => [[-1, -3, -1, 2, 3, 2, o.pants]]);
     const arm = cgeo('arm' + o.arm, () => [[-0.5, -3, -1, 1, 3, 2, o.arm || o.shirt]]);
     const legL = vmesh(leg), legR = vmesh(leg), armL = vmesh(arm), armR = vmesh(arm);
@@ -415,27 +524,44 @@
     g.userData = { body, legL, legR, armL, armR };
     scene.add(g); return g;
   }
-  function animPerson(p, moving, t) {
-    const u = p.userData, s = moving ? Math.sin(t * 14) : 0;
+  function animPerson(p, moving, t, amt) {
+    const u = p.userData, a = amt == null ? 1 : amt, s = moving ? Math.sin(t * 14) * a : 0;
     u.legL.rotation.x = s * 0.6; u.legR.rotation.x = -s * 0.6;
-    u.armL.rotation.x = -s * 0.5; if (!u.busy) u.armR.rotation.x = s * 0.5;
-    u.body.position.y = moving ? Math.abs(Math.cos(t * 14)) * 0.05 : 0;
+    if (!u.aim) u.armL.rotation.x = -s * 0.5;
+    if (!u.busy) u.armR.rotation.x = s * 0.5;
+    u.body.position.y = moving ? Math.abs(Math.cos(t * 14)) * 0.05 * a : 0;
   }
 
-  // 도구 (등급별 색)
+  // 무기 등급
+  const GRADES = {
+    normal: { name: '일반', col: '#c9b99a', col2: '#9aa5ad', mult: 1, n: 0, cost: 1, scrap: 100 },
+    rare: { name: '레어', col: '#5aa0ff', col2: '#2f6fd0', mult: 1.5, n: 1, cost: 1, scrap: 200 },
+    unique: { name: '유니크', col: '#b36bff', col2: '#7b3fd0', mult: 2.3, n: 2, cost: 1.6, scrap: 800 },
+    legend: { name: '레전드', col: '#ff9a2e', col2: '#d0601a', mult: 3.6, n: 3, cost: 2.6, scrap: 3000 },
+    ancient: { name: '에인션트', col: '#ff4fd8', col2: '#5aa0ff', mult: 9, n: 6, cost: 4, scrap: 15000 },
+  };
+  const GRADE_ORDER = ['normal', 'rare', 'unique', 'legend', 'ancient'];
   const TOOL_COL = [['#9aa5ad', '#e8eef2'], ['#6fa8d6', '#d6f0ff'], ['#f2c14e', '#fff2b0'], ['#b07cff', '#f1dcff']];
-  const axeGeo = t => cgeo('axe' + t, () => {
-    const [h, e] = TOOL_COL[t];
+  const axeGeo = (h, e, key, big) => cgeo('axe' + key, () => {
     const L = [[-0.5, -3, -0.5, 1, 6, 1, '#7a4b28'], [0.5, 0.5, -0.5, 2.5, 2.5, 1, h], [3, 0, -0.5, 0.7, 3.5, 1, e]];
-    if (t >= 3) L.push([1, 1.2, -0.7, 1, 1, 1.4, '#ffffff']);
+    if (big) L.push([1, 1.2, -0.7, 1, 1, 1.4, '#ffffff'], [0.5, 3, -0.5, 2, 0.8, 1, e], [-0.8, 3, -0.8, 1.6, 1, 1.6, big]);
     return L;
   });
   const pickGeo = t => cgeo('pick' + t, () => {
     const [h, e] = TOOL_COL[t];
     return [[-0.5, -3, -0.5, 1, 6, 1, '#7a4b28'], [-3, 2.2, -0.5, 6, 1, 1, h], [-3.8, 1.2, -0.5, 1, 1.4, 1, e], [2.8, 1.2, -0.5, 1, 1.4, 1, e]];
   });
+  const bowHandGeo = g => cgeo('bowh' + g, () => {
+    const c = GRADES[g].col, w = g === 'normal' ? '#a0693a' : c;
+    return [[-0.3, -4, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.3, -3, 0.3, 0.6, 2, 0.6, w], [-0.3, -1, 0.9, 0.6, 2, 0.6, '#8a5a32'], [-0.3, 1, 0.3, 0.6, 2, 0.6, w], [-0.3, 3, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.1, -3.5, -0.3, 0.2, 7, 0.2, '#f4efe2']];
+  });
+  const gunHandGeo = g => cgeo('gunh' + g, () => {
+    const c = GRADES[g].col;
+    return [[-0.4, -1.6, -0.6, 0.8, 1.8, 0.9, '#3b2a1a'], [-0.6, 0, -1.2, 1.2, 1.2, 3.6, '#4a4f57'], [-0.35, 0.3, 2.4, 0.7, 0.6, 2.6, '#2b2f36'], [-0.65, 0.4, -0.6, 1.3, 0.5, 2, g === 'normal' ? '#8a5a32' : c]];
+  });
+  const arrowGeo = cgeo('arrow', () => [[-0.25, -0.25, -2.5, 0.5, 0.5, 5, '#8a5a32'], [-0.5, -0.5, 2.5, 1, 1, 1, '#c7d0d6'], [-0.6, -0.1, -3, 1.2, 0.2, 1, '#f4efe2']]);
 
-  // 나무 (3가지 색 변형 + 곰 숲 소나무)
+  // 나무·짐승·바위
   const TREE_COL = [['#3f7d3a', '#4f9a45', '#62b04f'], ['#4b8c3c', '#5ea84b', '#74bf5a'], ['#c46a2c', '#d98a3a', '#e8b95a']];
   const stumpGeo = cgeo('stump', () => [[-1.1, 0, -1.1, 2.2, 1.4, 2.2, '#6b4a2b'], [-0.9, 1.4, -0.9, 1.8, 0.1, 1.8, '#c9a066']]);
   const topGeo = v => cgeo('top' + v, () => {
@@ -454,26 +580,36 @@
       [-2.5, 8, 5, 1.5, 1.5, 1, C], [1, 8, 5, 1.5, 1.5, 1, C],
     ];
   });
-  // 티라노사우루스 (몸통 / 다리 / 턱을 나눠 움직임)
   const TC = '#5f7f3f', TC2 = '#4f6a33', TC3 = '#3f5a2a';
   const trexBodyGeo = cgeo('trex', () => [
-    [-3, 5, -4, 6, 6, 9, TC], [-2.5, 5, -3, 5, 1, 7, '#c9b27a'],
-    [-2, 8.5, 4.5, 4, 3, 2, TC],
+    [-3, 5, -4, 6, 6, 9, TC], [-2.5, 5, -3, 5, 1, 7, '#c9b27a'], [-2, 8.5, 4.5, 4, 3, 2, TC],
     [-2.5, 9.5, 5.5, 5, 3.4, 6, TC], [-2.3, 9.5, 10.6, 4.6, 0.5, 0.5, '#f4efe2'],
-    [-2.6, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'], [2.3, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'],
-    [-2.6, 12.9, 6.5, 5.2, 0.5, 3, TC3],
+    [-2.6, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'], [2.3, 11.4, 8, 0.3, 0.9, 0.9, '#f2c14e'], [-2.6, 12.9, 6.5, 5.2, 0.5, 3, TC3],
     [-3.2, 7, 4, 0.8, 2, 0.8, TC2], [2.4, 7, 4, 0.8, 2, 0.8, TC2],
     [-2, 6.5, -8, 4, 4, 4, TC], [-1.5, 7, -12, 3, 3, 4, TC], [-1, 7.5, -15, 2, 2, 3, TC2],
     [-3.1, 10.2, -3, 6.2, 0.6, 1, TC3], [-3.1, 10.2, 0, 6.2, 0.6, 1, TC3], [-2.1, 10.2, -7, 4.2, 0.6, 1, TC3],
   ]);
   const trexLegGeo = cgeo('trexleg', () => [[-1.3, -4, -1.5, 2.6, 4, 3, TC], [-1, -7, -0.8, 2, 3, 2, TC2], [-1.3, -7, 0.8, 2.6, 0.8, 2, TC2]]);
   const trexJawGeo = cgeo('trexjaw', () => [[-2.2, -1.4, 0, 4.4, 1.4, 5, '#4f6a3a'], [-2, 0, 4.5, 4, 0.4, 0.4, '#f4efe2'], [-1.6, -1.2, 0.5, 3.2, 0.3, 4, '#a8453a']]);
-  const arrowGeo = cgeo('arrow', () => [[-0.25, -0.25, -2.5, 0.5, 0.5, 5, '#8a5a32'], [-0.5, -0.5, 2.5, 1, 1, 1, '#c7d0d6'], [-0.6, -0.1, -3, 1.2, 0.2, 1, '#f4efe2']]);
-  const bowGeo = cgeo('bow', () => [[-0.3, -4, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.3, -3, 0.3, 0.6, 2, 0.6, '#a0693a'], [-0.3, -1, 0.9, 0.6, 2, 0.6, '#a0693a'], [-0.3, 1, 0.3, 0.6, 2, 0.6, '#a0693a'], [-0.3, 3, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.1, -3.5, -0.3, 0.2, 7, 0.2, '#f4efe2']]);
-  const swordGeo = t => cgeo('sword' + t, () => {
-    const [h, e] = TOOL_COL[t];
-    return [[-2.5, -0.5, -0.5, 2.5, 1, 1, '#5a3a22'], [0, -1.8, -0.7, 0.8, 3.6, 1.4, '#e0b040'], [0.8, -0.8, -0.3, 11, 1.6, 0.6, h], [0.8, -0.2, -0.35, 11, 0.4, 0.7, e], [11.8, -0.4, -0.3, 1.2, 0.8, 0.6, e]];
-  });
+  // 최종 보스 뿌잉뿌잉
+  const PK = '#e86aa8', PK2 = '#c8508a';
+  const bossBodyGeo = cgeo('boss', () => [
+    [-6, 0, -3, 4, 3, 5, PK2], [2, 0, -3, 4, 3, 5, PK2],
+    [-7, 3, -6, 14, 10, 12, PK], [-6, 13, -5, 12, 3, 10, PK], [-5, 16, -4, 10, 1.5, 8, '#f08abb'],
+    [-5, 4, 5.9, 10, 7, 0.5, '#f7b7d2'],
+    [-5.5, 10, 6, 4, 4.4, 0.5, '#ffffff'], [1.5, 10, 6, 4, 4.4, 0.5, '#ffffff'],
+    [-4.3, 10.4, 6.3, 2, 2.8, 0.4, '#1d1a16'], [2.7, 10.4, 6.3, 2, 2.8, 0.4, '#1d1a16'],
+    [-3.7, 12.2, 6.6, 0.8, 0.8, 0.2, '#ffffff'], [3.3, 12.2, 6.6, 0.8, 0.8, 0.2, '#ffffff'],
+    [-4, 5, 6, 8, 3.2, 0.5, '#6a1a3a'],
+    [-3.6, 7.2, 6.3, 1.1, 1, 0.3, '#ffffff'], [-1.8, 7.2, 6.3, 1.1, 1, 0.3, '#ffffff'], [0.7, 7.2, 6.3, 1.1, 1, 0.3, '#ffffff'], [2.5, 7.2, 6.3, 1.1, 1, 0.3, '#ffffff'],
+    [-3, 5, 6.3, 1, 1.2, 0.3, '#ffffff'], [2, 5, 6.3, 1, 1.2, 0.3, '#ffffff'],
+    [-6.5, 9.5, 6, 1.6, 1, 0.3, '#ff9ac8'], [4.9, 9.5, 6, 1.6, 1, 0.3, '#ff9ac8'],
+    [-6, 17, -1, 2, 4, 2, '#f2c14e'], [4, 17, -1, 2, 4, 2, '#f2c14e'], [-6.5, 21, -0.5, 1, 2, 1, '#fff2b0'], [5, 21, -0.5, 1, 2, 1, '#fff2b0'],
+    [-0.5, 17.5, -0.5, 1, 3, 1, PK2], [-1.5, 20.5, -1, 3, 2.4, 2, '#ff3a6a'], [-0.5, 22.9, -0.5, 1, 0.6, 1, '#ff3a6a'],
+    [-7.2, 6, -3, 0.5, 5, 2, '#f7b7d2'], [6.7, 6, -3, 0.5, 5, 2, '#f7b7d2'],
+    [-2, 4, -7, 4, 4, 1.5, PK2], [-1, 5, -9, 2, 2, 2.5, PK2],
+  ]);
+  const bossArmGeo = cgeo('bossarm', () => [[-2, -9, -2, 4, 9, 4, PK], [-2.4, -11, -2.4, 4.8, 2, 4.8, PK2], [-2.2, -12, 1.6, 1, 1.5, 1, '#fff2b0'], [1.2, -12, 1.6, 1, 1.5, 1, '#fff2b0'], [-0.5, -12, 1.6, 1, 1.5, 1, '#fff2b0']]);
   const rockGeo = cgeo('rock', () => [[-3, 0, -2.5, 6, 3, 5, '#7d7f84'], [-2, 3, -1.5, 4, 1.5, 3.5, '#8f9196'], [1, 0, 1, 2.5, 2, 2.5, '#6c6e73'], [-3.5, 0, -3, 2, 1.5, 2, '#74767b']]);
   const crystalGeo = cgeo('crystal', () => [[-3, 0, -2.5, 6, 2.5, 5, '#6f7176'], [-1, 2.5, -1, 1.4, 4.5, 1.4, '#9b6cf0'], [0.8, 2, 0, 1.1, 3.2, 1.1, '#b48cff'], [-2.5, 2, 0.5, 1, 2.6, 1, '#7b4fd0'], [-0.7, 7, -0.7, 0.8, 0.8, 0.8, '#e2d2ff']]);
   const padGeo = c => cgeo('pad' + c, () => [[-4.5, 0, -4.5, 9, 0.3, 9, '#1d1a16'], [-4, 0.05, -4, 8, 0.35, 8, c]]);
@@ -481,6 +617,37 @@
   const barGeo = cgeo('goldbar', () => [[-1.2, 0, -0.7, 2.4, 1, 1.4, '#f2c14e'], [-1, 1, -0.5, 2, 0.2, 1, '#ffe08a']]);
   const coinGeo = cgeo('coin', () => [[-0.7, 0, -0.7, 1.4, 0.5, 1.4, '#f2c14e'], [-0.4, 0.5, -0.4, 0.8, 0.1, 0.8, '#ffe08a']]);
   const hopperGeo = cgeo('hopper', () => [[-3.5, 0, -3.5, 7, 3, 7, '#5b646e'], [-4, 3, -4, 8, 1, 8, '#7d8791'], [-3, 3.9, -3, 6, 0.2, 6, '#1d1a16'], [-4, 3, -4, 8, 1, 1, '#f2c14e']]);
+
+  // 발판 위 아이콘 (강화 내용을 떠올리게 하는 상징)
+  const AXE_ICON = [[-0.5, -4, -0.5, 1, 8, 1, '#8a5a32'], [0.5, 0.5, -0.5, 3, 3, 1, '#c7d0d6'], [3.5, 0, -0.5, 0.8, 4, 1, '#ffffff']];
+  const ICONS = {
+    axeCount: () => [...AXE_ICON, [-4.5, 2.5, -0.5, 3, 1, 1, '#8fd06a'], [-3.5, 1.5, -0.5, 1, 3, 1, '#8fd06a']],
+    axeDmg: () => [[-0.5, -4, -0.5, 1, 8, 1, '#8a5a32'], [0.5, 0.5, -0.5, 3, 3, 1, '#f2c14e'], [3.5, 0, -0.5, 0.8, 4, 1, '#fff2b0'], [-4, 1, -0.5, 1, 3, 1, '#ff6a3a'], [-3, 3, -0.5, 1, 1, 1, '#ff6a3a'], [-5, 0, -0.5, 1, 1, 1, '#ff6a3a']],
+    spin: () => { const L = []; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; L.push([Math.cos(a) * 3.5 - 0.6, Math.sin(a) * 3.5 - 0.6, -0.5, 1.2, 1.2, 1, i < 8 ? '#6fa8d6' : '#f4efe2']); } L.push([2.4, -3.6, -0.5, 2, 1, 1, '#f4efe2'], [3, -2.8, -0.5, 1, 1, 1, '#f4efe2']); return L; },
+    bag: () => [[-2.5, -3, -1.5, 5, 6, 3, '#a0693a'], [-2.6, 1.5, -1.7, 5.2, 1.5, 3.4, '#8a5a32'], [-1.5, -2, 1.5, 3, 2, 0.6, '#8a5a32'], [-0.5, 1, 1.7, 1, 1, 0.4, '#f2c14e'], [-2, 3, -0.5, 4, 0.8, 1, '#5b3a1e']],
+    speed: () => [[-1.5, -3, -2, 3, 5, 3, '#8a5a32'], [-1.5, -3, 1, 3, 2, 2.5, '#8a5a32'], [-1.6, -3.5, -2.1, 3.2, 0.6, 5.8, '#3b2a1a'], [1.5, -0.5, -1.5, 2.5, 1, 2, '#f4efe2'], [1.5, 0.5, -1, 1.8, 1, 1.4, '#f4efe2']],
+    price: () => [[-4, -1, -0.5, 8, 4.5, 1, '#c8925a'], [-0.5, -4.5, -0.5, 1, 3.5, 1, '#7a4b28'], [-1.2, 0, 0.5, 2.4, 2.4, 0.4, '#f2c14e'], [-3.5, 3.5, -0.5, 1, 1, 1, '#7a4b28'], [2.5, 3.5, -0.5, 1, 1, 1, '#7a4b28']],
+    worker: () => [[-2.5, -1, -2.5, 5, 2.5, 5, '#e0b33a'], [-3.2, -1.5, -3.2, 6.4, 0.6, 6.4, '#e0b33a'], [-0.5, 1.5, -0.5, 1, 0.6, 1, '#f4efe2'], [-1, -4, -1, 2, 2.5, 2, '#f1c27d']],
+    hunter: () => [[-0.3, -4, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.3, -3, 0.9, 0.6, 2, 0.6, '#a0693a'], [-0.3, -1, 1.7, 0.6, 2, 0.6, '#a0693a'], [-0.3, 1, 0.9, 0.6, 2, 0.6, '#a0693a'], [-0.3, 3, -0.3, 0.6, 1, 0.6, '#8a5a32'], [-0.1, -3.5, -0.3, 0.2, 7, 0.2, '#f4efe2'], [-0.2, -0.3, -4, 0.4, 0.4, 7, '#8a5a32'], [-0.6, -0.7, 2.6, 1.2, 1.2, 1, '#c7d0d6']],
+    miner: () => [[-0.5, -4, -0.5, 1, 8, 1, '#8a5a32'], [-4, 2.5, -0.5, 8, 1.4, 1, '#9aa5ad'], [-5, 1, -0.5, 1.2, 2, 1, '#e8eef2'], [3.8, 1, -0.5, 1.2, 2, 1, '#e8eef2']],
+    cashier: () => [[-3, -2, -2, 6, 3, 4, '#3d4650'], [-2, 1, -0.5, 4, 2.2, 0.6, '#8fd06a'], [-3.2, -3, -2.2, 6.4, 1, 4.4, '#5b646e'], [-2, -0.5, 2, 1, 0.6, 0.4, '#f2c14e'], [0, -0.5, 2, 1, 0.6, 0.4, '#f2c14e']],
+    lane2: () => [[-3, -2, -2, 6, 3, 4, '#3d4650'], [-2, 1, -0.5, 4, 2.2, 0.6, '#8fd06a'], [3.5, 0, -0.5, 3, 1, 1, '#8fd06a'], [4.5, -1, -0.5, 1, 3, 1, '#8fd06a']],
+    beltSpeed: () => { const L = [[-1.5, -1.5, -0.6, 3, 3, 1.2, '#7d8791']]; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; L.push([Math.cos(a) * 2.8 - 0.7, Math.sin(a) * 2.8 - 0.7, -0.5, 1.4, 1.4, 1, '#9aa5ad']); } L.push([-0.5, -0.5, 0.6, 1, 1, 0.3, '#f2c14e']); return L; },
+    magnet: () => [[-3.5, -1, -0.8, 2, 5, 1.6, '#d9573b'], [1.5, -1, -0.8, 2, 5, 1.6, '#d9573b'], [-3.5, -3, -0.8, 7, 2, 1.6, '#d9573b'], [-3.5, 4, -0.8, 2, 1.2, 1.6, '#e8eef2'], [1.5, 4, -0.8, 2, 1.2, 1.6, '#e8eef2']],
+    bank: () => { const L = []; for (let i = 0; i < 4; i++) L.push([-2 + (i % 2) * 0.3, -3 + i * 1.1, -2, 4, 0.9, 4, i % 2 ? '#ffe08a' : '#f2c14e']); L.push([-3, -4, -3, 6, 0.8, 6, '#5b646e']); return L; },
+    beltForest: () => [[-4, -1, -1.5, 8, 1, 3, '#454a52'], [-4, 0, -1.6, 8, 0.4, 0.3, '#f2c14e'], [-2.5, 0, -0.6, 5, 1.2, 1.2, '#8a5a32'], [2.5, 0, -0.6, 0.3, 1.2, 1.2, '#dcb57f']],
+    beltBear: () => [[-4, -1, -1.5, 8, 1, 3, '#454a52'], [-4, 0, -1.6, 8, 0.4, 0.3, '#f2c14e'], [-1.5, 0, -1, 3, 1.6, 2, '#c94c4c'], [1.5, 0.4, -0.4, 1.5, 0.8, 0.8, '#f2eadb']],
+    beltQuarry: () => [[-4, -1, -1.5, 8, 1, 3, '#454a52'], [-4, 0, -1.6, 8, 0.4, 0.3, '#f2c14e'], [-1.5, 0, -1, 3, 1.8, 2, '#8d8f93'], [-0.5, 1.8, -0.5, 1, 1.5, 1, '#b48cff']],
+    gateBear: () => [[-3, -2.5, -2, 6, 5, 4, '#6e4526'], [-3, 2.5, -1, 1.6, 1.6, 1.4, '#6e4526'], [1.4, 2.5, -1, 1.6, 1.6, 1.4, '#6e4526'], [-1.2, -2, 2, 2.4, 2, 1.2, '#c9a07a'], [-0.5, -0.6, 3.1, 1, 0.7, 0.3, '#1d1a16'], [-2, 0.5, 2, 0.8, 0.8, 0.2, '#1d1a16'], [1.2, 0.5, 2, 0.8, 0.8, 0.2, '#1d1a16']],
+    gateQuarry: () => [[-1, -3, -1, 2, 7, 2, '#9b6cf0'], [1.2, -3, 0, 1.4, 4.5, 1.4, '#b48cff'], [-2.8, -3, 0.3, 1.2, 3.5, 1.2, '#7b4fd0'], [-0.5, 4, -0.5, 1, 1, 1, '#e2d2ff']],
+    gateDino: () => [[-2.5, -1.5, -3, 5, 4, 7, TC], [-2.2, -3, -1, 4.4, 1.5, 5, '#4f6a3a'], [-2, -1.6, 3.9, 4, 0.5, 0.4, '#f4efe2'], [-2.7, 1.2, 1, 0.3, 1, 1, '#f2c14e'], [2.4, 1.2, 1, 0.3, 1, 1, '#f2c14e']],
+    gateBoss: () => [[-3.5, -3, -2, 7, 6, 4, PK], [-2.8, 0, 2, 2, 2.2, 0.4, '#ffffff'], [0.8, 0, 2, 2, 2.2, 0.4, '#ffffff'], [-2.2, 0.3, 2.3, 1, 1.4, 0.3, '#1d1a16'], [1.4, 0.3, 2.3, 1, 1.4, 0.3, '#1d1a16'], [-2, -2.2, 2, 4, 1.4, 0.4, '#6a1a3a'], [-3.5, 3, -0.5, 1, 2.5, 1, '#f2c14e'], [2.5, 3, -0.5, 1, 2.5, 1, '#f2c14e']],
+    pick: () => [[-0.5, -4, -0.5, 1, 8, 1, '#8a5a32'], [-4, 2.5, -0.5, 8, 1.4, 1, '#f2c14e'], [-5, 1, -0.5, 1.2, 2, 1, '#fff2b0'], [3.8, 1, -0.5, 1.2, 2, 1, '#fff2b0'], [-3, -3, -0.5, 1, 1, 1, '#ff6a3a']],
+    armor: () => [[-3, -3, -1, 6, 6, 2, '#aab4bd'], [-4.5, 1.5, -1.2, 2, 1.5, 2.4, '#9aa5ad'], [2.5, 1.5, -1.2, 2, 1.5, 2.4, '#9aa5ad'], [-1, -1, 1, 2, 2, 0.4, '#d9573b'], [-1.5, 3, -1, 3, 1, 2, '#5b646e']],
+    shopWeapon: () => [[-4, -0.5, -0.6, 7, 1.4, 1.2, '#4a4f57'], [2.5, -0.3, -0.4, 3, 1, 0.8, '#2b2f36'], [-3.8, -2.5, -0.5, 1.4, 2.2, 1, '#3b2a1a'], [-0.3, -4, 1, 0.6, 8, 0.6, '#a0693a'], [0.2, -3.5, 1.2, 0.2, 7, 0.2, '#f4efe2']],
+    shopGacha: () => [[-3, -4, -2.5, 6, 3.5, 5, '#d0483a'], [-2.5, -0.5, -2, 5, 5, 4, '#9fd8ff'], [-1.5, 0, -1, 1.4, 1.4, 1.4, '#ff4fd8'], [0.4, 0.5, -0.5, 1.4, 1.4, 1.4, '#f2c14e'], [-0.8, 2, 0.2, 1.4, 1.4, 1.4, '#5aa0ff'], [-0.8, -3, 2.5, 1.6, 1.6, 0.4, '#f2c14e']],
+    shopSkin: () => [[-0.3, 3, -0.3, 0.6, 1.5, 0.6, '#c7d0d6'], [-3.5, 2.5, -0.3, 7, 0.6, 0.6, '#c7d0d6'], [-3, -3, -0.8, 6, 5.5, 1.6, '#5aa0ff'], [-5, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [3, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [-1, -1, 0.8, 2, 2, 0.3, '#f2c14e']],
+  };
 
   function makePad(color) {
     const g = new THREE.Group();
@@ -507,47 +674,96 @@
   }
   const stockG = new THREE.Group(); scene.add(stockG);
   const cashG = new THREE.Group(); scene.add(cashG);
-
-  // 목표 화살표
   const arrow = vmesh(geo([[-0.5, 2, -0.5, 1, 2.5, 1, '#f2c14e'], [-1.5, 1, -0.5, 3, 1, 1, '#f2c14e'], [-0.5, 0, -0.5, 1, 1, 1, '#f2c14e']]), false);
   arrow.scale.setScalar(2); scene.add(arrow);
 
   // ================= 상태 =================
   const DEFAULT_L = { axeCount: 0, axeDmg: 0, spin: 0, bag: 0, speed: 0, price: 0, magnet: 0, pick: 0,
     worker: 0, hunter: 0, miner: 0, cashier: 0, lane2: 0, bank: 0, beltSpeed: 0,
-    beltForest: 0, beltBear: 0, beltQuarry: 0, gateBear: 0, gateQuarry: 0, armor: 0, bow: 0, sword: 0, gateDino: 0 };
-  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0, dino: 0, deaths: 0 };
+    beltForest: 0, beltBear: 0, beltQuarry: 0, gateBear: 0, gateQuarry: 0, armor: 0, gateDino: 0, gateBoss: 0 };
+  const DEFAULT_STATS = { chopped: 0, deposited: 0, sales: 0, collected: 0, meat: 0, gem: 0, earned: 0, dino: 0, deaths: 0, pulls: 0, boss: 0 };
   const L = { ...DEFAULT_L };
   const stats = { ...DEFAULT_STATS };
   const padPaid = {};
-  let gold = 0, cashPile = 0, goal = 0;
+  let gold = 0, cashPile = 0, goal = 0, gems = 0;
+  let weapons = [], nextWid = 1, skinsOwned = [0], skin = 0;
+  const eq = { ranged: null, axe: null };
   const stock = [];
-  const player = { x: 0, z: 1.5, face: 0, carry: [], reserved: 0, fullMsgT: 0, depT: 0, kx: 0, kz: 0, stun: 0, hurtT: 0, hp: 10, calm: 0, dead: 0, inv: 0 };
+  const player = { x: 0, z: 1.5, vx: 0, vz: 0, face: 0, carry: [], reserved: 0, fullMsgT: 0, depT: 0, kx: 0, kz: 0, stun: 0, hurtT: 0, hp: 10, calm: 0, dead: 0, inv: 0 };
+  let curTier = 0;
+
+  // ================= 무기·스킬 =================
+  const SKILLS = {
+    multi: { name: '멀티샷', desc: '투사체 +2발' },
+    poison: { name: '독', desc: '4초간 독 피해' },
+    fire: { name: '화염', desc: '3초간 화상 피해' },
+    explode: { name: '폭발', desc: '맞은 곳 주변 범위 피해' },
+    chain: { name: '연쇄 번개', desc: '주변 3마리에 번개' },
+    crit: { name: '치명타', desc: '25% 확률 3배 피해' },
+    freeze: { name: '빙결', desc: '적 이동 속도 절반' },
+    rapid: { name: '속사', desc: '공격 속도 +50%' },
+    pierce: { name: '관통', desc: '2마리 더 관통' },
+    vamp: { name: '흡혈', desc: '준 피해 일부 체력 회복' },
+    loot: { name: '풍요', desc: '채집·사냥 드롭 2배' },
+    meteor: { name: '메테오', desc: '3초마다 운석 낙하' },
+    aura: { name: '신성 오라', desc: '주변 적에게 지속 피해' },
+    more: { name: '도끼 증식', desc: '회전 도끼 +2개' },
+    giant: { name: '거대화', desc: '도끼 크기·범위 증가' },
+    whirl: { name: '회오리', desc: '도끼 회전 +40%' },
+  };
+  const RANGED_POOL = ['multi', 'poison', 'fire', 'explode', 'chain', 'crit', 'freeze', 'rapid', 'pierce', 'vamp', 'loot'];
+  const AXE_POOL = ['poison', 'fire', 'explode', 'chain', 'crit', 'freeze', 'vamp', 'loot', 'more', 'giant', 'whirl'];
+  const WBASE = { bow: { dmg: 7, rate: 1.4, range: 12, speed: 26 }, gun: { dmg: 10, rate: 2.6, range: 14, speed: 45 } };
+  const SHOP_W = {
+    bow: { name: '사냥 활', price: 500, up: 300, unlock: [[3, 'multi'], [6, 'poison'], [9, 'pierce']] },
+    gun: { name: '사냥 총', price: 1500, up: 600, unlock: [[3, 'fire'], [6, 'explode'], [9, 'rapid']] },
+  };
+  const MAX_WLV = 10;
+  const TYPE_NAME = { bow: '활', gun: '총', axe: '도끼' };
+  const wById = id => weapons.find(w => w.id === id);
+  const eqW = slot => wById(eq[slot]);
+  function wSkills(w) {
+    if (!w) return [];
+    if (w.shop) return SHOP_W[w.type].unlock.filter(([lv]) => w.lv >= lv).map(a => a[1]);
+    return w.skills;
+  }
+  const wMult = w => GRADES[w.grade].mult * (1 + 0.3 * (w.lv - 1));
+  function rStats(w) {
+    const b = WBASE[w.type], sk = wSkills(w), c = n => sk.filter(s => s === n).length;
+    return { dmg: b.dmg * wMult(w), rate: b.rate * (1 + 0.05 * (w.lv - 1)) * Math.pow(1.5, c('rapid')),
+      range: b.range + (w.grade === 'ancient' ? 4 : w.grade === 'legend' ? 2 : 0), speed: b.speed, count: 1 + 2 * c('multi'), pierce: 2 * c('pierce'), sk };
+  }
+  const upCost = w => Math.round((w.shop ? SHOP_W[w.type].up : 400 * GRADES[w.grade].cost) * Math.pow(1.55, w.lv - 1));
+  const scrapValue = w => Math.round(GRADES[w.grade].scrap * (1 + 0.5 * (w.lv - 1)));
+  function activeSkills() { return wSkills(eqW('ranged')).concat(wSkills(eqW('axe'))); }
+  const hasAncient = () => ['ranged', 'axe'].some(s => { const w = eqW(s); return w && w.grade === 'ancient'; });
 
   function derived() {
+    const aw = eqW('axe'), sk = activeSkills(), c = n => sk.filter(s => s === n).length;
+    const axeMult = aw ? wMult(aw) : 1;
     return {
-      axes: 1 + L.axeCount, dmg: 1 + L.axeDmg,
-      spin: 4.4 * (1 + 0.15 * L.spin), radius: 1.8 + 0.3 * L.spin,
+      sk, axes: 1 + L.axeCount + 2 * c('more'), dmg: (1 + L.axeDmg) * axeMult,
+      spin: 4.4 * (1 + 0.15 * L.spin) * Math.pow(1.4, c('whirl')), radius: 1.8 + 0.3 * L.spin + 0.8 * c('giant'), axeHitR: 0.35 * c('giant'),
       picks: L.gateQuarry ? 1 + Math.floor(L.pick / 2) : 0, pickDmg: 1 + L.pick,
-      cap: 10 + 5 * L.bag, speed: 4.6 * (1 + 0.1 * L.speed), magnet: 2.6 + 0.8 * L.magnet,
+      caps: { w: 10 + 5 * L.bag, m: 6 + 3 * L.bag, s: 8 + 4 * L.bag },
+      speed: 4.6 * (1 + 0.1 * L.speed), magnet: 4 + 1.6 * L.magnet,
       price: 1 + 0.2 * L.price, custEvery: 1.25 / (1 + 0.25 * L.price),
-      beltSpeed: 2.2 + 0.9 * L.beltSpeed,
-      maxHp: 10 + 5 * L.armor + 3 * Math.max(0, curTier),
-      bowEvery: Math.max(0.25, 1.1 - 0.1 * (L.bow - 1)), bowDmg: 4 + 3 * (L.bow - 1),
-      swordEvery: Math.max(1.2, 3.2 - 0.25 * (L.sword - 1)), swordDmg: 12 + 8 * (L.sword - 1), swordR: 3.2 + 0.2 * (L.sword - 1),
+      beltSpeed: 3 + 1.2 * L.beltSpeed,
+      maxHp: 10 + 8 * L.armor + 3 * curTier, armorRed: 0.04 * L.armor,
     };
   }
-  const power = () => L.axeCount + L.axeDmg + L.spin + L.bag + L.speed + L.pick + L.magnet + L.armor + L.bow + L.sword;
+  const power = () => L.axeCount + L.axeDmg + L.spin + L.bag + L.speed + L.pick + L.magnet + L.armor;
   const tierOf = () => { let t = 0; TIER_AT.forEach((v, i) => { if (power() >= v) t = i; }); return t; };
+  const catCount = cat => player.carry.reduce((n, t) => n + (CAT[t] === cat ? 1 : 0), 0);
 
   // ================= 나무 / 바위 =================
   const trees = [], rocks = [];
   const blocked = (x, z) =>
-    (Math.abs(x) < 13.5 && z > -6.5 && z < 18) ||           // 기지
-    (Math.abs(x) < 3.5 && z < -14) ||                         // 곰 숲 문 가는 길
-    (Math.abs(x + 6) < 1.6 && z > -21 && z < -5) ||           // 곰숲 컨베이어
-    (Math.abs(z - 6) < 1.6 && x > 12 && x < 36) ||             // 채석장 컨베이어
-    (x > 29 && x < 36 && z > -4 && z < 9);                     // 채석장 입구 발판
+    (Math.abs(x) < 13.5 && z > -6.5 && z < 18) ||
+    (Math.abs(x) < 3.5 && z < -14) ||
+    (Math.abs(x + 6) < 1.6 && z > -21 && z < -5) ||
+    (Math.abs(z - 6) < 1.6 && x > 12 && x < 36) ||
+    (x > 29 && x < 36 && z > -4 && z < 9);
   function scatter(n, x0, x1, z0, z1, gap, avoid, seed, make) {
     const r = mulberry32(seed), pts = []; let tries = 0;
     while (pts.length < n && tries++ < 8000) {
@@ -562,23 +778,24 @@
     g.position.set(x, 0, z); if (big) g.scale.setScalar(jungle ? 1.4 : 1.25);
     scene.add(g);
     const hp = jungle ? 9 : big ? 6 : 3;
-    trees.push({ g, top, x, z, big, jungle, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(8).fill(0), shake: 0, dir: 1, claimed: null });
+    trees.push({ kind2: 'tree', g, top, x, z, big, jungle, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(12).fill(0), shake: 0, dir: 1, claimed: null });
   }
   scatter(100, -34, 34, -20.5, 17.5, 2.05, blocked, 11, (x, z, r) => addTree(x, z, r() < 0.14 ? 2 : (r() < 0.5 ? 1 : 0), false));
   scatter(46, -33, 33, -45, -24, 2.8, (x, z) => Math.abs(x) < 3 && (z > -28 || z < -40), 29, (x, z) => addTree(x, z, 'big', true));
-  scatter(30, -33, 33, -77, -50, 4.2, (x, z) => Math.abs(x) < 3.5 && z > -54, 31, (x, z) => addTree(x, z, 'jungle', true, true));
+  scatter(30, -33, 33, -77, -50, 4.2, (x, z) => Math.abs(x) < 3.5 && (z > -54 || z < -72), 31, (x, z) => addTree(x, z, 'jungle', true, true));
   function addRock(x, z, crystal) {
     const m = vmesh(crystal ? crystalGeo : rockGeo);
     m.position.set(x, 0, z); m.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2; m.scale.setScalar(crystal ? 1.15 : 1);
     scene.add(m);
     const hp = crystal ? 9 : 4;
-    rocks.push({ m, x, z, crystal, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(8).fill(0), shake: 0, claimed: null });
+    rocks.push({ kind2: 'rock', m, x, z, crystal, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(12).fill(0), shake: 0, claimed: null });
   }
-  scatter(58, 38.5, 58, -20, 16, 2.1, (x, z) => x < 41 && Math.abs(z - QZ) < 3, 47, (x, z, r) => addRock(x, z, r() < 0.26));
+  scatter(58, 38.5, 58, -20, 16, 2.1, (x, z) => x < 41 && Math.abs(z - QZ) < 3, 47, (x, z, r) => addRock(x, z, r() < 0.3));
 
-  // ================= 파편 / 떨어진 아이템 / 코인 =================
-  const drops = [], chips = [], coins = [];
+  // ================= 파편 / 떨어진 아이템 / 코인 / 이펙트 =================
+  const drops = [], chips = [], coins = [], fxParts = [];
   function spawnDrop(type, x, z) {
+    if (drops.length > 160) { if (type === 'g') gems++; return; }
     const m = itemMesh(type); scene.add(m);
     const a = rand(0, Math.PI * 2), s = rand(1.5, 3);
     drops.push({ m, type, x, y: 1, z, vx: Math.cos(a) * s, vy: rand(4, 6), vz: Math.sin(a) * s, t: 0, state: 'pop' });
@@ -595,11 +812,34 @@
     const m = vmesh(coinGeo, false); m.visible = false; scene.add(m);
     coins.push({ m, ax, ay, az, bx, by, bz, t: -(delay || 0), dur: 0.45 });
   }
+  function emit(c, x, y, z, vx, vy, vz, life, size) {
+    if (fxParts.length > 260) return;
+    const m = new THREE.Mesh(BOX, FX(c)); m.scale.setScalar(size); m.position.set(x, y, z); scene.add(m);
+    fxParts.push({ m, x, y, z, vx, vy, vz, t: 0, life, size });
+  }
+  function boomFx(x, z, r, c) {
+    for (let i = 0; i < 14; i++) { const a = rand(0, 6.28), s = rand(0.5, 1) * r * 2.5; emit(i % 2 ? c : '#fff2b0', x, 0.6, z, Math.cos(a) * s, rand(1, 4), Math.sin(a) * s, 0.45, 0.25); }
+    rings.push({ x, z, r0: 0.2, r1: r, t: 0, life: 0.35, c });
+  }
+  function boltFx(ax, ay, az, bx, by, bz) {
+    const n = 7;
+    for (let i = 0; i <= n; i++) { const k = i / n; emit(i % 2 ? '#bfe8ff' : '#ffffff', ax + (bx - ax) * k + rand(-0.25, 0.25), ay + (by - ay) * k + rand(-0.25, 0.25), az + (bz - az) * k + rand(-0.25, 0.25), 0, 0, 0, 0.15, 0.18); }
+  }
+  // 퍼지는 고리 (폭발, 보스 충격파 예고)
+  const rings = [];
+  const ringPool = [];
+  function ringMesh(c) {
+    let m = ringPool.pop();
+    if (!m) { m = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; }
+    m.material.color.set(c); m.visible = true; scene.add(m); return m;
+  }
 
+  // ================= 피해 처리 =================
+  let shake = 0;
   function hitTree(tr, dmg) {
     if (!tr.alive) return 0;
     tr.hp -= dmg; tr.shake = 0.25;
-    spawnChips(tr.x, 1.2, tr.z, '#c9a066', 3);
+    spawnChips(tr.x, 1.2, tr.z, '#c9a066', 2);
     if (tr.hp > 0) return 0;
     tr.alive = false; tr.state = 'fall'; tr.t = 0; tr.dir = Math.random() < 0.5 ? 1 : -1;
     spawnChips(tr.x, 1.8, tr.z, tr.big ? '#356b45' : '#4f9a45', 8);
@@ -609,15 +849,16 @@
   function hitRock(rk, dmg) {
     if (!rk.alive) return null;
     rk.hp -= dmg; rk.shake = 0.2;
-    spawnChips(rk.x, 0.8, rk.z, rk.crystal ? '#b48cff' : '#a9abb0', 3);
+    spawnChips(rk.x, 0.8, rk.z, rk.crystal ? '#b48cff' : '#a9abb0', 2);
     if (rk.hp > 0) return null;
     rk.alive = false; rk.state = 'dead'; rk.t = 0; rk.m.visible = false;
     spawnChips(rk.x, 0.8, rk.z, '#8d8f93', 10);
-    return rk.crystal ? ['s', 'g', 'g'] : ['s', 's'];
+    if (rk.crystal) return ['s', 'g', 'g', ...(Math.random() < 0.4 ? ['g'] : [])];
+    return ['s', 's', ...(Math.random() < 0.15 ? ['g'] : [])];
   }
   function updateWorld(dt, t) {
     for (const tr of trees) {
-      for (let i = 0; i < 8; i++) if (tr.hitCd[i] > 0) tr.hitCd[i] -= dt;
+      for (let i = 0; i < 12; i++) if (tr.hitCd[i] > 0) tr.hitCd[i] -= dt;
       if (tr.shake > 0) { tr.shake -= dt; tr.top.rotation.z = Math.sin(t * 55) * 0.07 * Math.max(0, tr.shake) / 0.25; }
       if (tr.state === 'fall') {
         tr.t += dt; const k = Math.min(1, tr.t / 0.45);
@@ -633,7 +874,7 @@
       }
     }
     for (const rk of rocks) {
-      for (let i = 0; i < 8; i++) if (rk.hitCd[i] > 0) rk.hitCd[i] -= dt;
+      for (let i = 0; i < 12; i++) if (rk.hitCd[i] > 0) rk.hitCd[i] -= dt;
       if (rk.shake > 0) { rk.shake -= dt; rk.m.position.x = rk.x + Math.sin(t * 70) * 0.05; }
       if (rk.state === 'dead') {
         rk.t += dt;
@@ -645,86 +886,197 @@
       }
     }
   }
+  // 모든 공격(도끼·곡괭이·활·총·스킬)이 거치는 공통 경로
+  function dealDirect(o, dmg, sk, fromX, fromZ, noKb) {
+    if (!o.alive || dmg <= 0) return;
+    const loot = sk && sk.includes('loot') ? 2 : 1;
+    if (o.kind2 === 'tree') {
+      const k = hitTree(o, dmg);
+      if (k) { SFX.fell(); for (let i = 0; i < k * loot; i++) spawnDrop('w', o.x, o.z); } else SFX.chop();
+    } else if (o.kind2 === 'rock') {
+      const got = hitRock(o, dmg);
+      if (got) { SFX.crack(); for (let i = 0; i < loot; i++) got.forEach(t => spawnDrop(t, o.x, o.z)); } else SFX.clink();
+    } else {
+      const k = hitBear(o, dmg, fromX == null ? player.x : fromX, fromZ == null ? player.z : fromZ, noKb);
+      if (k) for (let i = 0; i < loot; i++) o.def.drops.forEach(t => spawnDrop(t, o.x, o.z));
+    }
+  }
+  function applyHit(o, dmg, sk) {
+    if (!o.alive) return;
+    if (sk.includes('crit') && Math.random() < 0.25) { dmg *= 3; if (Math.random() < 0.4) floatText('치명타!', o.x, 2.6, o.z, 'bad'); }
+    const beast = o.kind2 === 'beast';
+    dealDirect(o, dmg, sk);
+    if (beast && o.alive) {
+      if (sk.includes('poison')) addDot(o, 'p', dmg * 0.35, 4);
+      if (sk.includes('fire')) addDot(o, 'f', dmg * 0.6, 3);
+      if (sk.includes('freeze')) o.slowT = 2;
+    }
+    if (sk.includes('explode')) {
+      SFX.boom(); boomFx(o.x, o.z, 2.6, '#ff9a3a');
+      for (const b of bears) if (b !== o && b.alive && dist(b.x, b.z, o.x, o.z) < 2.6 + b.def.hitR * 0.5) dealDirect(b, dmg * 0.6, sk);
+      for (const t of trees) if (t !== o && t.alive && Math.abs(t.x - o.x) < 2.6 && dist(t.x, t.z, o.x, o.z) < 2.6) dealDirect(t, dmg * 0.6, sk);
+    }
+    if (sk.includes('chain') && beast) {
+      const near = bears.filter(b => b !== o && b.alive && dist(b.x, b.z, o.x, o.z) < 7).sort((a, b) => dist(a.x, a.z, o.x, o.z) - dist(b.x, b.z, o.x, o.z)).slice(0, 3);
+      if (near.length) SFX.zap();
+      for (const b of near) { boltFx(o.x, 1.2, o.z, b.x, 1.2, b.z); dealDirect(b, dmg * 0.5, sk); }
+    }
+    if (sk.includes('vamp') && !player.dead) player.hp = Math.min(derived().maxHp, player.hp + Math.min(5, dmg * 0.03));
+  }
+  function addDot(b, type, dps, t) {
+    const d = b.dots.find(x => x.type === type);
+    if (d) { d.dps = Math.max(d.dps, dps); d.t = t; } else b.dots.push({ type, dps, t });
+  }
 
-  // ================= 곰 =================
-  let shake = 0;
-  const shots = [];   // 화살
-  // 곰과 티라노사우루스를 같은 규칙으로 다룬다
+  // ================= 짐승 (곰, 티라노, 최종 보스) =================
   const BEAST = {
-    bear: { hp: 14, wander: 1.1, chase: 2.7, aggro: 8, reach: 1.6, hitR: 1.25, dmg: 1, cd: 1.3, knock: 9, drops: ['m', 'm', 'm'], respawn: 14, scale: 1.25, barY: 2.6,
-            zone: () => [rand(-31, 31), rand(-43, -25)], zMin: -45, zMax: BEAR_Z - 1, inZone: z => z < BEAR_Z && z >= DINO_Z },
-    dino: { hp: 220, wander: 1.3, chase: 3.7, aggro: 12, reach: 2.9, hitR: 2.3, dmg: 4, cd: 1.6, knock: 15, drops: ['d', 'd', 'd', 'd'], respawn: 35, scale: 1.7, barY: 5.2,
-            zone: () => [rand(-30, 30), rand(-75, -52)], zMin: -77, zMax: DINO_Z - 1.5, inZone: z => z < DINO_Z },
+    bear: { hp: 14, wander: 1.1, chase: 2.7, aggro: 8, reach: 1.6, hitR: 1.25, dmg: 1, cd: 1.3, knock: 9, drops: ['m', 'm', 'm'], respawn: 14, scale: 1.25, barY: 2.6, barW: 1.1,
+            zone: () => [rand(-31, 31), rand(-43, -25)], zMin: -45, zMax: BEAR_Z - 1, xMax: 33, inZone: z => z < BEAR_Z && z >= DINO_Z },
+    dino: { hp: 220, wander: 1.3, chase: 3.7, aggro: 12, reach: 2.9, hitR: 2.3, dmg: 4, cd: 1.6, knock: 15, drops: ['d', 'd', 'd', 'd'], respawn: 35, scale: 1.7, barY: 5.2, barW: 2.4,
+            zone: () => [rand(-30, 30), rand(-75, -52)], zMin: -77, zMax: DINO_Z - 1.5, xMax: 33, inZone: z => z < DINO_Z && z >= BOSS_Z },
+    boss: { hp: 60000, wander: 0.8, chase: 2.6, aggro: 60, reach: 4.6, hitR: 4, dmg: 16, cd: 1.7, knock: 18, drops: [], respawn: 120, scale: 2.3, barY: 11, barW: 0,
+            zone: () => [rand(-8, 8), rand(-98, -90)], zMin: -104, zMax: BOSS_Z - 4, xMax: 26, inZone: z => z < BOSS_Z },
   };
   const bears = [];
   function addBeast(kind) {
     const def = BEAST[kind], [x, z] = def.zone();
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
-    let legL = null, legR = null, jaw = null;
+    let legL = null, legR = null, jaw = null, armL = null, armR = null;
     if (kind === 'bear') body.add(vmesh(bearGeo));
-    else {
+    else if (kind === 'dino') {
       body.add(vmesh(trexBodyGeo));
       legL = vmesh(trexLegGeo); legL.position.set(-2.3 * V, 7 * V, 0);
       legR = vmesh(trexLegGeo); legR.position.set(2.3 * V, 7 * V, 0);
       jaw = vmesh(trexJawGeo); jaw.position.set(0, 9.5 * V, 5.8 * V);
       body.add(legL, legR, jaw);
+    } else {
+      body.add(vmesh(bossBodyGeo));
+      armL = vmesh(bossArmGeo); armL.position.set(-8.5 * V, 11 * V, 1 * V);
+      armR = vmesh(bossArmGeo); armR.position.set(8.5 * V, 11 * V, 1 * V);
+      body.add(armL, armR);
     }
     g.scale.setScalar(def.scale); scene.add(g);
-    const bar = new THREE.Group(), w = kind === 'dino' ? 2.4 : 1.1;
-    const bg = new THREE.Mesh(BOX, M('#1d1a16')); bg.scale.set(w, 0.14, 0.12); bar.add(bg);
-    const fill = new THREE.Mesh(BOX, M('#d9573b')); fill.scale.set(w - 0.1, 0.16, 0.14); bar.add(fill);
-    bar.visible = false; scene.add(bar);
-    bears.push({ kind, def, g, body, legL, legR, jaw, bite: 0, bar, fill, barW: w - 0.1, x, z, face: rand(0, 6), hp: def.hp, maxHp: def.hp, alive: true, tx: x, tz: z, t: rand(0, 5), atkCd: 0, hitCd: new Array(8).fill(0), bump: 0, respawnT: 0, walk: 0, claimed: null, angry: false });
+    let bar = null, fill = null;
+    if (def.barW) {
+      bar = new THREE.Group();
+      const bg = new THREE.Mesh(BOX, M('#1d1a16')); bg.scale.set(def.barW, 0.14, 0.12); bar.add(bg);
+      fill = new THREE.Mesh(BOX, M('#d9573b')); fill.scale.set(def.barW - 0.1, 0.16, 0.14); bar.add(fill);
+      bar.visible = false; scene.add(bar);
+    }
+    bears.push({ kind2: 'beast', kind, def, g, body, legL, legR, jaw, armL, armR, bite: 0, bar, fill, x, z, face: rand(0, 6), hp: def.hp, maxHp: def.hp, alive: true,
+      tx: x, tz: z, t: rand(0, 5), atkCd: 0, hitCd: new Array(12).fill(0), bump: 0, respawnT: 0, walk: 0, claimed: null, angry: false, dots: [], dotAcc: 0, dotT: 0, slowT: 0,
+      waveT: 5, wave: null, jump: 0 });
   }
   for (let i = 0; i < 16; i++) addBeast('bear');
   for (let i = 0; i < 6; i++) addBeast('dino');
-  function hitBear(b, dmg, fromX, fromZ) {
+  addBeast('boss');
+  const boss = bears[bears.length - 1];
+
+  function hitBear(b, dmg, fromX, fromZ, noKb) {
     if (!b.alive) return 0;
     b.hp -= dmg; b.bump = 0.15;
-    const a = Math.atan2(b.z - fromZ, b.x - fromX), kb = b.kind === 'dino' ? 0.12 : 0.4;
-    b.x += Math.cos(a) * kb; b.z += Math.sin(a) * kb;
-    spawnChips(b.x, b.kind === 'dino' ? 2 : 1, b.z, b.kind === 'dino' ? '#5f7f3f' : '#6e4526', 3);
-    if (b.kind === 'dino') SFX.stomp(); else SFX.bear();
+    if (!noKb && b.kind !== 'boss') {
+      const a = Math.atan2(b.z - fromZ, b.x - fromX), kb = b.kind === 'dino' ? 0.12 : 0.4;
+      b.x += Math.cos(a) * kb; b.z += Math.sin(a) * kb;
+    }
+    if (Math.random() < 0.5) spawnChips(b.x, b.kind === 'boss' ? 4 : b.kind === 'dino' ? 2 : 1, b.z, b.kind === 'boss' ? PK : b.kind === 'dino' ? TC : '#6e4526', 2);
+    if (b.kind === 'dino' || b.kind === 'boss') SFX.stomp(); else SFX.bear();
     if (b.hp > 0) return 0;
-    b.alive = false; b.g.visible = false; b.bar.visible = false; b.respawnT = b.def.respawn;
-    spawnChips(b.x, 1, b.z, '#c94c4c', b.kind === 'dino' ? 24 : 10);
-    if (b.kind === 'dino') { stats.dino++; floatText('티라노 사냥!', b.x, 3, b.z, 'note big'); shake = 0.4; SFX.trex(); }
-    else floatText('곰 사냥!', b.x, 2, b.z, 'note');
+    b.alive = false; b.g.visible = false; if (b.bar) b.bar.visible = false; b.respawnT = b.def.respawn; b.dots = []; b.wave = null;
+    spawnChips(b.x, 1, b.z, '#c94c4c', b.kind === 'bear' ? 10 : 24);
+    if (b.kind === 'dino') {
+      stats.dino++; floatText('티라노 사냥!', b.x, 3, b.z, 'note big'); shake = 0.4; SFX.trex();
+      if (Math.random() < 0.25) spawnDrop('g', b.x, b.z);
+    } else if (b.kind === 'boss') {
+      const first = stats.boss === 0;
+      stats.boss++;
+      const g = first ? 50000 : 15000, gm = first ? 30 : 10;
+      gold += g; gems += gm; bumpGold(); shake = 1;
+      for (let i = 0; i < 40; i++) { const a = rand(0, 6.28); emit(pick(['#ff4fd8', '#f2c14e', '#5aa0ff', '#ffffff']), b.x, 4, b.z, Math.cos(a) * rand(3, 9), rand(3, 10), Math.sin(a) * rand(3, 9), 1.2, 0.35); }
+      SFX.level();
+      toast(`뿌잉뿌잉 격파! +${fmt(g)}G, 보석 +${gm}`);
+    } else floatText('곰 사냥!', b.x, 2, b.z, 'note');
     return b.def.drops.length;
   }
   function updateBears(dt) {
     for (const b of bears) {
       const def = b.def;
-      for (let i = 0; i < 8; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
+      for (let i = 0; i < 12; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
       if (!b.alive) {
         b.respawnT -= dt;
         if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
         continue;
       }
+      // 지속 피해
+      if (b.dots.length) {
+        let dps = 0;
+        for (let i = b.dots.length - 1; i >= 0; i--) { const d = b.dots[i]; d.t -= dt; dps += d.dps; if (d.t <= 0) b.dots.splice(i, 1); }
+        b.dotAcc += dps * dt; b.dotT += dt;
+        if (b.dotT > 0.5) {
+          b.dotT = 0;
+          const col = b.dots.some(d => d.type === 'f') ? '#ff7a2a' : '#6fd04a';
+          emit(col, b.x + rand(-0.5, 0.5), 1 + rand(0, 1), b.z + rand(-0.5, 0.5), 0, 2, 0, 0.5, 0.2);
+          const v = b.dotAcc; b.dotAcc = 0;
+          dealDirect(b, v, activeSkills(), b.x, b.z, true);
+          if (!b.alive) continue;
+        }
+      }
+      if (b.slowT > 0) b.slowT -= dt;
+      const slow = b.slowT > 0 ? 0.5 : 1;
       const dx = player.x - b.x, dz = player.z - b.z, d = Math.hypot(dx, dz);
       const chase = !player.dead && def.inZone(player.z) && d < def.aggro;
+      const enraged = b.kind === 'boss' && b.hp < b.maxHp * 0.35;
       let mx = 0, mz = 0, sp = 0;
       if (chase) {
-        if (!b.angry && b.kind === 'dino') { SFX.trex(); floatText('크아앙!', b.x, 4.5, b.z, 'bad big'); }
+        if (!b.angry) {
+          if (b.kind === 'dino') { SFX.trex(); floatText('크아앙!', b.x, 4.5, b.z, 'bad big'); }
+          if (b.kind === 'boss') { SFX.puing(); floatText('뿌잉뿌잉!!', b.x, 12, b.z, 'bad big'); }
+        }
         b.angry = true;
-        if (d > def.reach - 0.3) { mx = dx / d; mz = dz / d; sp = def.chase; }
+        if (d > def.reach - 0.3 && b.jump <= 0) { mx = dx / d; mz = dz / d; sp = def.chase * (enraged ? 1.3 : 1) * slow; }
         b.atkCd -= dt;
         if (d < def.reach && b.atkCd <= 0) {
-          b.atkCd = def.cd; b.bite = 0.3;
+          b.atkCd = def.cd * (enraged ? 0.75 : 1); b.bite = 0.3;
           const k = d > 0.01 ? 1 / d : 0;
-          damagePlayer(def.dmg, dx * k * def.knock, dz * k * def.knock, b.kind === 'dino' ? '콱!' : '쿵!');
-          if (b.kind === 'dino') SFX.trex(); else SFX.roar();
+          damagePlayer(def.dmg, dx * k * def.knock, dz * k * def.knock, b.kind === 'boss' ? '뿌잉!' : b.kind === 'dino' ? '콱!' : '쿵!');
+          if (b.kind === 'dino') SFX.trex(); else if (b.kind === 'bear') SFX.roar();
+        }
+        // 보스: 점프 후 충격파
+        if (b.kind === 'boss') {
+          b.waveT -= dt;
+          if (b.waveT <= 0 && b.jump <= 0 && !b.wave) { b.jump = 0.7; }
+          if (enraged && !b.enrageShown) { b.enrageShown = true; toast('뿌잉뿌잉이 분노했습니다!'); SFX.puing(); }
         }
       } else {
         b.angry = false;
         b.t += dt;
         const tx = b.tx - b.x, tz = b.tz - b.z, td = Math.hypot(tx, tz);
         if (td < 0.5 || b.t > 8) { [b.tx, b.tz] = def.zone(); b.t = 0; }
-        else if (b.t > 1.5) { mx = tx / td; mz = tz / td; sp = def.wander; }
+        else if (b.t > 1.5) { mx = tx / td; mz = tz / td; sp = def.wander * slow; }
+        if (b.kind === 'boss' && b.hp < b.maxHp) b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.02 * dt); // 싸움을 멈추면 조금씩 회복
+      }
+      if (b.kind === 'boss') {
+        if (b.jump > 0) {
+          b.jump -= dt;
+          b.body.position.y = Math.sin((0.7 - Math.max(0, b.jump)) / 0.7 * Math.PI) * 1.2;
+          if (b.jump <= 0) {
+            b.body.position.y = 0; b.waveT = enraged ? 4.2 : 6.5;
+            b.wave = { r: 1, hit: false, m: ringMesh('#ff4f8a') };
+            shake = Math.max(shake, 0.5); SFX.quake();
+          }
+        }
+        if (b.wave) {
+          const w = b.wave; w.r += 9 * dt;
+          w.m.position.set(b.x, 0.1, b.z); w.m.scale.setScalar(w.r); w.m.material.opacity = Math.max(0, 0.9 - w.r / 14);
+          const pd = dist(player.x, player.z, b.x, b.z);
+          if (!w.hit && Math.abs(pd - w.r) < 0.9 && !player.dead) { w.hit = true; const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(24, (player.x - b.x) * k * 14, (player.z - b.z) * k * 14, '충격파!'); }
+          if (w.r > 13) { scene.remove(w.m); ringPool.push(w.m); b.wave = null; }
+        }
       }
       b.x += mx * sp * dt; b.z += mz * sp * dt;
-      b.x = Math.max(-33, Math.min(33, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z));
+      b.x = Math.max(-def.xMax, Math.min(def.xMax, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z));
       if (sp > 0) b.face = lerpAngle(b.face, Math.atan2(mx, mz), dt * 8);
+      else if (chase) b.face = lerpAngle(b.face, Math.atan2(dx, dz), dt * 6);
       b.walk += sp * dt;
       if (b.bump > 0) b.bump -= dt;
       if (b.bite > 0) b.bite -= dt;
@@ -734,18 +1086,26 @@
         b.legL.rotation.x = s * 0.5; b.legR.rotation.x = -s * 0.5;
         b.body.position.y = sp > 0 ? Math.abs(Math.cos(b.walk * 2.2)) * 0.08 : 0;
         b.jaw.rotation.x = b.bite > 0 ? 0.6 : (b.angry ? 0.25 + Math.sin(b.walk * 6) * 0.1 : 0.05);
+      } else if (b.kind === 'boss') {
+        const s = Math.sin(b.walk * 1.6);
+        b.armL.rotation.x = b.bite > 0 ? -1.6 : s * 0.3; b.armR.rotation.x = b.bite > 0 ? -1.6 : -s * 0.3;
+        if (b.jump <= 0) b.body.scale.set(1 + Math.sin(clock * 3) * 0.02, 1 - Math.sin(clock * 3) * 0.02, 1);
       } else b.body.position.y = sp > 0 ? Math.abs(Math.sin(b.walk * 4)) * 0.06 : 0;
-      b.g.scale.setScalar(def.scale * (1 + Math.max(0, b.bump) * (b.kind === 'dino' ? 0.3 : 1)));
-      b.bar.visible = b.hp < b.maxHp;
-      if (b.bar.visible) { b.bar.position.set(b.x, def.barY, b.z); const k = Math.max(0, b.hp / b.maxHp); b.fill.scale.x = b.barW * k; b.fill.position.x = -b.barW * (1 - k) / 2; }
+      b.g.scale.setScalar(def.scale * (1 + Math.max(0, b.bump) * (b.kind === 'bear' ? 1 : 0.2)));
+      if (b.bar) {
+        b.bar.visible = b.hp < b.maxHp;
+        if (b.bar.visible) { b.bar.position.set(b.x, def.barY, b.z); const k = Math.max(0, b.hp / b.maxHp), w = def.barW - 0.1; b.fill.scale.x = w * k; b.fill.position.x = -w * (1 - k) / 2; }
+      }
     }
   }
 
   // ================= 체력 / 기절 =================
   function damagePlayer(n, kx, kz, label) {
     if (player.dead || player.inv > 0) return;
+    const D = derived();
+    n = Math.max(1, Math.round(n * (1 - D.armorRed)));
     player.hp -= n; player.calm = 0;
-    player.kx = kx; player.kz = kz; player.stun = 0.3; player.hurtT = 0.4; shake = Math.max(shake, n >= 3 ? 0.45 : 0.25);
+    player.kx = kx; player.kz = kz; player.stun = 0.25; player.hurtT = 0.4; shake = Math.max(shake, n >= 8 ? 0.5 : n >= 3 ? 0.35 : 0.2);
     SFX.hurt(); SFX.bump();
     floatText(label + ' -' + n, player.x, 2.4, player.z, 'bad');
     if (player.hp <= 0) killPlayer();
@@ -760,68 +1120,78 @@
     toast(lost ? `기절했습니다! 가방의 ${lost}개를 그 자리에 떨어뜨렸어요` : '기절했습니다!');
   }
   function revivePlayer() {
-    player.dead = 0; player.x = 0; player.z = 1.5; player.kx = player.kz = 0;
+    player.dead = 0; player.x = 0; player.z = 1.5; player.kx = player.kz = 0; player.vx = player.vz = 0;
     player.hp = derived().maxHp; player.inv = 2;
     pg.rotation.x = 0;
   }
 
-  // ================= 플레이어 (강해질수록 외형 변화) =================
-  const TIER_LOOK = [
-    { shirt: '#c8553d', pants: '#3b4a6b', arm: '#c8553d' },
-    { shirt: '#b5653a', pants: '#3b4a6b', arm: '#b5653a' },
-    { shirt: '#7d8791', pants: '#4a5058', arm: '#7d8791' },
-    { shirt: '#aab4bd', pants: '#5a616a', arm: '#aab4bd' },
-    { shirt: '#e0b040', pants: '#8a6a20', arm: '#e0b040' },
-    { shirt: '#f2d36b', pants: '#6a4aa0', arm: '#f2d36b' },
+  // ================= 외형 (의상실) =================
+  const SKINS = [
+    { name: '기본', price: 0, desc: '처음 입는 작업복', look: { shirt: '#c8553d', arm: '#c8553d', pants: '#3b4a6b', hair: '#4a2f1b' } },
+    { name: '나무꾼', price: 500, desc: '체크 셔츠와 비니', look: { shirt: '#3f7a3a', arm: '#3f7a3a', pants: '#4a3a2a', hair: '#4a2f1b',
+      extra: [[-2.6, 4.2, 1.5, 5.2, 0.5, 0.1, '#244d22'], [-2.6, 5.6, 1.5, 5.2, 0.5, 0.1, '#244d22'], [-0.4, 3, 1.5, 0.6, 4, 0.1, '#244d22'], [-2.3, 10, -2.3, 4.6, 1.8, 4.6, '#c8453d'], [-0.6, 11.8, -0.6, 1.2, 0.8, 1.2, '#f4efe2']] } },
+    { name: '사냥꾼', price: 1500, desc: '초록 두건과 화살통', look: { shirt: '#7a5a3a', arm: '#7a5a3a', pants: '#4a3a2a', hair: '#2b1d12',
+      extra: [[-2.4, 8, -2.5, 4.8, 3.6, 1, '#3f5a2a'], [-2.4, 10.6, -2.4, 4.8, 1, 4.8, '#3f5a2a'], [-1, 3.5, -2.6, 1.4, 5, 1, '#8a5a32'], [-0.8, 8.5, -2.6, 0.4, 1.5, 0.4, '#f4efe2'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#5b3a1e']] } },
+    { name: '광부', price: 3000, desc: '안전모와 멜빵바지', look: { shirt: '#c9b27a', arm: '#c9b27a', pants: '#3d5a80', hair: '#2b1d12',
+      extra: [[-2.6, 3, 1.4, 5.2, 3, 0.2, '#3d5a80'], [-2, 5.5, 1.4, 0.8, 1.6, 0.2, '#3d5a80'], [1.2, 5.5, 1.4, 0.8, 1.6, 0.2, '#3d5a80'], [-2.5, 10.2, -2.5, 5, 1.4, 5, '#f2c14e'], [-3, 10, -3, 6, 0.4, 6, '#f2c14e'], [-0.6, 10.4, 2.5, 1.2, 0.8, 0.4, '#fff6c0']] } },
+    { name: '기사', price: 8000, desc: '강철 갑옷과 붉은 망토', look: { shirt: '#aab4bd', arm: '#9aa5ad', pants: '#5a616a', hair: '#2b1d12',
+      extra: [[-2.4, 9.8, -2.4, 4.8, 2.2, 4.8, '#9aa5ad'], [-0.5, 12, -2, 1, 1.5, 3, '#d0483a'], [-3.8, 6.2, -1.6, 1.8, 1.2, 3.2, '#9aa5ad'], [2, 6.2, -1.6, 1.8, 1.2, 3.2, '#9aa5ad'], [-2.7, 3.5, 1.5, 5.4, 3.2, 0.4, '#c7d0d6'], [-2.4, 2.2, -2, 4.8, 5, 0.4, '#b33a2e'], [-0.6, 4.5, 1.9, 1.2, 1.2, 0.2, '#d0483a']] } },
+    { name: '닌자', price: 15000, desc: '검은 복면과 붉은 머리띠', look: { shirt: '#1f1f24', arm: '#1f1f24', pants: '#1f1f24', hair: '#1f1f24',
+      extra: [[-2.1, 7, 1.9, 4.2, 1.6, 0.3, '#1f1f24'], [-2.3, 9.6, -2.3, 4.6, 0.7, 4.6, '#c8453d'], [-0.5, 9.4, -3.6, 1, 0.5, 1.4, '#c8453d'], [0.3, 9, -4.4, 0.8, 0.4, 1, '#c8453d'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#c8453d'], [0.5, 4, -2.2, 0.6, 6, 0.6, '#9aa5ad']] } },
+    { name: '해적', price: 25000, desc: '삼각모와 붉은 코트', look: { shirt: '#f4efe2', arm: '#8a2a2a', pants: '#2b2b33', hair: '#1d1a16',
+      extra: [[-2.7, 2.5, -1.7, 5.4, 4.5, 0.4, '#8a2a2a'], [-2.7, 2.5, 1.4, 1.5, 4.5, 0.4, '#8a2a2a'], [1.2, 2.5, 1.4, 1.5, 4.5, 0.4, '#8a2a2a'], [-3.2, 10.6, -3.2, 6.4, 0.8, 6.4, '#1d1a16'], [-2.2, 11.4, -2.2, 4.4, 1.4, 4.4, '#1d1a16'], [-0.6, 11.6, 2.2, 1.2, 1, 0.3, '#f2c14e'], [0.5, 8.3, 2, 1, 1.1, 0.3, '#1d1a16'], [-1.5, 6.4, 1.9, 3, 1.2, 0.3, '#2b1d12']] } },
+    { name: '대마법사', price: 40000, desc: '별 모자, 반짝이는 마력', fx: 'sparkle', look: { shirt: '#4a3a9a', arm: '#4a3a9a', pants: '#4a3a9a', hair: '#dcd6ff',
+      extra: [[-2.7, 0, -1.7, 5.4, 3.2, 3.4, '#4a3a9a'], [-2.9, 10.6, -2.9, 5.8, 0.6, 5.8, '#3a2a7a'], [-1.9, 11.2, -1.9, 3.8, 1.8, 3.8, '#3a2a7a'], [-1.1, 13, -1.1, 2.2, 1.8, 2.2, '#3a2a7a'], [-0.4, 14.8, -0.4, 0.8, 1.2, 0.8, '#3a2a7a'],
+        [0.8, 11.8, 1.9, 0.7, 0.7, 0.2, '#f2c14e'], [-1.4, 12.4, 1.9, 0.5, 0.5, 0.2, '#f2c14e'], [-1.8, 6.2, 1.9, 3.6, 2.2, 0.4, '#f4efe2'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#f2c14e']] } },
+    { name: '황금 영웅', price: 65000, desc: '황금 갑옷과 금빛 오라', fx: 'gold', look: { shirt: '#e0b040', arm: '#e0b040', pants: '#8a6a20', hair: '#4a2f1b',
+      extra: [[-2.4, 9.8, -2.4, 4.8, 2, 4.8, '#e0b040'], [-3.2, 10.5, -0.5, 0.8, 2.4, 1, '#f4efe2'], [2.4, 10.5, -0.5, 0.8, 2.4, 1, '#f4efe2'], [-3.8, 6.2, -1.6, 1.8, 1.2, 3.2, '#f2c14e'], [2, 6.2, -1.6, 1.8, 1.2, 3.2, '#f2c14e'],
+        [-2.7, 3.5, 1.5, 5.4, 3.2, 0.4, '#f2c14e'], [-2.4, 2.2, -2, 4.8, 5, 0.4, '#6a3cc0'], [-0.6, 4.5, 1.9, 1.2, 1.2, 0.2, '#5aa0ff']] } },
+    { name: '살라스', price: 100000, desc: '황금빛 머리, 타오르는 기운과 번개', fx: 'salas', scale: 1.15, look: { shirt: '#1d1a24', arm: '#1d1a24', pants: '#1d1a24', hair: '#ffe14a', eye: '#3ff2ff',
+      extra: [[-2.6, 3, -1.6, 5.2, 0.7, 3.2, '#f2c14e'], [-0.7, 5, 1.5, 1.4, 1.4, 0.2, '#f2c14e'], [-2.7, 6, -1.7, 5.4, 1, 3.4, '#2a2436'], [-2.6, 6.8, 1.5, 5.2, 0.3, 0.2, '#f2c14e']],
+      glow: [[-2.4, 10, -2.4, 4.8, 1.4, 4.8, '#ffe14a'], [-2.2, 11.4, -1.6, 1.2, 2.4, 1.2, '#ffe14a'], [-0.6, 11.4, -2, 1.2, 3.4, 1.2, '#fff07a'], [1, 11.4, -1.6, 1.2, 2.6, 1.2, '#ffe14a'],
+        [-1.8, 8, -3, 3.6, 3, 1.2, '#ffe14a'], [-1, 9.4, -3.9, 2, 2.8, 1, '#fff07a'], [-3.1, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [2.2, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [-0.4, 10.6, 2, 0.8, 1.2, 0.6, '#fff07a'],
+        [-3.7, 3.4, -1.1, 1.2, 0.6, 2.2, '#f2c14e'], [2.5, 3.4, -1.1, 1.2, 0.6, 2.2, '#f2c14e']] } },
   ];
-  function tierExtras(t) {
-    const E = [];
-    if (t === 1) E.push([-2.3, 10.2, -2.3, 4.6, 1.2, 4.6, '#8a5a32'], [-2.3, 10.2, 2.3, 4.6, 0.4, 1.2, '#6b4424']);
-    const helm = t >= 4 ? '#e0b040' : '#9aa5ad';
-    if (t >= 2) E.push([-2.4, 9.8, -2.4, 4.8, 2, 4.8, helm], [-3.8, 6.2, -1.6, 1.8, 1.2, 3.2, helm], [2, 6.2, -1.6, 1.8, 1.2, 3.2, helm]);
-    if (t === 2 || t === 3) E.push([-0.5, 11.8, -0.5, 1, 1, 1, '#c7d0d6']);
-    if (t >= 3) E.push([-2.7, 3.5, 1.5, 5.4, 3.2, 0.4, t >= 4 ? '#f2c14e' : '#c7d0d6'], [-2.4, 2.2, -2, 4.8, 5, 0.4, t >= 5 ? '#6a3cc0' : '#b33a2e'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#5a3a22']);
-    if (t >= 4) E.push([-3.2, 10.5, -0.5, 0.8, 2, 1, '#f4efe2'], [2.4, 10.5, -0.5, 0.8, 2, 1, '#f4efe2']);
-    if (t >= 5) E.push([-1.8, 11.8, -0.4, 0.8, 1.5, 0.8, '#b48cff'], [-0.4, 11.8, -0.4, 0.8, 2.2, 0.8, '#e2d2ff'], [1, 11.8, -0.4, 0.8, 1.5, 0.8, '#b48cff']);
-    return E;
-  }
-  let pg = null, stackG = new THREE.Group(), aura = null, curTier = -1;
-  function buildPlayer(t) {
+
+  let pg = null, stackG = new THREE.Group(), handW = null;
+  function buildPlayer() {
     if (pg) scene.remove(pg);
-    const look = TIER_LOOK[t];
-    pg = person({ shirt: look.shirt, pants: look.pants, arm: look.arm, hair: '#4a2f1b', extra: tierExtras(t) });
-    pg.scale.setScalar(1 + 0.06 * t);
+    const s = SKINS[skin] || SKINS[0];
+    pg = person(s.look);
+    pg.scale.setScalar(s.scale || 1);
     stackG.position.set(0, 0.8, -0.62); pg.add(stackG);
-    if (L.bow) { const bw = vmesh(bowGeo); bw.position.set(0, -0.5, 0.25); pg.userData.armL.add(bw); }
-    if (L.sword) { const sw = vmesh(swordGeo(Math.min(3, Math.floor((L.sword - 1) / 2)))); sw.scale.setScalar(0.55); sw.position.set(0.35, 1.4, -0.45); sw.rotation.set(0, Math.PI / 2, 2.3); pg.add(sw); }
-    if (aura) { scene.remove(aura); aura = null; }
-    if (t >= 3) {
-      aura = new THREE.Group();
-      const col = t >= 5 ? '#c9a8ff' : t >= 4 ? '#ffd76a' : '#e8eef2';
-      const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8 });
-      const n = 10 + t * 2;
-      for (let i = 0; i < n; i++) {
-        const m = new THREE.Mesh(BOX, mat); const a = i / n * Math.PI * 2;
-        m.scale.set(0.14, 0.05, 0.14); m.position.set(Math.cos(a) * 0.9, 0.05, Math.sin(a) * 0.9); aura.add(m);
-      }
-      scene.add(aura);
+    const rw = eqW('ranged');
+    handW = null;
+    if (rw) {
+      const anc = rw.grade === 'ancient';
+      handW = vmesh(rw.type === 'bow' ? bowHandGeo(rw.grade) : gunHandGeo(rw.grade), true, anc ? ANCIENT : null);
+      handW.position.set(0, -0.6, 0.12); pg.userData.armL.add(handW);
     }
-    curTier = t;
   }
   function rebuildStack(g, list, maxShow) {
     while (g.children.length) g.remove(g.children[0]);
     const n = Math.min(list.length, maxShow);
     for (let i = 0; i < n; i++) { const m = itemMesh(list[i]); m.position.y = i * 0.26; m.rotation.y = (i % 3 - 1) * 0.08; g.add(m); }
   }
+  // 회전 도끼 / 곡괭이
   const axes = [], picks = [];
-  let axeTier = -1, pickTier = -1;
+  let axeKey = '', pickTier = -1;
   function syncTools() {
-    const D = derived();
-    const at = Math.min(3, Math.floor(L.axeDmg / 3)), pt = Math.min(3, Math.floor(L.pick / 2));
-    if (at !== axeTier) { axes.forEach(a => scene.remove(a)); axes.length = 0; axeTier = at; }
+    const D = derived(), aw = eqW('axe');
+    let h, e, key, big = null, mat = null, sc;
+    if (aw) {
+      const G = GRADES[aw.grade]; h = G.col; e = aw.grade === 'ancient' ? '#ffffff' : '#fff2b0'; key = 'g' + aw.grade; big = aw.grade === 'legend' || aw.grade === 'ancient' ? G.col2 : null;
+      if (aw.grade === 'ancient') mat = ANCIENT;
+      sc = 1.5 + GRADE_ORDER.indexOf(aw.grade) * 0.12;
+    } else { const t = Math.min(3, Math.floor(L.axeDmg / 3)); [h, e] = TOOL_COL[t]; key = 't' + t; sc = 1.35 + 0.12 * t; }
+    sc += 0.35 * D.sk.filter(s => s === 'giant').length;
+    const k = key + '|' + sc + '|' + D.axes;
+    if (k !== axeKey) {
+      axes.forEach(a => scene.remove(a)); axes.length = 0; axeKey = k;
+      for (let i = 0; i < D.axes; i++) { const m = vmesh(axeGeo(h, e, key, big), true, mat); m.scale.setScalar(sc); scene.add(m); axes.push(m); }
+    }
+    const pt = Math.min(3, Math.floor(L.pick / 2));
     if (pt !== pickTier) { picks.forEach(a => scene.remove(a)); picks.length = 0; pickTier = pt; }
-    while (axes.length < D.axes) { const m = vmesh(axeGeo(at)); m.scale.setScalar(1.35 + 0.12 * at); scene.add(m); axes.push(m); }
-    while (axes.length > D.axes) scene.remove(axes.pop());
     while (picks.length < D.picks) { const m = vmesh(pickGeo(pt)); m.scale.setScalar(1.3 + 0.1 * pt); scene.add(m); picks.push(m); }
     while (picks.length > D.picks) scene.remove(picks.pop());
   }
@@ -858,6 +1228,8 @@
     b.hopper = vmesh(hopperGeo); b.hopper.position.set(b.hop.x, 0, b.hop.z); b.group.add(b.hopper);
     b.group.visible = false; scene.add(b.group);
   }
+  // 플레이어가 있는 구역의 컨베이어 (곰 숲·공룡 계곡·보스 경기장은 곰숲 컨베이어)
+  const zoneBelt = (x, z) => x > QX ? BELTS[2] : z < BEAR_Z ? BELTS[1] : BELTS[0];
   function beltPos(b, d) {
     for (const s of b.segs) {
       if (d <= s.len) { const k = d / s.len; return [s.x0 + (s.x1 - s.x0) * k, s.z0 + (s.z1 - s.z0) * k]; }
@@ -866,6 +1238,7 @@
     const s = b.segs[b.segs.length - 1]; return [s.x1, s.z1];
   }
   function beltPush(b, type) {
+    if (beltItems.length > 180) { stock.push(type); stockDirty = true; return; }   // 벨트가 꽉 차면 바로 판매대로
     const m = itemMesh(type); scene.add(m);
     beltItems.push({ b, type, m, d: 0 });
   }
@@ -877,6 +1250,7 @@
       const [x, z] = beltPos(it.b, it.d); it.m.position.set(x, 0.2, z);
     }
   }
+  function syncBelts() { BELTS.forEach(b => { b.group.visible = !!L[b.k]; }); }
 
   // ================= 발판 =================
   const PADS = [
@@ -893,26 +1267,35 @@
     { k: 'lane2', name: '계산대 추가', x: 7.5, z: 9.5, base: 350, mul: 1, max: 1, once: true, req: () => L.cashier },
     { k: 'beltSpeed', name: '벨트 속도', x: 10.5, z: 9.5, base: 150, mul: 1.8, max: 5, req: () => L.beltForest || L.beltBear || L.beltQuarry },
     { k: 'magnet', name: '자석', x: -10.5, z: 12.5, base: 60, mul: 1.8, max: 5 },
-    { k: 'bank', name: '자동 입금', x: 10.5, z: 12.5, base: 300, mul: 1, max: 1, once: true },
     { k: 'armor', name: '갑옷 강화', x: -7.5, z: 12.5, base: 80, mul: 1.6, max: 10 },
-    { k: 'bow', name: '활', buyName: '활 구매', x: -4.5, z: 12.5, base: 500, mul: 1.7, max: 8, req: () => L.gateBear },
-    { k: 'sword', name: '대검', buyName: '대검 구매', x: 4.5, z: 12.5, base: 1500, mul: 1.7, max: 8, req: () => L.gateBear },
-    { k: 'gateDino', name: '공룡 계곡 개방', x: 0, z: DINO_Z + 2.4, base: 3000, mul: 1, max: 1, once: true, req: () => L.gateBear },
+    { k: 'shopWeapon', name: '무기점', x: -4.5, z: 12.5, open: 'weapon' },
+    { k: 'shopGacha', name: '뽑기', x: 4.5, z: 12.5, open: 'gacha' },
+    { k: 'shopSkin', name: '의상실', x: 7.5, z: 12.5, open: 'skin' },
+    { k: 'bank', name: '자동 입금', x: 10.5, z: 12.5, base: 300, mul: 1, max: 1, once: true },
     { k: 'beltForest', name: '숲 컨베이어', x: -12, z: 6, base: 200, mul: 1, max: 1, once: true },
     { k: 'gateBear', name: '곰 숲 개방', x: 0, z: -19.5, base: 250, mul: 1, max: 1, once: true },
     { k: 'beltBear', name: '곰숲 컨베이어', x: -6, z: -19.5, base: 600, mul: 1, max: 1, once: true, req: () => L.gateBear },
     { k: 'gateQuarry', name: '채석장 개방', x: 33.5, z: 1.2, base: 800, mul: 1, max: 1, once: true, req: () => L.gateBear },
     { k: 'pick', name: '곡괭이 강화', x: 33.5, z: -1.8, base: 150, mul: 1.7, max: 8, req: () => L.gateQuarry },
     { k: 'beltQuarry', name: '채석장 컨베이어', x: 33.5, z: 6, base: 1000, mul: 1, max: 1, once: true, req: () => L.gateQuarry },
+    { k: 'gateDino', name: '공룡 계곡 개방', x: 0, z: DINO_Z + 2.4, base: 3000, mul: 1, max: 1, once: true, req: () => L.gateBear },
+    { k: 'gateBoss', name: '최종 보스 개방', x: 0, z: BOSS_Z + 2.4, base: 10000, mul: 1, max: 1, once: true, req: () => L.gateDino },
   ];
+  const PAD_COL = { hire: '#b9d69a', gate: '#e0a08a', shop: '#c9a8e8', belt: '#a9b4c0' };
+  const padColor = p => p.open ? PAD_COL.shop : p.k.startsWith('gate') ? PAD_COL.gate : p.k.startsWith('belt') && p.k !== 'beltSpeed' ? PAD_COL.belt : ['worker', 'hunter', 'miner', 'cashier', 'lane2'].includes(p.k) ? PAD_COL.hire : '#d9c48e';
   const tagsEl = $('tags');
   function mkTag(cls) { const d = document.createElement('div'); d.className = 'tag ' + (cls || ''); tagsEl.appendChild(d); return d; }
-  for (const p of PADS) { p.pad = makePad('#d9c48e'); p.pad.g.position.set(p.x, 0, p.z); p.tag = mkTag(); p.html = ''; p.cool = 0; p.acc = 0; }
+  for (const p of PADS) {
+    p.pad = makePad(padColor(p)); p.pad.g.position.set(p.x, 0, p.z);
+    p.icon = vmesh(cgeo('icon' + p.k, ICONS[p.k]), false); p.icon.scale.setScalar(0.9); p.icon.position.set(p.x, 1.7, p.z); scene.add(p.icon);
+    p.tag = mkTag(p.open ? 'shop' : ''); p.html = '';
+    if (p.open) p.tag.innerHTML = p.name;
+  }
   const depPad = makePad('#f2c14e'); depPad.g.position.set(DEPOSIT.x, 0, DEPOSIT.z);
   const chkPads = CHECK.map(c => { const p = makePad('#8fd06a'); p.g.position.set(c.x, 0, c.z); return p; });
   const depTag = mkTag('info'), chkTag = mkTag('info'), stockTag = mkTag('info'), cashTag = mkTag('info');
   depTag.innerHTML = '판매대<small> 내려놓기</small>'; chkTag.textContent = '계산대';
-  const hopTags = BELTS.map(() => { const t = mkTag('info'); t.innerHTML = '투입구<small> 올라서기</small>'; return t; });
+  const hopTags = BELTS.map(() => { const t = mkTag('info'); t.innerHTML = '투입구'; return t; });
 
   const cost = p => Math.round(p.base * Math.pow(p.mul, L[p.k]));
   const onPad = (x, z, px, pz) => Math.abs(px - x) < 0.95 && Math.abs(pz - z) < 0.95;
@@ -923,71 +1306,77 @@
     if (k === 'hunter') addNpc('hunter', -7.5, 9.5);
     if (k === 'miner') addNpc('miner', -4.5, 9.5);
     if (k === 'cashier' || k === 'lane2') syncCashiers();
-    if (k === 'gateBear') { gateBearG.visible = false; toast('곰 숲이 열렸습니다. 곰에게 맞으면 밀려나요'); }
+    if (k === 'gateBear') { gateBearG.visible = false; toast('곰 숲이 열렸습니다'); }
     if (k === 'gateQuarry') { gateQuarryG.visible = false; toast('채석장이 열렸습니다. 곡괭이가 함께 돕니다!'); }
-    if (k.startsWith('belt') && k !== 'beltSpeed') { syncBelts(); toast('컨베이어 설치! 투입구에 올라서면 자동으로 판매대로 갑니다'); }
-    if (k === 'bank') toast('자동 입금: 쌓인 돈이 알아서 들어옵니다');
     if (k === 'gateDino') { gateDinoG.visible = false; toast('공룡 계곡이 열렸습니다. 티라노를 조심하세요!'); SFX.trex(); }
-    if (k === 'bow' && L.bow === 1) toast('활 획득! 가까운 곰·공룡을 자동으로 쏩니다');
-    if (k === 'sword' && L.sword === 1) toast('대검 획득! 주기적으로 주변을 크게 벱니다');
+    if (k === 'gateBoss') { gateBossG.visible = false; toast('최종 보스 뿌잉뿌잉의 경기장이 열렸습니다'); SFX.puing(); }
+    if (k.startsWith('belt') && k !== 'beltSpeed') { syncBelts(); toast('컨베이어 설치! 이 구역에서 줍는 채집품은 자동으로 판매대로 갑니다'); }
+    if (k === 'bank') toast('자동 입금: 쌓인 돈이 알아서 들어옵니다');
     if (k === 'armor') player.hp = derived().maxHp;
-    if (k === 'bow' || k === 'sword') buildPlayer(tierOf());
     const t = tierOf();
-    if (t !== curTier) { buildPlayer(t); SFX.level(); toast('더 강해졌다! ' + RANKS[t]); spawnChips(player.x, 1.5, player.z, '#f2c14e', 18); }
+    if (t !== curTier) { curTier = t; SFX.level(); toast('등급 상승! ' + RANKS[t]); spawnChips(player.x, 1.5, player.z, '#f2c14e', 18); }
   }
-  // 발판: 밟기만 해서는 돈이 나가지 않는다. 구매 창에서 버튼을 눌러야 결제.
   const PAD_DESC = {
-    axeCount: '회전 도끼 +1개', axeDmg: '도끼 피해 +1', spin: '도끼 회전 속도·반경 증가', bag: '가방 +5칸',
+    axeCount: '회전 도끼 +1개', axeDmg: '도끼 피해 +1', spin: '도끼 회전 속도·반경 증가', bag: '나무 +5 · 고기 +3 · 광물 +4칸',
     speed: '이동 속도 +10%', price: '판매가 +20%, 손님 증가', worker: '나무를 베어 납품하는 일꾼', hunter: '곰을 잡아 납품하는 일꾼',
     miner: '바위를 캐서 납품하는 일꾼', cashier: '계산대 자동 판매', lane2: '계산대 한 줄 추가(계산원 포함)', beltSpeed: '컨베이어 속도 증가',
-    magnet: '아이템 줍는 범위 증가', bank: '금괴 더미 자동 수거', beltForest: '투입구 → 판매대 자동 운반', beltBear: '투입구 → 판매대 자동 운반',
-    beltQuarry: '투입구 → 판매대 자동 운반', gateBear: '곰 숲 입장 (고기 8G)', gateQuarry: '채석장 입장, 곡괭이 획득', gateDino: '공룡 계곡 입장 (공룡 고기 40G)',
-    pick: '곡괭이 피해 +1, 2단계마다 +1개', armor: '최대 체력 +5', bow: '가까운 짐승 자동 사격', sword: '주기적으로 주변 360도 베기',
+    magnet: '줍는 범위 +1.6', bank: '금괴 더미 자동 수거', beltForest: '숲에서 줍는 채집품이 자동으로 판매대로', beltBear: '곰 숲·공룡 계곡·경기장 채집품 자동 운반',
+    beltQuarry: '채석장 채집품 자동 운반', gateBear: '곰 숲 입장 (고기 8G)', gateQuarry: '채석장 입장, 곡괭이 획득', gateDino: '공룡 계곡 입장 (공룡 고기 40G)',
+    gateBoss: '최종 보스 뿌잉뿌잉과 결투', pick: '곡괭이 피해 +1, 2단계마다 +1개', armor: '최대 체력 +8, 받는 피해 -4%',
+    shopWeapon: '활·총 구매와 강화', shopGacha: '보석 5개로 무기 뽑기', shopSkin: '외형 10종 구매·착용',
   };
   let curPad = null, buyHtml = '';
-  const remain = p => cost(p) - (padPaid[p.k] || 0);
+  const padPrice = p => cost(p) - (padPaid[p.k] || 0);
   function buyPad(p) {
-    if (!p || L[p.k] >= p.max || (p.req && !p.req())) return;
-    const r = remain(p);
-    if (gold < r) { SFX.hurt(); floatText(`${r - gold}G 부족`, player.x, 2.6, player.z, 'bad'); return; }
+    if (!p) return;
+    if (p.open) { openShop(p.open, true); return; }
+    if (L[p.k] >= p.max || (p.req && !p.req())) return;
+    const r = padPrice(p);
+    if (gold < r) { SFX.hurt(); floatText(`${fmt(r - gold)}G 부족`, player.x, 2.6, player.z, 'bad'); return; }
     gold -= r; padPaid[p.k] = 0; L[p.k]++;
     SFX.buy();
     spawnChips(p.x, 0.5, p.z, '#f2c14e', 12);
-    if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + (p.buyName ? 0 : 1)), p.x, 1.4, p.z, 'note');
+    if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + 1), p.x, 1.4, p.z, 'note');
     applyUpgrade(p.k);
     buyHtml = '';
   }
-  function updatePads(dt) {
+  function updatePads(t) {
     let here = null;
     for (const p of PADS) {
-      const maxed = L[p.k] >= p.max;
+      const maxed = !p.open && L[p.k] >= p.max;
       const hide = (p.once && maxed) || (p.req && !p.req());
-      p.pad.g.visible = !hide; p.tag.hidden = hide;
+      p.pad.g.visible = !hide; p.tag.hidden = hide; p.icon.visible = !hide;
       if (hide) continue;
-      const c = cost(p), paid = padPaid[p.k] || 0;
+      p.icon.rotation.y = t * 0.9 + p.x; p.icon.position.y = 1.7 + Math.sin(t * 2 + p.x) * 0.12;
       if (!player.dead && onPad(p.x, p.z, player.x, player.z)) here = p;
+      if (p.open) continue;
+      const c = cost(p), paid = padPaid[p.k] || 0;
       setPadFill(p.pad, maxed ? 0 : paid / c);
-      const html = maxed
-        ? `${p.name}<div class="c">MAX</div>`
-        : `${p.buyName && !L[p.k] ? p.buyName : p.name}<div class="c">${p.once || (p.buyName && !L[p.k]) ? '' : '<small>Lv.' + (L[p.k] + (p.buyName ? 0 : 1)) + '</small>'}<i class="coin"></i>${c - paid}</div>`;
+      const html = maxed ? `${p.name}<div class="c">MAX</div>`
+        : `${p.name}<div class="c">${p.once ? '' : '<small>Lv.' + (L[p.k] + 1) + '</small>'}<i class="coin"></i>${fmt(c - paid)}</div>`;
       if (html !== p.html) { p.tag.innerHTML = html; p.html = html; }
       p.tag.classList.toggle('max', maxed);
       p.tag.classList.toggle('poor', !maxed && gold + paid < c);
     }
     curPad = here;
     const panel = $('buyPanel');
-    panel.hidden = !here;
+    panel.hidden = !here || shopOpen;
     if (!here) { buyHtml = ''; return; }
-    const maxed = L[here.k] >= here.max, r = remain(here);
-    const title = here.buyName && !L[here.k] ? here.buyName : here.name;
-    const lv = here.once ? '' : here.buyName ? (L[here.k] ? ` Lv.${L[here.k]} → ${L[here.k] + 1}` : '') : ` Lv.${L[here.k] + 1} → ${L[here.k] + 2}`;
-    const html = `<div class="bt"><b>${title}</b><span>${maxed ? '최대 단계' : lv}</span></div><div class="bd">${PAD_DESC[here.k] || ''}</div>` +
-      (maxed ? '' : `<div class="bc"><i class="coin"></i>${r}${gold < r ? `<small> · ${r - gold}G 부족</small>` : ''}</div>`);
+    if (here.open) {
+      const html = `<div class="bt"><b>${here.name}</b></div><div class="bd">${PAD_DESC[here.k]}</div>`;
+      if (html !== buyHtml) { $('buyInfo').innerHTML = html; buyHtml = html; }
+      $('btnBuy').hidden = false; $('btnBuy').disabled = false; $('btnBuy').textContent = '열기';
+      return;
+    }
+    const maxed = L[here.k] >= here.max, r = padPrice(here);
+    const lv = here.once ? '' : ` Lv.${L[here.k] + 1} → ${L[here.k] + 2}`;
+    const html = `<div class="bt"><b>${here.name}</b><span>${maxed ? '최대 단계' : lv}</span></div><div class="bd">${PAD_DESC[here.k] || ''}</div>` +
+      (maxed ? '' : `<div class="bc"><i class="coin"></i>${fmt(r)}${gold < r ? `<small> · ${fmt(r - gold)}G 부족</small>` : ''}</div>`);
     if (html !== buyHtml) { $('buyInfo').innerHTML = html; buyHtml = html; }
+    $('btnBuy').textContent = '구매';
     $('btnBuy').hidden = maxed;
     $('btnBuy').disabled = gold < r;
   }
-  function syncBelts() { BELTS.forEach(b => { b.group.visible = !!L[b.k]; }); }
 
   // ================= 손님 =================
   const custs = [];
@@ -1001,9 +1390,9 @@
     let lane = 0;
     if (lanes() === 2 && counts[1] < counts[0]) lane = 1;
     if (counts[lane] >= 8) return;
-    const shirt = SHIRTS[(Math.random() * SHIRTS.length) | 0];
-    const p = person({ shirt, arm: shirt, pants: '#44464f', hair: HAIRS[(Math.random() * HAIRS.length) | 0], hat: Math.random() < 0.3 ? '#d9c68f' : null });
-    const c = { p, lane, x: rand(-1.5, 1.5), z: 25, face: Math.PI, state: 'walk', want: 3 + ((Math.random() * 5) | 0), wait: 0, serveT: 0, qi: 0, tx: 0, tz: 0, bag: false };
+    const shirt = pick(SHIRTS);
+    const p = person({ shirt, arm: shirt, pants: '#44464f', hair: pick(HAIRS), hat: Math.random() < 0.3 ? '#d9c68f' : null });
+    const c = { p, lane, x: rand(-1.5, 1.5), z: 25, face: Math.PI, state: 'walk', want: 3 + irand(5), wait: 0, serveT: 0, qi: 0, tx: 0, tz: 0 };
     p.position.set(c.x, 0, c.z);
     custs.push(c);
   }
@@ -1016,7 +1405,7 @@
     if (custTimer <= 0) {
       custTimer = D.custEvery * rand(0.6, 1.4);
       spawnCustomer();
-      if (Math.random() < 0.35) spawnCustomer();   // 가끔 둘이 함께 온다
+      if (Math.random() < 0.35) spawnCustomer();
     }
     const qi = [0, 0];
     for (const c of custs) {
@@ -1035,7 +1424,7 @@
           if (c.serveT > 0.35) {
             const n = Math.min(c.want, stock.length);
             const items = stock.splice(stock.length - n, n);
-            const pay = Math.round(items.reduce((s, it) => s + PRICE[it], 0) * D.price);
+            const pay = Math.round(items.reduce((s, it) => s + (PRICE[it] || 0), 0) * D.price);
             cashPile += pay; stats.sales++; stats.earned += pay; stockDirty = true;
             floatText('+' + pay, c.x, 2.2, c.z);
             for (let k = 0; k < Math.min(5, 1 + (pay >> 3)); k++) flyCoin(c.x, 1.2, c.z, CASH.x + rand(-0.6, 0.6), 0.3, CASH.z + rand(-0.3, 0.3), k * 0.06);
@@ -1073,17 +1462,17 @@
     miner: { shirt: '#3d5a80', arm: '#3d5a80', pants: '#3b3b46', hair: '#2b1d12', hat: '#f2c14e' },
   };
   const npcs = [];
+  const NPC_CAP = 14, NPC_ACT = 0.45, NPC_SPEED = 4.2;
   function addNpc(kind, x, z) {
     const p = person(NPC_LOOK[kind]);
-    const tool = vmesh(kind === 'miner' ? pickGeo(0) : axeGeo(kind === 'hunter' ? 1 : 0));
+    const tool = vmesh(kind === 'miner' ? pickGeo(0) : axeGeo(kind === 'hunter' ? '#6fa8d6' : '#9aa5ad', '#e8eef2', kind === 'hunter' ? 'npcH' : 'npcL'));
     tool.scale.setScalar(0.6); tool.position.set(0, -0.35, 0.2); p.userData.armR.add(tool);
     p.userData.busy = false;
     const sg = new THREE.Group(); sg.position.set(0, 0.8, -0.62); p.add(sg);
-    const n = { kind, p, sg, x: x + rand(-0.5, 0.5), z, face: 0, state: 'seek', carry: [], cap: kind === 'lumber' ? 6 : 8, target: null, actT: 0, shown: -1 };
+    const n = { kind, p, sg, x: x + rand(-0.5, 0.5), z, face: 0, state: 'seek', carry: [], cap: NPC_CAP, target: null, actT: 0, shown: -1 };
     p.position.set(n.x, 0, n.z);
     npcs.push(n);
   }
-  // 울타리를 넘을 때는 문을 거쳐 간다
   function routeTo(x, z, tx, tz) {
     const sideB = z < BEAR_Z, tSideB = tz < BEAR_Z;
     if (sideB !== tSideB) {
@@ -1116,7 +1505,7 @@
         else {
           let best = null, bd = 1e9;
           for (const o of pool) {
-            if (!o.alive || o.claimed || (n.kind === 'lumber' && o.big) || (n.kind === 'hunter' && o.kind === 'dino')) continue;
+            if (!o.alive || o.claimed || (n.kind === 'lumber' && o.big) || (n.kind === 'hunter' && o.kind !== 'bear')) continue;
             const d = dist(o.x, o.z, n.x, n.z);
             if (d < bd) { bd = d; best = o; }
           }
@@ -1135,17 +1524,18 @@
         n.actT += dt;
         n.face = lerpAngle(n.face, Math.atan2(o.x - n.x, o.z - n.z), dt * 10);
         n.p.userData.busy = true;
-        n.p.userData.armR.rotation.x = -1.2 - Math.abs(Math.sin(n.actT * Math.PI / 0.7)) * 1.2;
+        n.p.userData.armR.rotation.x = -1.2 - Math.abs(Math.sin(n.actT * Math.PI / NPC_ACT)) * 1.2;
         if (!o.alive) { o.claimed = null; n.target = null; n.state = 'seek'; }
         else if (n.kind === 'hunter' && dist(o.x, o.z, n.x, n.z) > 1.9) n.state = 'go';
-        else if (n.actT >= 0.7) {
+        else if (n.actT >= NPC_ACT) {
           n.actT = 0;
           let got = null;
-          if (n.kind === 'lumber') { const k = hitTree(o, 1 + Math.floor(L.axeDmg / 3)); if (k) { got = Array(k).fill('w'); SFX.fell(); } else SFX.chop(); }
-          else if (n.kind === 'miner') { got = hitRock(o, 1 + Math.floor(L.pick / 2)); if (got) SFX.crack(); else SFX.clink(); }
-          else { const k = hitBear(o, 3 + L.axeDmg, n.x, n.z); if (k) got = Array(k).fill('m'); }
+          // 일꾼 생산량 2배: 한 번 캘 때마다 두 배로 챙긴다
+          if (n.kind === 'lumber') { const k = hitTree(o, 2 + Math.floor(L.axeDmg / 2)); if (k) { got = Array(k * 2).fill('w'); SFX.fell(); } else SFX.chop(); }
+          else if (n.kind === 'miner') { const g = hitRock(o, 2 + L.pick); if (g) { got = g.concat(g); SFX.crack(); } else SFX.clink(); }
+          else { const k = hitBear(o, 6 + L.axeDmg * 1.5, n.x, n.z); if (k) got = Array(k * 2).fill('m'); }
           if (got) {
-            for (const it of got) if (n.carry.length < n.cap) n.carry.push(it);
+            for (const it of got) { if (it === 'g') { gems++; continue; } if (n.carry.length < n.cap) n.carry.push(it); }
             o.claimed = null; n.target = null; n.state = 'seek';
           }
         }
@@ -1153,7 +1543,7 @@
       if (n.state === 'return') {
         let best = null, bd = 1e9;
         for (const p of dropPoints()) { const d = pathLen(n.x, n.z, p.x, p.z); if (d < bd) { bd = d; best = p; } }
-        if (dist(best.x, best.z, n.x, n.z) < 0.6) {
+        if (dist(best.x, best.z, n.x, n.z) < 0.8) {
           for (const it of n.carry) { if (best.belt) beltPush(best.belt, it); else { stock.push(it); stockDirty = true; } stats.deposited++; }
           n.carry = []; n.state = 'seek';
         } else [gx, gz] = routeTo(n.x, n.z, best.x, best.z);
@@ -1161,7 +1551,7 @@
       const dx = gx - n.x, dz = gz - n.z, d = Math.hypot(dx, dz);
       const moving = d > 0.05 && n.state !== 'work';
       if (moving) {
-        const sp = Math.min(d, 3.2 * dt);
+        const sp = Math.min(d, NPC_SPEED * dt);
         n.x += dx / d * sp; n.z += dz / d * sp;
         n.face = lerpAngle(n.face, Math.atan2(dx, dz), dt * 10);
       }
@@ -1201,7 +1591,7 @@
     const amt = cashPile; cashPile = 0; gold += amt; stats.collected++;
     const n = Math.min(18, cashShown);
     for (let i = 0; i < n; i++) flyCoin(CASH.x + rand(-0.8, 0.8), 0.3 + rand(0, 1), CASH.z + rand(-0.4, 0.4), player.x, 1.4, player.z, i * 0.03);
-    floatText('+' + amt, auto ? CASH.x : player.x, 2.4, auto ? CASH.z : player.z, 'big');
+    floatText('+' + fmt(amt), auto ? CASH.x : player.x, 2.4, auto ? CASH.z : player.z, 'big');
     SFX.cash(); bumpGold();
   }
   let goldBumpT = 0;
@@ -1223,13 +1613,308 @@
     el.style.visibility = '';
     el.style.transform = `translate(${((pv.x + 1) / 2 * innerWidth).toFixed(1)}px, ${((1 - pv.y) / 2 * innerHeight + (dy || 0)).toFixed(1)}px) translate(-50%, 0)`;
   }
-
-  // ================= 목표 =================
   function nearest(list, ok) {
     let b = null, bd = 1e9;
     for (const o of list) if (ok(o)) { const d = dist(o.x, o.z, player.x, player.z); if (d < bd) { bd = d; b = o; } }
     return b;
   }
+
+  // ================= 원거리 무기 / 메테오 / 오라 =================
+  const shots = [], meteors = [];
+  let fireT = 0, meteorT = 2, auraT = 0;
+  const bulletGeo = c => cgeo('bullet' + c, () => [[-0.4, -0.4, -1.2, 0.8, 0.8, 2.4, c], [-0.2, -0.2, 1.2, 0.4, 0.4, 0.6, '#ffffff']]);
+  function pickTargets(range, n) {
+    const found = [];
+    for (const b of bears) if (b.alive) { const d = dist(b.x, b.z, player.x, player.z) - (b.kind === 'boss' ? 4 : 0); if (d < range) found.push([d, b]); }
+    if (!found.length) {
+      for (const t of trees) if (t.alive && Math.abs(t.x - player.x) < range) { const d = dist(t.x, t.z, player.x, player.z); if (d < range) found.push([d, t]); }
+      if (L.gateQuarry) for (const r of rocks) if (r.alive) { const d = dist(r.x, r.z, player.x, player.z); if (d < range) found.push([d, r]); }
+    }
+    found.sort((a, b) => a[0] - b[0]);
+    const out = [];
+    for (let i = 0; i < n && found.length; i++) out.push(found[i % found.length][1]);
+    return out;
+  }
+  function shotColor(w, sk) {
+    if (w.grade === 'ancient') return pick(['#ff4fd8', '#5aa0ff', '#f2c14e', '#8fd06a']);
+    if (sk.includes('fire')) return '#ff7a2a';
+    if (sk.includes('poison')) return '#6fd04a';
+    if (sk.includes('freeze')) return '#8fe8ff';
+    return w.type === 'gun' ? '#ffe08a' : null;
+  }
+  function updateRanged(dt, D) {
+    const w = eqW('ranged');
+    if (w && !player.dead) {
+      const st = rStats(w);
+      fireT -= dt;
+      if (fireT <= 0) {
+        const tg = pickTargets(st.range, st.count);
+        if (tg.length) {
+          fireT = 1 / st.rate;
+          const sk = D.sk;
+          tg.forEach((o, i) => {
+            const c = shotColor(w, sk);
+            const m = w.type === 'bow' && !c ? vmesh(arrowGeo, false) : vmesh(bulletGeo(c || '#ffe08a'), false);
+            m.scale.setScalar(w.type === 'bow' ? 1.3 : 0.9); scene.add(m);
+            const a = (i - (tg.length - 1) / 2) * 0.25;
+            shots.push({ m, x: player.x + Math.cos(player.face + a) * 0.4, y: 1.3, z: player.z + Math.sin(player.face + a) * 0.4, tg, dmg: st.dmg, sk, left: st.pierce, speed: st.speed, t: 0, hit: [] });
+          });
+          player.aimT = 0.25; player.aimFace = Math.atan2(tg[0].x - player.x, tg[0].z - player.z);
+          if (w.type === 'gun') SFX.gun(); else SFX.bow();
+        } else fireT = 0.15;
+      }
+    }
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const s = shots[i]; s.t += dt;
+      const o = s.tg;
+      if (!o.alive || s.t > 2) { scene.remove(s.m); shots.splice(i, 1); continue; }
+      const ty = o.kind === 'boss' ? 4 : o.kind === 'dino' ? 2.2 : o.kind2 === 'beast' ? 0.9 : 1.2;
+      const dx = o.x - s.x, dy = ty - s.y, dz = o.z - s.z, d = Math.hypot(dx, dy, dz), stp = s.speed * dt;
+      const reach = o.kind === 'boss' ? 3 : 0.4;
+      if (d <= stp + reach) {
+        applyHit(o, s.dmg, s.sk);
+        s.hit.push(o);
+        if (s.left > 0) {
+          const next = bears.filter(b => b.alive && !s.hit.includes(b) && dist(b.x, b.z, o.x, o.z) < 6).sort((a, b) => dist(a.x, a.z, o.x, o.z) - dist(b.x, b.z, o.x, o.z))[0];
+          if (next) { s.left--; s.tg = next; s.x = o.x; s.z = o.z; continue; }
+        }
+        scene.remove(s.m); shots.splice(i, 1); continue;
+      }
+      s.x += dx / d * stp; s.y += dy / d * stp; s.z += dz / d * stp;
+      s.m.position.set(s.x, s.y, s.z); s.m.rotation.y = Math.atan2(dx, dz);
+      if (s.sk.includes('fire') && Math.random() < 0.3) emit('#ff9a3a', s.x, s.y, s.z, 0, 0.5, 0, 0.25, 0.14);
+    }
+    // 메테오 / 신성 오라 (에인션트 스킬)
+    const baseDmg = Math.max(D.dmg, w ? rStats(w).dmg : 0);
+    const nMet = D.sk.filter(s => s === 'meteor').length;
+    if (nMet && !player.dead) {
+      meteorT -= dt;
+      if (meteorT <= 0) {
+        const tg = pickTargets(16, 1)[0];
+        if (tg) {
+          meteorT = 3 / nMet;
+          const m = vmesh(cgeo('meteor', () => [[-2, -2, -2, 4, 4, 4, '#ff5a1a'], [-1.4, -1.4, -2.3, 2.8, 2.8, 0.4, '#ffd84a'], [-2.3, -1, -1, 0.4, 2, 2, '#ffd84a'], [-1, 2, -1, 2, 0.5, 2, '#fff2b0']]), false);
+          m.scale.setScalar(1.6); scene.add(m);
+          meteors.push({ m, x: tg.x, z: tg.z, t: 0, dmg: baseDmg * 6 });
+          SFX.meteor();
+        } else meteorT = 0.5;
+      }
+    }
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const mt = meteors[i]; mt.t += dt;
+      const k = Math.min(1, mt.t / 0.5);
+      mt.m.position.set(mt.x + (1 - k) * 6, 16 * (1 - k) + 0.5, mt.z - (1 - k) * 4); mt.m.rotation.x += dt * 8;
+      emit(pick(['#ff5a1a', '#ffd84a', '#fff2b0']), mt.m.position.x, mt.m.position.y, mt.m.position.z, rand(-1, 1), rand(0, 2), rand(-1, 1), 0.35, 0.3);
+      if (k >= 1) {
+        boomFx(mt.x, mt.z, 3.8, '#ff5a1a'); shake = Math.max(shake, 0.35);
+        const sk = D.sk.filter(s => s !== 'explode');
+        for (const b of bears) if (b.alive && dist(b.x, b.z, mt.x, mt.z) < 3.8 + (b.kind === 'boss' ? 4 : 0)) dealDirect(b, mt.dmg, sk);
+        for (const t of trees) if (t.alive && dist(t.x, t.z, mt.x, mt.z) < 3.8) dealDirect(t, mt.dmg, sk);
+        for (const r of rocks) if (r.alive && dist(r.x, r.z, mt.x, mt.z) < 3.8) dealDirect(r, mt.dmg, sk);
+        scene.remove(mt.m); meteors.splice(i, 1);
+      }
+    }
+    const nAura = D.sk.filter(s => s === 'aura').length;
+    auraRing.visible = nAura > 0 && !player.dead;
+    if (auraRing.visible) {
+      auraRing.position.set(player.x, 0.1, player.z); auraRing.rotation.y += dt * 1.2;
+      auraRing.children.forEach((c, i) => c.material.color.setHSL((clock * 0.25 + i / auraRing.children.length) % 1, 1, 0.6));
+      auraT -= dt;
+      if (auraT <= 0) {
+        auraT = 0.5;
+        for (const b of bears) if (b.alive && dist(b.x, b.z, player.x, player.z) < 4.8 + (b.kind === 'boss' ? 4 : 0)) {
+          dealDirect(b, baseDmg * 0.8 * nAura, D.sk, player.x, player.z, true);
+          emit('#fff2b0', b.x, 1.5, b.z, 0, 2, 0, 0.4, 0.2);
+        }
+      }
+    }
+  }
+  const auraRing = new THREE.Group();
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff' })); m.scale.set(0.3, 0.08, 0.3); m.position.set(Math.cos(a) * 4.8, 0, Math.sin(a) * 4.8); auraRing.add(m); }
+  auraRing.visible = false; scene.add(auraRing);
+
+  // 외형·에인션트 이펙트
+  let fxAcc = 0, boltT = 0;
+  const orbs = [];
+  for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff' })); m.scale.setScalar(0.22); m.visible = false; scene.add(m); orbs.push(m); }
+  function updateFx(dt) {
+    const s = SKINS[skin] || SKINS[0];
+    const fx = player.dead ? null : s.fx;
+    const px = player.x, pz = player.z;
+    fxAcc += dt;
+    const rate = fx === 'salas' ? 55 : fx === 'gold' ? 14 : fx === 'sparkle' ? 10 : 0;
+    let n = Math.floor(fxAcc * rate); if (rate) fxAcc -= n / rate; else fxAcc = 0;
+    while (n-- > 0) {
+      const a = rand(0, 6.28);
+      if (fx === 'salas') {
+        const r = rand(0.35, 0.85);
+        emit(pick(['#ffe14a', '#fff07a', '#ffffff', '#ffb52e', '#ffe14a']), px + Math.cos(a) * r, rand(0.1, 1.2), pz + Math.sin(a) * r, Math.cos(a) * 0.4, rand(3, 5.5), Math.sin(a) * 0.4, rand(0.35, 0.6), rand(0.12, 0.24));
+      } else if (fx === 'gold') {
+        emit(pick(['#f2c14e', '#fff2b0']), px + Math.cos(a) * 0.9, rand(0.1, 0.5), pz + Math.sin(a) * 0.9, 0, rand(1, 2), 0, 0.7, 0.1);
+      } else if (fx === 'sparkle') {
+        emit(pick(['#b48cff', '#8fe8ff', '#ffffff']), px + Math.cos(a) * rand(0.4, 1), rand(0.5, 2.4), pz + Math.sin(a) * rand(0.4, 1), 0, 0.6, 0, 0.8, 0.09);
+      }
+    }
+    if (fx === 'salas') {
+      auraLight.position.set(px, 1.6, pz); auraLight.intensity = 1.2 + Math.random() * 0.8;
+      boltT -= dt;
+      if (boltT <= 0) {
+        boltT = rand(0.15, 0.45);
+        const a = rand(0, 6.28), r = rand(0.5, 1), y0 = rand(0.3, 2);
+        boltFx(px + Math.cos(a) * r, y0, pz + Math.sin(a) * r, px + Math.cos(a + 0.6) * r, y0 + rand(0.6, 1.2), pz + Math.sin(a + 0.6) * r);
+      }
+    } else auraLight.intensity = 0;
+    // 에인션트 무기: 무지개 구슬이 주위를 돈다
+    const anc = hasAncient() && !player.dead;
+    ANCIENT.emissive.setHSL((clock * 0.35) % 1, 1, 0.45);
+    orbs.forEach((m, i) => {
+      m.visible = anc;
+      if (!anc) return;
+      const a = clock * 2.2 + i / orbs.length * Math.PI * 2;
+      m.position.set(px + Math.cos(a) * 1.4, 1.3 + Math.sin(clock * 3 + i) * 0.3, pz + Math.sin(a) * 1.4);
+      m.material.color.setHSL((clock * 0.4 + i / 6) % 1, 1, 0.6);
+      if (Math.random() < dt * 6) emit('#ffffff', m.position.x, m.position.y, m.position.z, 0, 0.3, 0, 0.3, 0.08);
+    });
+  }
+
+  // ================= 상점 (무기점·뽑기·장비·의상실) =================
+  let shopOpen = false, shopTab = 'inv', shopAtPad = false, lastPull = [], armedScrap = 0;
+  const WEAPON_PREFIX = { rare: ['단단한', '날렵한', '푸른'], unique: ['폭풍의', '서리의', '맹독의', '번개의'], legend: ['용사의', '불사조의', '천둥신의', '심연의'], ancient: ['태초의', '창세의', '무한의', '신성한'] };
+  const WEAPON_NOUN = { bow: ['활', '장궁', '석궁'], gun: ['권총', '소총', '대포총'], axe: ['도끼', '전투도끼', '쌍날도끼'] };
+  function rollGrade() { const r = Math.random() * 100; return r < 3 ? 'ancient' : r < 8 ? 'legend' : r < 18 ? 'unique' : 'rare'; }
+  function makeGachaWeapon(grade) {
+    const type = pick(['bow', 'gun', 'axe']);
+    const pool = type === 'axe' ? AXE_POOL : RANGED_POOL;
+    let skills;
+    if (grade === 'ancient') { skills = ['meteor', 'aura']; while (skills.length < 6) skills.push(pick(pool)); }
+    else { const p = pool.slice().sort(() => Math.random() - 0.5); skills = p.slice(0, GRADES[grade].n); }
+    return { id: nextWid++, type, grade, name: `${pick(WEAPON_PREFIX[grade])} ${pick(WEAPON_NOUN[type])}`, skills, lv: 1 };
+  }
+  function pull(n) {
+    if (!shopAtPad || gems < 5 * n) return;
+    gems -= 5 * n; stats.pulls += n;
+    lastPull = [];
+    for (let i = 0; i < n; i++) { const w = makeGachaWeapon(rollGrade()); weapons.push(w); lastPull.push(w); }
+    // 가방이 넘치면 장착하지 않은 가장 약한 레어부터 자동 분해
+    while (weapons.length > 60) {
+      const cand = weapons.filter(w => !isEquipped(w) && w.grade === 'rare').sort((a, b) => a.lv - b.lv)[0];
+      if (!cand) break;
+      gold += scrapValue(cand); weapons = weapons.filter(w => w !== cand);
+    }
+    const best = lastPull.reduce((g, w) => GRADE_ORDER.indexOf(w.grade) > GRADE_ORDER.indexOf(g) ? w.grade : g, 'rare');
+    SFX.gacha();
+    setTimeout(() => SFX.grade(best), 350);
+    if (best === 'ancient') { flashT = 1.2; toast('에인션트 등장!!'); }
+    else if (best === 'legend') toast('레전드 획득!');
+    renderShop();
+  }
+  const isEquipped = w => eq.ranged === w.id || eq.axe === w.id;
+  function equip(w) {
+    if (w.type === 'axe') eq.axe = eq.axe === w.id ? null : w.id; else eq.ranged = w.id;
+    syncTools(); buildPlayer(); SFX.buy();
+  }
+  function wStatLine(w) {
+    if (w.type === 'axe') return `회전 도끼 피해 ×${wMult(w).toFixed(1)}`;
+    const s = rStats(w);
+    return `피해 ${s.dmg.toFixed(0)} · 초당 ${s.rate.toFixed(1)}발 · 사거리 ${s.range}${s.count > 1 ? ` · ${s.count}발` : ''}`;
+  }
+  function skillChips(w) {
+    if (w.shop) return SHOP_W[w.type].unlock.map(([lv, k]) => `<span class="chip ${w.lv >= lv ? '' : 'off'}" title="${SKILLS[k].desc}">${SKILLS[k].name} Lv.${lv}</span>`).join('');
+    return w.skills.map(k => `<span class="chip" title="${SKILLS[k].desc}">${SKILLS[k].name}</span>`).join('');
+  }
+  function weaponCard(w, opts) {
+    const G = GRADES[w.grade];
+    const up = w.lv < MAX_WLV ? `<button class="box btn" data-act="up" data-id="${w.id}" ${shopAtPad && gold >= upCost(w) ? '' : 'disabled'}>강화 ${fmt(upCost(w))}G</button>` : '<button class="box btn" disabled>최대 강화</button>';
+    const eqd = isEquipped(w);
+    const eqBtn = `<button class="box btn ${eqd ? '' : 'primary'}" data-act="eq" data-id="${w.id}">${eqd ? (w.type === 'axe' ? '해제' : '장착 중') : '장착'}</button>`;
+    const scrap = w.shop ? '' : `<button class="box btn ${armedScrap === w.id ? 'warn' : ''}" data-act="scrap" data-id="${w.id}" ${eqd ? 'disabled' : ''}>${armedScrap === w.id ? '한 번 더: 분해' : '분해 +' + fmt(scrapValue(w)) + 'G'}</button>`;
+    return `<div class="card ${w.grade} ${opts && opts.reveal ? 'reveal' : ''}" ${opts && opts.delay ? `style="animation-delay:${opts.delay}s"` : ''}>
+      <div class="nm"><span>${esc(w.name)} <small>Lv.${w.lv}</small></span><span class="grade ${w.grade}">${G.name} ${TYPE_NAME[w.type]}</span></div>
+      <div class="st">${wStatLine(w)}</div>
+      <div class="chips">${skillChips(w)}</div>
+      ${opts && opts.noActs ? '' : `<div class="acts">${eqBtn}${up}${scrap}</div>`}
+    </div>`;
+  }
+  const padNote = what => shopAtPad ? '' : `<p class="note warn">${what}은(는) 기지의 ${what === '뽑기' ? '뽑기' : what === '옷 구매' ? '의상실' : '무기점'} 발판에서 이용할 수 있습니다.</p>`;
+  function renderShop() {
+    for (const b of $('shopTabs').querySelectorAll('[data-tab]')) b.classList.toggle('on', b.dataset.tab === shopTab);
+    let h = '';
+    if (shopTab === 'weapon') {
+      h += `<p class="note">활이나 총 중 하나를 장착하면 가까운 곰·공룡을 자동으로 쏘고, 짐승이 없으면 나무와 바위를 쏩니다. 강화할수록 스킬이 열립니다.</p>` + padNote('무기 구매·강화');
+      h += '<div class="cards">';
+      for (const t of ['bow', 'gun']) {
+        const own = weapons.find(w => w.shop && w.type === t), S = SHOP_W[t];
+        if (own) h += weaponCard(own);
+        else h += `<div class="card normal"><div class="nm"><span>${S.name}</span><span class="grade">일반 ${TYPE_NAME[t]}</span></div>
+          <div class="st">피해 ${WBASE[t].dmg} · 초당 ${WBASE[t].rate}발 · 사거리 ${WBASE[t].range}</div>
+          <div class="chips">${S.unlock.map(([lv, k]) => `<span class="chip off">${SKILLS[k].name} Lv.${lv}</span>`).join('')}</div>
+          <div class="acts"><button class="box btn primary" data-act="buyW" data-t="${t}" ${shopAtPad && gold >= S.price ? '' : 'disabled'}>구매 ${fmt(S.price)}G</button></div></div>`;
+      }
+      h += '</div>';
+    } else if (shopTab === 'gacha') {
+      h += `<p class="note">보석 5개로 한 번 뽑습니다. 활·총·도끼가 나오고, 등급이 높을수록 스킬이 많이 붙습니다. 에인션트는 스킬 6개(메테오·신성 오라 포함)에 능력치 9배입니다.</p>` + padNote('뽑기');
+      h += `<table class="tbl"><tr><td><span class="grade ancient">에인션트</span></td><td>3%</td><td>스킬 6개 · 피해 ×9</td></tr><tr><td><span class="grade legend">레전드</span></td><td>5%</td><td>스킬 3개 · 피해 ×3.6</td></tr><tr><td><span class="grade unique">유니크</span></td><td>10%</td><td>스킬 2개 · 피해 ×2.3</td></tr><tr><td><span class="grade rare">레어</span></td><td>82%</td><td>스킬 1개 · 피해 ×1.5</td></tr></table>`;
+      h += `<div class="pulls"><span><i class="gemi"></i> 보석 ${gems}개</span><button class="box btn primary" data-act="pull" data-n="1" ${shopAtPad && gems >= 5 ? '' : 'disabled'}>1회 뽑기 (보석 5)</button><button class="box btn primary" data-act="pull" data-n="10" ${shopAtPad && gems >= 50 ? '' : 'disabled'}>10회 뽑기 (보석 50)</button></div>`;
+      if (lastPull.length) h += '<div class="cards">' + lastPull.slice().sort((a, b) => GRADE_ORDER.indexOf(b.grade) - GRADE_ORDER.indexOf(a.grade)).map((w, i) => weaponCard(w, { reveal: true, delay: i * 0.06 })).join('') + '</div>';
+      else h += '<p class="note">보석은 채석장의 보라색 수정 바위에서 주로 나오고, 일반 바위·티라노·최종 보스에게서도 얻을 수 있습니다.</p>';
+    } else if (shopTab === 'inv') {
+      const r = eqW('ranged'), a = eqW('axe');
+      h += `<p class="note">원거리: <b>${r ? esc(r.name) : '없음'}</b> · 도끼: <b>${a ? esc(a.name) : '기본 도끼'}</b> — 장착·해제·분해는 어디서나, 강화는 무기점에서 할 수 있습니다.</p>`;
+      if (!weapons.length) h += '<p class="note">아직 무기가 없습니다. 무기점에서 사거나 뽑기로 얻으세요.</p>';
+      const list = weapons.slice().sort((x, y) => (isEquipped(y) - isEquipped(x)) || GRADE_ORDER.indexOf(y.grade) - GRADE_ORDER.indexOf(x.grade) || y.lv - x.lv);
+      h += '<div class="cards">' + list.map(w => weaponCard(w)).join('') + '</div>';
+    } else {
+      h += '<p class="note">돈을 모아 외형을 사고, 산 외형은 언제든 갈아입을 수 있습니다.</p>' + padNote('옷 구매');
+      h += '<div class="cards">' + SKINS.map((s, i) => {
+        const own = skinsOwned.includes(i), on = skin === i;
+        const sw = [s.look.shirt, s.look.pants, s.look.hair].map(c => `<i style="background:${c}"></i>`).join('');
+        const btn = on ? '<button class="box btn" disabled>착용 중</button>' : own ? `<button class="box btn primary" data-act="wear" data-i="${i}">착용</button>`
+          : `<button class="box btn primary" data-act="buySkin" data-i="${i}" ${shopAtPad && gold >= s.price ? '' : 'disabled'}>구매 ${fmt(s.price)}G</button>`;
+        return `<div class="card ${i === 9 ? 'ancient' : i >= 7 ? 'legend' : i >= 4 ? 'unique' : 'normal'}"><div class="nm"><span>${s.name}</span><span class="sw">${sw}</span></div><div class="st">${s.desc}</div><div class="acts">${btn}</div></div>`;
+      }).join('') + '</div>';
+    }
+    $('shopBody').innerHTML = h;
+  }
+  function openShop(tab, atPad) { shopOpen = true; shopTab = tab; shopAtPad = atPad; armedScrap = 0; $('shop').hidden = false; $('buyPanel').hidden = true; renderShop(); }
+  function closeShop() { shopOpen = false; $('shop').hidden = true; for (const k in keys) keys[k] = false; }
+  $('shopTabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'shopClose') { closeShop(); return; }
+    if (b.dataset.tab) { shopTab = b.dataset.tab; armedScrap = 0; renderShop(); }
+  });
+  $('shop').addEventListener('click', e => { if (e.target.id === 'shop') closeShop(); });
+  $('shopBody').addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b || b.disabled) return;
+    const act = b.dataset.act, w = b.dataset.id ? wById(+b.dataset.id) : null;
+    if (act === 'buyW') {
+      const t = b.dataset.t, S = SHOP_W[t];
+      if (!shopAtPad || gold < S.price || weapons.some(x => x.shop && x.type === t)) return;
+      gold -= S.price; const nw = { id: nextWid++, type: t, grade: 'normal', name: S.name, skills: [], lv: 1, shop: true };
+      weapons.push(nw); eq.ranged = nw.id; buildPlayer(); SFX.buy(); toast(S.name + ' 구매·장착!');
+    } else if (act === 'up' && w) {
+      const c = upCost(w);
+      if (!shopAtPad || gold < c || w.lv >= MAX_WLV) return;
+      gold -= c; w.lv++; SFX.level();
+      const un = w.shop && SHOP_W[w.type].unlock.find(([lv]) => lv === w.lv);
+      if (un) toast(`${SKILLS[un[1]].name} 스킬 해금!`);
+      syncTools();
+    } else if (act === 'eq' && w) equip(w);
+    else if (act === 'scrap' && w) {
+      if (isEquipped(w)) return;
+      if (armedScrap !== w.id) { armedScrap = w.id; renderShop(); return; }
+      armedScrap = 0; gold += scrapValue(w); weapons = weapons.filter(x => x !== w); lastPull = lastPull.filter(x => x !== w); SFX.cash(); bumpGold();
+    } else if (act === 'pull') pull(+b.dataset.n);
+    else if (act === 'buySkin') {
+      const i = +b.dataset.i, s = SKINS[i];
+      if (!shopAtPad || gold < s.price || skinsOwned.includes(i)) return;
+      gold -= s.price; skinsOwned.push(i); skin = i; buildPlayer(); SFX.level();
+      toast(i === 9 ? '살라스 각성!!' : s.name + ' 외형 구매!');
+      if (i === 9) { flashT = 1; shake = 0.6; }
+    } else if (act === 'wear') { skin = +b.dataset.i; buildPlayer(); SFX.buy(); }
+    renderShop();
+  });
+
+  // ================= 목표 =================
   const padOf = k => PADS.find(p => p.k === k);
   const GOALS = [
     { txt: '나무 옆으로 가면 도는 도끼가 나무를 벱니다 (3그루)', done: () => stats.chopped >= 3, target: () => nearest(trees, t => t.alive && !t.big) },
@@ -1242,29 +1927,31 @@
     { txt: '숲 컨베이어를 설치하세요', done: () => L.beltForest >= 1, target: () => padOf('beltForest') },
     { txt: '곰 숲을 여세요 (고기 한 개 8G)', done: () => L.gateBear >= 1, target: () => padOf('gateBear') },
     { txt: '곰을 사냥해 고기 5개를 모으세요', done: () => stats.meat >= 5, target: () => nearest(bears, b => b.alive && b.kind === 'bear') },
+    { txt: '무기점에서 활이나 총을 사세요', done: () => weapons.length > 0, target: () => padOf('shopWeapon') },
     { txt: '사냥꾼을 고용하세요', done: () => L.hunter >= 1, target: () => padOf('hunter') },
-    { txt: '활을 사세요. 곰을 멀리서 자동으로 쏩니다', done: () => L.bow >= 1, target: () => padOf('bow') },
-    { txt: '채석장을 여세요 (보석 한 개 15G)', done: () => L.gateQuarry >= 1, target: () => padOf('gateQuarry') },
-    { txt: '보라색 수정 바위에서 보석 3개를 캐세요', done: () => stats.gem >= 3, target: () => nearest(rocks, r => r.alive && r.crystal) },
+    { txt: '채석장을 여세요 (보석이 나옵니다)', done: () => L.gateQuarry >= 1, target: () => padOf('gateQuarry') },
+    { txt: '보석 5개를 모아 뽑기를 해 보세요', done: () => stats.pulls >= 1, target: () => gems >= 5 ? padOf('shopGacha') : nearest(rocks, r => r.alive && r.crystal) },
     { txt: '광부를 고용하세요', done: () => L.miner >= 1, target: () => padOf('miner') },
-    { txt: '대검을 사세요', done: () => L.sword >= 1, target: () => padOf('sword') },
+    { txt: '의상실에서 새 옷을 사 보세요', done: () => skinsOwned.length > 1, target: () => padOf('shopSkin') },
     { txt: '갑옷을 3단계까지 강화하세요', done: () => L.armor >= 3, target: () => padOf('armor') },
     { txt: '공룡 계곡을 여세요 (공룡 고기 한 개 40G)', done: () => L.gateDino >= 1, target: () => padOf('gateDino') },
     { txt: '티라노사우루스를 쓰러뜨리세요', done: () => stats.dino >= 1, target: () => nearest(bears, b => b.alive && b.kind === 'dino') },
-    { txt: '모든 강화를 MAX로 만들어 보세요', done: () => PADS.every(p => L[p.k] >= p.max), target: () => null },
+    { txt: '1만 골드로 최종 보스 경기장을 여세요', done: () => L.gateBoss >= 1, target: () => padOf('gateBoss') },
+    { txt: '최종 보스 뿌잉뿌잉을 쓰러뜨리세요', done: () => stats.boss >= 1, target: () => boss.alive ? boss : null },
+    { txt: '모든 강화를 MAX로, 살라스가 되어 보세요', done: () => PADS.every(p => p.open || L[p.k] >= p.max) && skinsOwned.includes(9), target: () => null },
     { txt: '숲의 주인이 되었습니다!', done: () => false, target: () => null },
   ];
   let goalShown = -1;
   function updateGoal(t) {
     let guard = 0;
-    while (goal < GOALS.length - 1 && GOALS[goal].done() && guard++ < 20) {
+    while (goal < GOALS.length - 1 && GOALS[goal].done() && guard++ < 30) {
       goal++;
       if (guard === 1) toast(goal === GOALS.length - 1 ? '클리어! 숲의 주인이 되었습니다' : '목표 달성!');
     }
     if (goalShown !== goal) { goalShown = goal; $('goalNo').textContent = 'GOAL ' + (goal + 1) + '/' + GOALS.length; $('goalTxt').textContent = GOALS[goal].txt; }
     const tg = GOALS[goal].target();
     arrow.visible = !!tg;
-    if (tg) { arrow.position.set(tg.x, 2.8 + Math.sin(t * 5) * 0.3 + (tg.g || tg.m ? 1.8 : 0), tg.z); arrow.rotation.y = t * 2; }
+    if (tg) { arrow.position.set(tg.x, 2.8 + Math.sin(t * 5) * 0.3 + (tg.kind === 'boss' ? 9 : tg.g || tg.m ? 1.8 : tg.icon ? 1 : 0), tg.z); arrow.rotation.y = t * 2; }
   }
 
   // ================= 입력 / 카메라 줌 =================
@@ -1273,9 +1960,11 @@
   const joyEl = $('joy'), knob = joyEl.firstElementChild, gameEl = $('game');
   addEventListener('keydown', e => {
     if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    if (shopOpen) { if (e.key === 'Escape') closeShop(); return; }
     keys[e.key.toLowerCase()] = true;
     if (e.key.startsWith('Arrow') || e.key === ' ') e.preventDefault();
     if ((e.key === 'e' || e.key === 'E' || e.key === 'Enter' || e.key === ' ') && curPad && !e.repeat && e.target.tagName !== 'BUTTON') { e.preventDefault(); buyPad(curPad); }
+    if (e.key === 'i' || e.key === 'I') openShop('inv', false);
     if (e.key === '+' || e.key === '=') setZoom(zoom - 0.12);
     if (e.key === '-') setZoom(zoom + 0.12);
   });
@@ -1307,7 +1996,8 @@
     if (!joy || e.pointerId !== joy.id) return;
     let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy;
     const d = Math.hypot(dx, dy), R = 48;
-    if (d > R) { dx = dx / d * R; dy = dy / d * R; }
+    // 조이스틱이 손가락을 따라와서 방향 전환이 부드럽다
+    if (d > R) { joy.ox += (dx / d) * (d - R); joy.oy += (dy / d) * (d - R); dx = dx / d * R; dy = dy / d * R; joyEl.style.left = joy.ox + 'px'; joyEl.style.top = joy.oy + 'px'; }
     joy.dx = dx / R; joy.dy = dy / R;
     knob.style.transform = `translate(${dx}px, ${dy}px)`;
   });
@@ -1315,13 +2005,14 @@
   gameEl.addEventListener('pointerup', endPtr);
   gameEl.addEventListener('pointercancel', endPtr);
 
-  // ================= 저장 (이 기기 + 계정) =================
-  const SAVE_KEY = 'axeForestSave2';
-  let cloudRef = null, cloudBusy = false, lastCloudBody = '', savedAt = 0;
+  // ================= 저장 / 불러오기 (자동 + 수동 슬롯 + 계정) =================
+  const SAVE_KEY = 'axeForestSave2', MANUAL_KEY = 'axeForestManual';
+  let cloudRef = null, cloudManualRef = null, cloudBusy = false, lastCloudBody = '', savedAt = 0;
   function snapshot() {
     return {
-      v: 2, gold, cashPile, goal, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
+      v: 3, gold, cashPile, goal, gems, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
       stock: stock.concat(beltItems.map(b => b.type)), carry: player.carry.slice(), npcCarry: npcs.flatMap(n => n.carry),
+      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, skinsOwned: skinsOwned.slice(), skin,
     };
   }
   function saveLocal() {
@@ -1344,51 +2035,87 @@
     beltItems.length = 0;
     for (const d of drops) scene.remove(d.m);
     drops.length = 0;
+    for (const s of shots) scene.remove(s.m);
+    shots.length = 0;
     player.reserved = 0;
   }
+  const SWORD_COST = lv => { let s = 0; for (let i = 0; i < lv; i++) s += Math.round(1500 * Math.pow(1.7, i)); return s; };
   function applyState(s) {
     clearWorld();
-    Object.assign(L, DEFAULT_L, (s && s.L) || {});
+    const sl = (s && s.L) || {};
+    Object.assign(L, DEFAULT_L);
+    for (const k in DEFAULT_L) if (sl[k] != null) L[k] = sl[k] | 0;
     Object.assign(stats, DEFAULT_STATS, (s && s.stats) || {});
     for (const k in padPaid) delete padPaid[k];
     Object.assign(padPaid, (s && s.padPaid) || {});
-    gold = (s && s.gold) | 0; cashPile = (s && s.cashPile) | 0; goal = (s && s.goal) | 0;
+    gold = (s && s.gold) | 0; cashPile = (s && s.cashPile) | 0; goal = (s && s.goal) | 0; gems = (s && s.gems) | 0;
+    weapons = s && Array.isArray(s.weapons) ? s.weapons.filter(w => w && TYPE_NAME[w.type] && GRADES[w.grade]).map(w => ({ ...w, lv: Math.max(1, Math.min(MAX_WLV, w.lv | 0)), skills: (w.skills || []).filter(k => SKILLS[k]) })) : [];
+    nextWid = Math.max((s && s.nextWid) | 0, ...weapons.map(w => w.id + 1), 1);
+    eq.ranged = s && s.eq && wById(s.eq.ranged) ? s.eq.ranged : null;
+    eq.axe = s && s.eq && wById(s.eq.axe) ? s.eq.axe : null;
+    skinsOwned = s && Array.isArray(s.skinsOwned) ? s.skinsOwned.filter(i => SKINS[i]) : [0];
+    if (!skinsOwned.includes(0)) skinsOwned.unshift(0);
+    skin = s && skinsOwned.includes(s.skin) ? s.skin : 0;
+    // 이전 버전 호환: 대검은 없어져서 쓴 돈을 돌려주고, 발판으로 산 활은 무기점 활로 바꿔 준다
+    const notes = [];
+    if (sl.sword > 0) { const r = SWORD_COST(sl.sword); gold += r; notes.push(`대검 환불 +${fmt(r)}G`); }
+    if (sl.bow > 0 && !weapons.some(w => w.shop && w.type === 'bow')) {
+      const w = { id: nextWid++, type: 'bow', grade: 'normal', name: SHOP_W.bow.name, skills: [], lv: Math.min(MAX_WLV, sl.bow), shop: true };
+      weapons.push(w); if (!eq.ranged) eq.ranged = w.id; notes.push('활 → 무기점 사냥 활로 이전');
+    }
     stock.length = 0;
-    const ok = t => Object.prototype.hasOwnProperty.call(PRICE, t);
-    if (s && Array.isArray(s.stock)) stock.push(...s.stock.filter(ok));
-    if (s && Array.isArray(s.npcCarry)) stock.push(...s.npcCarry.filter(ok));
-    player.carry = s && Array.isArray(s.carry) ? s.carry.filter(ok) : [];
-    player.x = 0; player.z = 1.5;
+    const toItems = arr => { const out = []; for (const t of arr || []) { if (t === 'g') gems++; else if (PRICE[t]) out.push(t); } return out; };
+    stock.push(...toItems(s && s.stock), ...toItems(s && s.npcCarry));
+    player.carry = toItems(s && s.carry);
+    player.x = 0; player.z = 1.5; player.vx = player.vz = 0;
     for (let i = 0; i < L.worker; i++) addNpc('lumber', -10.5, 9.5);
     for (let i = 0; i < L.hunter; i++) addNpc('hunter', -7.5, 9.5);
     for (let i = 0; i < L.miner; i++) addNpc('miner', -4.5, 9.5);
+    curTier = tierOf();
     syncCashiers(); syncBelts(); syncTools();
-    gateBearG.visible = !L.gateBear; gateQuarryG.visible = !L.gateQuarry; gateDinoG.visible = !L.gateDino;
-    buildPlayer(tierOf());
+    gateBearG.visible = !L.gateBear; gateQuarryG.visible = !L.gateQuarry; gateDinoG.visible = !L.gateDino; gateBossG.visible = !L.gateBoss;
+    buildPlayer();
     player.dead = 0; player.hp = derived().maxHp;
     rebuildStack(stackG, player.carry, 60); shownCarry = player.carry.length;
     stockDirty = true; cashShown = -1; goalShown = -1;
+    if (notes.length) setTimeout(() => toast(notes.join(' · ')), 600);
   }
   function setStatus(txt) { $('saveStatus').textContent = txt; }
-  const hhmm = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
-  const where = () => cloudRef ? '계정' : '이 기기';
+  const hhmm = (t) => { const d = t ? new Date(t) : new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 
+  // 저장 버튼: 수동 저장 슬롯(불러오기 대상)에 기록 + 자동 저장도 함께 갱신
   $('btnSave').addEventListener('click', async () => {
-    const a = saveLocal();
-    const b = await saveCloud(true);
-    setStatus((a || b) ? `저장 완료 ${hhmm()} · ${cloudRef && b ? '계정' : '이 기기'}` : '저장할 수 없는 환경입니다');
-    toast((a || b) ? '저장했습니다' : '이 화면에서는 저장이 막혀 있어요');
+    const snap = { ...snapshot(), savedAt: Date.now() };
+    let a = false; try { localStorage.setItem(MANUAL_KEY, JSON.stringify(snap)); a = true; } catch (e) {}
+    saveLocal();
+    let b = false;
+    if (cloudManualRef) { try { await cloudManualRef.set({ state: JSON.stringify(snap), savedAt: snap.savedAt }); b = true; } catch (e) {} }
+    await saveCloud(true);
+    setStatus((a || b) ? `저장 완료 ${hhmm()} · ${b ? '계정' : '이 기기'}` : '저장할 수 없는 환경입니다');
+    toast((a || b) ? '저장했습니다. 불러오기로 이 시점으로 돌아올 수 있어요' : '이 화면에서는 저장이 막혀 있어요');
+  });
+  let loadArm = 0;
+  $('btnLoad').addEventListener('click', async () => {
+    let st = null;
+    try { st = JSON.parse(localStorage.getItem(MANUAL_KEY) || 'null'); } catch (e) {}
+    if (cloudManualRef) {
+      try { const snap = await cloudManualRef.get(); if (snap.exists) { const d = snap.data() || {}; const cs = JSON.parse(d.state); if (cs && (!st || (cs.savedAt || 0) > (st.savedAt || 0))) st = cs; } } catch (e) {}
+    }
+    if (!st) { toast('저장한 기록이 없습니다. 먼저 저장을 눌러 주세요'); return; }
+    if (Date.now() - loadArm > 4000) { loadArm = Date.now(); toast(`${hhmm(st.savedAt)}에 저장한 진행으로 돌아갑니다. 한 번 더 누르세요`); return; }
+    loadArm = 0;
+    applyState(st); saveLocal(); await saveCloud(true);
+    toast('저장한 시점으로 불러왔습니다');
   });
   $('btnBuy').addEventListener('click', () => buyPad(curPad));
+  $('btnGear').addEventListener('click', () => openShop('inv', false));
   $('btnSound').addEventListener('click', () => { SFX.init(); const m = SFX.toggle(); $('btnSound').textContent = m ? '소리 끔' : '소리 켬'; });
   let resetArm = 0;
   $('btnReset').addEventListener('click', async () => {
     const b = $('btnReset');
     if (resetArm > 0) {
       resetArm = 0; b.textContent = '처음부터'; b.classList.remove('warn');
-      applyState(null);
-      saveLocal();
-      await saveCloud(true);
+      applyState(null); saveLocal(); await saveCloud(true);
       toast('처음부터 다시 시작합니다');
       return;
     }
@@ -1399,13 +2126,11 @@
 
   let localState = null;
   try { localState = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
-  // 진행도: 누적 판매액 + 강화 단계. 새로 연 빈 게임이 더 많이 진행된 저장을 덮어쓰지 않게 비교 기준으로 쓴다.
   function progressOf(st) {
     if (!st) return -1;
     const lv = Object.values(st.L || {}).reduce((a, b) => a + (b | 0), 0);
-    return ((st.stats && st.stats.earned) | 0) + ((st.gold | 0) + (st.cashPile | 0)) * 0.5 + lv * 50;
+    return ((st.stats && st.stats.earned) | 0) + ((st.gold | 0) + (st.cashPile | 0)) * 0.5 + lv * 50 + ((st.gems | 0) + (st.weapons ? st.weapons.length : 0)) * 20;
   }
-  // 계정 저장 연결 (claude.ai 로그인 사용자별 비공개 저장소)
   (async () => {
     try {
       if (!window.claude || !window.claude.use) return;
@@ -1414,6 +2139,7 @@
       const uid = await user.id();
       if (!uid) { setStatus('자동 저장 · 이 기기 (로그인 정보 없음)'); return; }
       const ref = db.doc('data/users/' + uid + '/save');
+      cloudManualRef = db.doc('data/users/' + uid + '/manual');
       const snap = await ref.get();
       let cs = null;
       if (snap.exists) { const d = snap.data() || {}; try { cs = JSON.parse(d.state); } catch (e) {} }
@@ -1430,7 +2156,7 @@
     } catch (e) { cloudRef = null; setStatus('계정 저장 실패 · 이 기기에만 저장 중'); }
   })();
 
-  // 백업 코드: 다른 기기·다른 링크로 진행을 옮기는 수동 백업
+  // 백업 코드
   function makeCode() { return 'AXF1.' + btoa(unescape(encodeURIComponent(JSON.stringify(snapshot())))); }
   function readCode(code) {
     const c = (code || '').trim().replace(/\s+/g, '');
@@ -1449,35 +2175,30 @@
   $('btnImport').addEventListener('click', async () => {
     const st = readCode($('codeIn').value);
     if (!st) { $('codeMsg').textContent = '코드가 올바르지 않습니다. AXF1. 로 시작하는 코드를 통째로 붙여 넣으세요.'; return; }
-    if (Date.now() - importArm > 4000) { importArm = Date.now(); $('codeMsg').textContent = `판매 누적 ${((st.stats && st.stats.earned) | 0)}G 진행입니다. 지금 진행을 덮어씁니다. 한 번 더 누르면 불러옵니다.`; return; }
+    if (Date.now() - importArm > 4000) { importArm = Date.now(); $('codeMsg').textContent = `판매 누적 ${fmt((st.stats && st.stats.earned) | 0)}G 진행입니다. 지금 진행을 덮어씁니다. 한 번 더 누르면 불러옵니다.`; return; }
     importArm = 0;
     applyState(st); saveLocal(); await saveCloud(true);
     $('backup').hidden = true; toast('백업 코드로 불러왔습니다');
   });
 
   // ================= 시작 =================
-  let shownCarry = 0;
+  let shownCarry = 0, clock = 0, flashT = 0;
   applyState(localState);
-  if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, get gold() { return gold; }, set gold(v) { gold = v; }, get cashPile() { return cashPile; }, get tier() { return curTier; }, damagePlayer, shots };
+  if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
+    get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
+    get cashPile() { return cashPile; }, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
-  let spinA = 0, clock = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, bowT = 0, swordT = 1, slashT = 0, slashM = null;
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 32), new THREE.MeshBasicMaterial({ color: '#fff2b0', transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-  ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
-  const camGoal = new THREE.Vector3(), camPos = new THREE.Vector3(player.x, 30 * zoom, player.z + 22 * zoom);
+  let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
+  const camGoal = new THREE.Vector3(), camPos = new THREE.Vector3(player.x, 30 * zoom, player.z + 22 * zoom), camLook = new THREE.Vector3(player.x, 0, player.z);
 
   function tryMove(nx, nz) {
     const x = player.x, z = player.z;
-    if ((z >= BEAR_Z) !== (nz >= BEAR_Z) && Math.min(x, nx) < QX) {
-      if (!(L.gateBear && Math.abs(nx) < GAP - 0.3)) nz = z;
-    }
-    if ((x >= QX) !== (nx >= QX) && nz > BEAR_Z) {
-      if (!(L.gateQuarry && Math.abs(nz - QZ) < GAP - 0.3)) nx = x;
-    }
-    if ((z >= DINO_Z) !== (nz >= DINO_Z) && Math.min(x, nx) < QX) {
-      if (!(L.gateDino && Math.abs(nx) < GAP - 0.3)) nz = z;
-    }
-    nx = Math.max(-34, Math.min(59, nx)); nz = Math.max(-78, Math.min(18, nz));
-    if (nz < BEAR_Z) nx = Math.min(nx, 34);
+    if ((z >= BEAR_Z) !== (nz >= BEAR_Z) && Math.min(x, nx) < QX) { if (!(L.gateBear && Math.abs(nx) < GAP - 0.3)) nz = z; }
+    if ((x >= QX) !== (nx >= QX) && nz > BEAR_Z) { if (!(L.gateQuarry && Math.abs(nz - QZ) < GAP - 0.3)) nx = x; }
+    if ((z >= DINO_Z) !== (nz >= DINO_Z) && Math.min(x, nx) < QX) { if (!(L.gateDino && Math.abs(nx) < GAP - 0.3)) nz = z; }
+    if ((z >= BOSS_Z) !== (nz >= BOSS_Z) && Math.min(x, nx) < QX) { if (!(L.gateBoss && Math.abs(nx) < GAP - 0.3)) nz = z; }
+    nx = Math.max(-34, Math.min(59, nx)); nz = Math.max(-107, Math.min(18, nz));
+    if (nz < BEAR_Z) nx = Math.max(-34, Math.min(nx, 34));
     if (nx > QX) nz = Math.max(nz, BEAR_Z + 0.5);
     if (Math.abs(nx - STALL.x) < 1.9 && Math.abs(nz - STALL.z) < 0.95) {
       const ox = 1.9 - Math.abs(nx - STALL.x), oz = 0.95 - Math.abs(nz - STALL.z);
@@ -1487,64 +2208,73 @@
   }
 
   function frame(now) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (shopOpen) {                 // 상점이 열려 있으면 게임은 멈춘다
+      renderer.render(scene, camera);
+      requestAnimationFrame(frame);
+      return;
+    }
+    clock += dt;
     const D = derived();
 
-    // 이동
+    // ---- 이동: 가속·감속으로 부드럽게 ----
     let mx = 0, mz = 0;
     if (keys['a'] || keys['arrowleft']) mx -= 1;
     if (keys['d'] || keys['arrowright']) mx += 1;
     if (keys['w'] || keys['arrowup']) mz -= 1;
     if (keys['s'] || keys['arrowdown']) mz += 1;
-    if (joy && Math.hypot(joy.dx, joy.dy) > 0.15) { mx = joy.dx; mz = joy.dy; }
-    let ml = Math.hypot(mx, mz);
-    if (player.stun > 0) { player.stun -= dt; ml = 0; }
+    let mag = Math.hypot(mx, mz);
+    if (mag > 0) { mx /= mag; mz /= mag; mag = 1; }
+    if (joy) {
+      const jl = Math.hypot(joy.dx, joy.dy);
+      if (jl > 0.12) { mx = joy.dx / jl; mz = joy.dy / jl; mag = Math.min(1, (jl - 0.12) / 0.7); }
+    }
+    if (player.stun > 0) { player.stun -= dt; mag = 0; }
     if (player.dead > 0) {
-      ml = 0; player.dead -= dt;
+      mag = 0; player.dead -= dt;
       pg.rotation.x = -Math.min(1, (2.2 - player.dead) * 4) * Math.PI / 2;
       if (player.dead <= 0) revivePlayer();
     } else {
       if (player.inv > 0) player.inv -= dt;
       player.calm += dt;
-      if (player.calm > 4) player.hp = Math.min(D.maxHp, player.hp + dt * 2);
+      if (player.calm > 4) player.hp = Math.min(D.maxHp, player.hp + dt * (2 + D.maxHp * 0.02));
       player.hp = Math.min(player.hp, D.maxHp);
     }
-    const moving = ml > 0.01;
-    if (moving) {
-      if (ml > 1) { mx /= ml; mz /= ml; }
-      tryMove(player.x + mx * D.speed * dt, player.z + mz * D.speed * dt);
-      player.face = lerpAngle(player.face, Math.atan2(mx, mz), dt * 14);
-      walkT += dt; stepT += dt; if (stepT > 0.3) { stepT = 0; SFX.step(); }
-    }
+    const tvx = mx * D.speed * mag, tvz = mz * D.speed * mag;
+    const acc = 1 - Math.exp(-(mag > 0 ? 12 : 16) * dt);
+    player.vx += (tvx - player.vx) * acc; player.vz += (tvz - player.vz) * acc;
+    const spd = Math.hypot(player.vx, player.vz);
+    if (spd > 0.02) tryMove(player.x + player.vx * dt, player.z + player.vz * dt);
     if (Math.abs(player.kx) + Math.abs(player.kz) > 0.05) {
       tryMove(player.x + player.kx * dt, player.z + player.kz * dt);
       const f = Math.exp(-7 * dt); player.kx *= f; player.kz *= f;
     }
-    pg.position.set(player.x, 0, player.z); pg.rotation.y = player.face;
-    animPerson(pg, moving, walkT);
-    if (aura) { aura.position.set(player.x, 0.02, player.z); aura.rotation.y += dt * 1.5; }
+    const moving = spd > 0.4;
+    if (player.aimT > 0) { player.aimT -= dt; }
+    if (moving) player.face = lerpAngle(player.face, Math.atan2(player.vx, player.vz), dt * 12);
+    else if (player.aimT > 0) player.face = lerpAngle(player.face, player.aimFace, dt * 10);
+    if (moving) { walkT += dt * Math.min(1.3, spd / 4.6); stepT += dt; if (stepT > 0.32) { stepT = 0; SFX.step(); } }
+    pg.position.set(player.x, 0, player.z); if (!player.dead) pg.rotation.y = player.face;
+    pg.userData.aim = player.aimT > 0 && !!eqW('ranged');
+    if (pg.userData.aim) pg.userData.armL.rotation.x = -1.4;
+    animPerson(pg, moving, walkT, Math.min(1, spd / 4));
 
-    // 도끼 / 곡괭이 회전 + 타격
+    // ---- 도끼 / 곡괭이 회전 + 타격 ----
     spinA += D.spin * dt;
+    const sk = D.sk, hitR = D.axeHitR;
     axes.forEach((ax, i) => {
       const a = spinA + i * Math.PI * 2 / axes.length;
       const x = player.x + Math.cos(a) * D.radius, z = player.z + Math.sin(a) * D.radius;
       ax.position.set(x, 0.9, z); ax.rotation.set(0, -a, 0.25);
+      if (player.dead) return;
+      const ci = i % 12;
       for (const tr of trees) {
-        if (!tr.alive || tr.hitCd[i] > 0 || Math.abs(tr.x - x) > 1.4 || Math.abs(tr.z - z) > 1.4) continue;
-        if (dist(tr.x, tr.z, x, z) < (tr.big ? 1.1 : 0.85)) {
-          tr.hitCd[i] = 0.25;
-          const got = hitTree(tr, D.dmg);
-          if (got) { SFX.fell(); for (let k = 0; k < got; k++) spawnDrop('w', tr.x, tr.z); } else SFX.chop();
-        }
+        if (!tr.alive || tr.hitCd[ci] > 0 || Math.abs(tr.x - x) > 1.6 || Math.abs(tr.z - z) > 1.6) continue;
+        if (dist(tr.x, tr.z, x, z) < (tr.big ? 1.1 : 0.85) + hitR) { tr.hitCd[ci] = 0.25; applyHit(tr, D.dmg, sk); }
       }
-      if (player.z < BEAR_Z + 3 && !player.dead) for (const b of bears) {
-        if (!b.alive || b.hitCd[i] > 0 || Math.abs(b.x - x) > 3 || Math.abs(b.z - z) > 3) continue;
-        if (dist(b.x, b.z, x, z) < b.def.hitR) {
-          b.hitCd[i] = 0.3;
-          const got = hitBear(b, D.dmg, player.x, player.z);
-          for (const it of b.def.drops.slice(0, got)) spawnDrop(it, b.x, b.z);
-        }
+      if (player.z < BEAR_Z + 3) for (const b of bears) {
+        if (!b.alive || b.hitCd[ci] > 0 || Math.abs(b.x - x) > 6 || Math.abs(b.z - z) > 6) continue;
+        if (dist(b.x, b.z, x, z) < b.def.hitR + hitR) { b.hitCd[ci] = 0.3; applyHit(b, D.dmg, sk); }
       }
     });
     picks.forEach((pk, i) => {
@@ -1552,80 +2282,19 @@
       const R = D.radius + 0.9;
       const x = player.x + Math.cos(a) * R, z = player.z + Math.sin(a) * R;
       pk.position.set(x, 1.1, z); pk.rotation.set(0, -a, -0.3);
-      if (player.x < QX - 3) return;
+      if (player.x < QX - 3 || player.dead) return;
       for (const rk of rocks) {
         if (!rk.alive || rk.hitCd[i] > 0 || Math.abs(rk.x - x) > 1.5 || Math.abs(rk.z - z) > 1.5) continue;
-        if (dist(rk.x, rk.z, x, z) < 1.05) {
-          rk.hitCd[i] = 0.25;
-          const got = hitRock(rk, D.pickDmg);
-          if (got) { SFX.crack(); for (const it of got) spawnDrop(it, rk.x, rk.z); } else SFX.clink();
-        }
+        if (dist(rk.x, rk.z, x, z) < 1.05) { rk.hitCd[i] = 0.25; applyHit(rk, D.pickDmg, sk.filter(s => s === 'loot' || s === 'crit')); }
       }
     });
 
-    // 활: 가까운 짐승 자동 조준
-    if (L.bow && !player.dead) {
-      bowT -= dt;
-      if (bowT <= 0) {
-        const tg = nearest(bears, b => b.alive && dist(b.x, b.z, player.x, player.z) < 10);
-        if (tg) {
-          bowT = D.bowEvery;
-          const m = vmesh(arrowGeo, false); m.scale.setScalar(1.3); scene.add(m);
-          shots.push({ m, x: player.x, y: 1.3, z: player.z, tg, dmg: D.bowDmg, t: 0 });
-          SFX.shoot();
-        } else bowT = 0.2;
-      }
-    }
-    for (let i = shots.length - 1; i >= 0; i--) {
-      const a = shots[i]; a.t += dt;
-      const ty = a.tg.kind === 'dino' ? 2.2 : 0.9;
-      const dx = a.tg.x - a.x, dy = ty - a.y, dz = a.tg.z - a.z, d = Math.hypot(dx, dy, dz), st = 22 * dt;
-      if (!a.tg.alive || a.t > 1.5) { scene.remove(a.m); shots.splice(i, 1); continue; }
-      if (d <= st + 0.3) {
-        const got = hitBear(a.tg, a.dmg, player.x, player.z);
-        for (const it of a.tg.def.drops.slice(0, got)) spawnDrop(it, a.tg.x, a.tg.z);
-        scene.remove(a.m); shots.splice(i, 1); continue;
-      }
-      a.x += dx / d * st; a.y += dy / d * st; a.z += dz / d * st;
-      a.m.position.set(a.x, a.y, a.z); a.m.rotation.y = Math.atan2(dx, dz);
-    }
-    // 대검: 주기적으로 360도 베기
-    if (L.sword && !player.dead) {
-      swordT -= dt;
-      if (swordT <= 0) {
-        const near = bears.some(b => b.alive && dist(b.x, b.z, player.x, player.z) < D.swordR + 1.5) ||
-                     trees.some(t => t.alive && dist(t.x, t.z, player.x, player.z) < D.swordR);
-        if (near) {
-          swordT = D.swordEvery; slashT = 0.32; SFX.whoosh();
-          for (const b of bears) if (b.alive && dist(b.x, b.z, player.x, player.z) < D.swordR + (b.kind === 'dino' ? 1.2 : 0)) {
-            const got = hitBear(b, D.swordDmg, player.x, player.z);
-            for (const it of b.def.drops.slice(0, got)) spawnDrop(it, b.x, b.z);
-          }
-          for (const tr of trees) if (tr.alive && dist(tr.x, tr.z, player.x, player.z) < D.swordR) {
-            const got = hitTree(tr, 2);
-            if (got) for (let k = 0; k < got; k++) spawnDrop('w', tr.x, tr.z);
-          }
-        } else swordT = 0.3;
-      }
-    }
-    if (slashT > 0) {
-      slashT -= dt;
-      const st = Math.min(3, Math.floor((L.sword - 1) / 2));
-      if (!slashM || slashM.userData.t !== st) {
-        if (slashM) scene.remove(slashM);
-        slashM = vmesh(swordGeo(st), false); slashM.userData.t = st; scene.add(slashM);
-      }
-      const k = 1 - slashT / 0.32, a = player.face + k * Math.PI * 2;
-      slashM.visible = true; slashM.scale.setScalar(D.swordR / 2.5);
-      slashM.position.set(player.x, 1.1, player.z); slashM.rotation.set(0, a, 0);
-      ring.visible = true; ring.position.set(player.x, 0.08, player.z);
-      ring.scale.setScalar(D.swordR * (0.4 + k * 0.6)); ring.material.opacity = 0.6 * (1 - k);
-    } else { if (slashM) slashM.visible = false; ring.visible = false; }
-
+    updateRanged(dt, D);
     updateWorld(dt, clock);
     updateBears(dt);
 
-    // 아이템 줍기
+    // ---- 아이템 줍기 (컨베이어가 있는 구역이면 벨트로 바로) ----
+    const zb = zoneBelt(player.x, player.z), beltOn = !!L[zb.k];
     for (let i = drops.length - 1; i >= 0; i--) {
       const o = drops[i]; o.t += dt;
       if (o.state === 'pop' || o.state === 'ground') {
@@ -1634,8 +2303,9 @@
           if (o.y <= 0.02) { o.y = 0.02; o.state = 'ground'; }
         }
         if (o.t > 0.3 && !player.dead && dist(o.x, o.z, player.x, player.z) < D.magnet) {
-          if (player.carry.length + player.reserved < D.cap) { o.state = 'fly'; player.reserved++; }
-          else if (player.fullMsgT <= 0) { floatText('가방 가득!', player.x, 2.6, player.z, 'bad'); player.fullMsgT = 2.5; }
+          const cat = CAT[o.type];
+          if (o.type === 'g' || beltOn || catCount(cat) + player.reserved < D.caps[cat]) { o.state = 'fly'; if (o.type !== 'g' && !beltOn) player.reserved++; o.res = o.type !== 'g' && !beltOn; }
+          else if (player.fullMsgT <= 0) { floatText(`가방(${cat === 'w' ? '나무' : cat === 'm' ? '고기' : '광물'}) 가득!`, player.x, 2.6, player.z, 'bad'); player.fullMsgT = 2.5; }
         }
         if (o.state === 'ground' && o.t > 60) { scene.remove(o.m); drops.splice(i, 1); continue; }
       }
@@ -1644,43 +2314,50 @@
         const k = Math.min(1, dt * 14);
         o.x += (tx - o.x) * k; o.y += (ty - o.y) * k; o.z += (tz - o.z) * k;
         if (dist(tx, tz, o.x, o.z) < 0.35) {
-          player.carry.push(o.type); player.reserved--;
-          if (o.type === 'm') stats.meat++;
-          if (o.type === 'g') stats.gem++;
-          SFX.pick();
+          if (o.res) player.reserved--;
+          if (o.type === 'g') { gems++; stats.gem++; SFX.gem(); floatText('+1', player.x, 2.4, player.z, 'gem'); }
+          else {
+            if (o.type === 'm' || o.type === 'd') stats.meat++;
+            if (L[zoneBelt(player.x, player.z).k]) { beltPush(zoneBelt(player.x, player.z), o.type); stats.deposited++; if (noteT <= 0) { floatText('→ 컨베이어', player.x, 2.6, player.z, 'note'); noteT = 3; } }
+            else if (catCount(CAT[o.type]) < D.caps[CAT[o.type]]) player.carry.push(o.type);
+            else { o.state = 'ground'; o.t = 0; continue; }
+            SFX.pick();
+          }
           scene.remove(o.m); drops.splice(i, 1); continue;
         }
       }
       o.m.position.set(o.x, o.y, o.z); o.m.rotation.y += dt * 3;
     }
     if (player.fullMsgT > 0) player.fullMsgT -= dt;
+    if (noteT > 0) noteT -= dt;
 
-    // 판매대 / 투입구에 내려놓기
+    // ---- 판매대 / 투입구 / 컨베이어 구역 자동 투입 ----
     player.depT -= dt;
-    if (player.carry.length && player.depT <= 0) {
+    if (player.carry.length && player.depT <= 0 && !player.dead) {
       if (onPad(DEPOSIT.x, DEPOSIT.z, player.x, player.z)) {
         stock.push(player.carry.pop()); stats.deposited++; stockDirty = true; player.depT = 0.05; SFX.drop();
       } else {
-        for (const b of BELTS) if (L[b.k] && onPad(b.hop.x, b.hop.z, player.x, player.z)) {
-          beltPush(b, player.carry.pop()); stats.deposited++; player.depT = 0.05; SFX.drop(); break;
-        }
+        let done = false;
+        for (const b of BELTS) if (L[b.k] && dist(b.hop.x, b.hop.z, player.x, player.z) < 2.6) { beltPush(b, player.carry.pop()); stats.deposited++; player.depT = 0.05; SFX.drop(); done = true; break; }
+        if (!done && beltOn) { beltPush(zb, player.carry.pop()); stats.deposited++; player.depT = 0.08; }
       }
     }
     if (shownCarry !== player.carry.length) { shownCarry = player.carry.length; rebuildStack(stackG, player.carry, 60); }
 
-    // 돈 더미
-    if (cashPile > 0 && dist(player.x, player.z, CASH.x, CASH.z) < 1.6) collectCash(false);
+    // ---- 돈 더미 ----
+    if (cashPile > 0 && dist(player.x, player.z, CASH.x, CASH.z) < 1.8) collectCash(false);
     if (L.bank) { bankT += dt; if (bankT > 2.5) { bankT = 0; if (cashPile > 0) collectCash(true); } }
     rebuildCash();
     if (stockDirty) rebuildStock();
 
-    updatePads(dt);
+    updatePads(clock);
     updateBelts(dt, D);
     updateCustomers(dt, clock, D);
     updateNpcs(dt, clock);
     for (const c of cashiers) if (c) animPerson(c, false, clock);
+    updateFx(dt);
 
-    // 파편 / 코인
+    // ---- 파편 / 코인 / 이펙트 ----
     for (let i = chips.length - 1; i >= 0; i--) {
       const c = chips[i]; c.t += dt; c.vy -= 16 * dt;
       c.x += c.vx * dt; c.y += c.vy * dt; c.z += c.vz * dt;
@@ -1697,20 +2374,37 @@
       c.m.rotation.y += dt * 12;
       if (k >= 1) { scene.remove(c.m); coins.splice(i, 1); }
     }
+    for (let i = fxParts.length - 1; i >= 0; i--) {
+      const p = fxParts[i]; p.t += dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      const k = 1 - p.t / p.life;
+      if (k <= 0) { scene.remove(p.m); fxParts.splice(i, 1); continue; }
+      p.m.position.set(p.x, p.y, p.z); p.m.scale.setScalar(p.size * k);
+    }
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const r = rings[i]; r.t += dt;
+      if (!r.m) r.m = ringMesh(r.c);
+      const k = r.t / r.life;
+      r.m.position.set(r.x, 0.12, r.z); r.m.scale.setScalar(r.r0 + (r.r1 - r.r0) * k); r.m.material.opacity = Math.max(0, 0.8 * (1 - k));
+      if (k >= 1) { scene.remove(r.m); ringPool.push(r.m); rings.splice(i, 1); }
+    }
 
-    // 카메라 (멀리서 보는 시점, 줌 조절 가능)
-    camGoal.set(player.x, 30 * zoom, player.z + 22 * zoom);
-    camPos.lerp(camGoal, Math.min(1, dt * 5));
+    // ---- 카메라 (살짝 앞을 내다보며 부드럽게 따라간다) ----
+    const lx = player.x + player.vx * 0.3, lz = player.z + player.vz * 0.3;
+    const ck = 1 - Math.exp(-6 * dt);
+    camGoal.set(lx, 30 * zoom, lz + 22 * zoom);
+    camPos.lerp(camGoal, ck);
+    camLook.x += (lx - camLook.x) * ck; camLook.z += (lz - 1 - camLook.z) * ck;
     camera.position.copy(camPos);
     if (shake > 0) { shake -= dt; camera.position.x += rand(-1, 1) * shake * 0.6; camera.position.y += rand(-1, 1) * shake * 0.6; }
-    camera.lookAt(camPos.x, 0, camPos.z - 22 * zoom - 1);
+    camera.lookAt(camLook.x, 0, camLook.z);
     sun.position.set(player.x + 12, 30, player.z + 10);
     sun.target.position.set(player.x, 0, player.z - 4); sun.target.updateMatrixWorld();
 
     updateGoal(clock);
     renderer.render(scene, camera);
 
-    // HTML 라벨
+    // ---- HTML 라벨 ----
     for (const p of PADS) if (!p.tag.hidden) project(p.x, 0, p.z + 1.0, p.tag);
     project(DEPOSIT.x - 2.1, 0, DEPOSIT.z - 0.2, depTag, -12);
     chkTag.hidden = L.cashier > 0;
@@ -1718,7 +2412,7 @@
     stockTag.textContent = '재고 ' + stock.length + ' · 손님 ' + custs.filter(c => c.state !== 'leave').length;
     project(STALL.x, 3.1, STALL.z, stockTag, -26);
     cashTag.hidden = cashPile <= 0;
-    if (!cashTag.hidden) { cashTag.innerHTML = `<div class="c"><i class="coin"></i>${cashPile}</div>`; project(CASH.x + 1.9, 0, CASH.z, cashTag, -12); }
+    if (!cashTag.hidden) { cashTag.innerHTML = `<div class="c"><i class="coin"></i>${fmt(cashPile)}</div>`; project(CASH.x + 1.9, 0, CASH.z, cashTag, -12); }
     BELTS.forEach((b, i) => { hopTags[i].hidden = !L[b.k]; if (L[b.k]) project(b.hop.x, 1, b.hop.z + 1, hopTags[i]); });
     for (let i = floats.length - 1; i >= 0; i--) {
       const f = floats[i]; f.t += dt;
@@ -1727,16 +2421,24 @@
       if (f.t > 1.1) { f.d.remove(); floats.splice(i, 1); }
     }
 
-    // HUD
-    $('hGold').textContent = gold;
-    $('hBag').textContent = player.carry.length + '/' + D.cap;
-    $('hBagBar').style.width = Math.min(100, player.carry.length / D.cap * 100) + '%';
-    $('hRank').textContent = RANKS[curTier] + ' · 힘 ' + power();
-    $('hHp').textContent = Math.ceil(player.hp) + '/' + D.maxHp;
-    $('hHpBar').style.width = Math.max(0, player.hp / D.maxHp * 100) + '%';
+    // ---- HUD ----
+    $('hGold').textContent = fmt(gold);
+    $('hGem').textContent = gems;
+    for (const [c, id] of [['w', 'W'], ['m', 'M'], ['s', 'S']]) {
+      const n = catCount(c), cap = D.caps[c];
+      $('n' + id).textContent = n + '/' + cap;
+      $('b' + id).style.width = Math.min(100, n / cap * 100) + '%';
+    }
+    $('hRank').textContent = RANKS[curTier] + ' · ' + (SKINS[skin] || SKINS[0]).name;
+    $('hHp').textContent = Math.ceil(Math.max(0, player.hp)) + '/' + D.maxHp;
+    $('hHpBar').style.width = Math.max(0, Math.min(100, player.hp / D.maxHp * 100)) + '%';
+    const showBoss = L.gateBoss && player.z < BOSS_Z + 8 && boss.alive;
+    $('bossBar').hidden = !showBoss;
+    if (showBoss) { $('bossFill').style.width = (boss.hp / boss.maxHp * 100) + '%'; $('bossHp').textContent = fmt(Math.max(0, boss.hp)) + ' / ' + fmt(boss.maxHp); }
     if (goldBumpT > 0) { goldBumpT -= dt; if (goldBumpT <= 0) $('goldBox').classList.remove('bump'); }
     if (player.hurtT > 0) player.hurtT -= dt;
     $('hurt').style.opacity = Math.max(0, player.hurtT / 0.35);
+    if (flashT > 0) { flashT -= dt; $('flash').style.opacity = Math.max(0, Math.min(1, flashT)); } else $('flash').style.opacity = 0;
     if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
     if (resetArm > 0) { resetArm -= dt; if (resetArm <= 0) { $('btnReset').textContent = '처음부터'; $('btnReset').classList.remove('warn'); } }
     if (clock > 8) $('hint').hidden = true;
