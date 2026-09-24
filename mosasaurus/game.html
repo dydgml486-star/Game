@@ -99,6 +99,22 @@
     .bite-below:active { transform: translateY(3px); box-shadow: 0 2px 0 #b44a2c; }
     .rotate-tip { display: block; }
   }
+  .overlay { overflow-y: auto; }
+  .pick-label { font-family: "Jua", "Noto Sans KR", sans-serif; }
+  .pick { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.6cqw; }
+  .pick-card {
+    display: flex; flex-direction: column; align-items: center; gap: .3cqw;
+    padding: .8cqw 1cqw; border-radius: 1.4cqw;
+    background: rgba(18, 52, 79, .85); border: .4cqw solid rgba(255,255,255,.18);
+    font-family: "Jua", "Noto Sans KR", sans-serif; font-size: clamp(.8rem, 1.9cqw, 1.25rem);
+  }
+  .pick-card canvas { width: clamp(84px, 17cqw, 200px); height: auto; aspect-ratio: 2 / 1; cursor: pointer; }
+  .pick-card[aria-pressed="true"] { border-color: var(--sun); background: rgba(38, 92, 124, .95); color: var(--sun); }
+  @container (max-width: 560px) {
+    .overlay .hint { display: none; }
+    .overlay h2 { font-size: 1.35rem; }
+    .overlay p { font-size: .8rem; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .big:active, .bite:active, .bite-below:active { transform: none; }
   }
@@ -120,9 +136,14 @@
 
       <div class="overlay" id="ovTitle">
         <h2>모사사우루스 바다 모험</h2>
-        <p>바다를 손가락으로 꾹 누른 채 움직이면 모사사우루스가 따라와요.<br>물고기를 냠냠 먹고, 메갈로돈이 달려오면 피하고, 어지러워할 때 콱 물어요!</p>
+        <p class="pick-label">누구랑 모험할까?</p>
+        <div class="pick" aria-label="주인공 고르기">
+          <button class="pick-card" id="pickMosa" type="button" data-char="mosa" aria-pressed="true"><canvas width="240" height="120"></canvas>모사사우루스</button>
+          <button class="pick-card" id="pickPlesio" type="button" data-char="plesio" aria-pressed="false"><canvas width="240" height="120"></canvas>플레시오사우루스</button>
+          <button class="pick-card" id="pickIchthy" type="button" data-char="ichthy" aria-pressed="false"><canvas width="240" height="120"></canvas>이크티오사우루스</button>
+        </div>
         <button class="big" id="btnStart" type="button">모험 시작!</button>
-        <p class="hint">키보드: 방향키로 이동 · 스페이스 = 앙! · P = 멈춤</p>
+        <p class="hint">화면을 누른 채 움직이면 따라와요 · 물고기 냠냠, 빨간 줄은 피하고, 메갈로돈이 어지러우면 콱! · 키보드: 방향키, 스페이스 = 앙!</p>
       </div>
 
       <div class="overlay" id="ovClear" hidden>
@@ -138,7 +159,7 @@
       </div>
 
       <div class="overlay" id="ovWin" hidden>
-        <h2>바다의 왕 모사사우루스!</h2>
+        <h2 id="winTitle">바다의 왕 모사사우루스!</h2>
         <p id="winMsg"></p>
         <button class="big" id="btnAgain" type="button">처음부터 다시</button>
       </div>
@@ -158,7 +179,7 @@
   'use strict';
   const W = 960, H = 540;
   const cv = document.getElementById('cv');
-  const ctx = cv.getContext('2d');
+  let ctx = cv.getContext('2d');
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const FONT = '"Jua", "Noto Sans KR", sans-serif';
 
@@ -211,18 +232,22 @@
   // ---------- 단계 설정 ----------
   const STAGES = [
     { name: '얕은 바다', travel: 30, hp: 3, charges: 1, charge: 520, idle: 2.4, warn: 1.7, tired: 4.2,
-      jelly: 7, shark: 6, water: ['#6fd0ee', '#2f93c4', '#1b6592'], far: '#2b7fa6', kelp: '#4fa36a', sand: '#f1d99a', sand2: '#e2c27a', ray: 0.09, coral: false, glow: false },
+      jelly: 7, shark: 6, snack: 'shark', amm: false, surface: true,
+      events: [[5, 'brachio'], [13, 'ptera'], [18, 'archelon'], [24, 'ptera']], water: ['#6fd0ee', '#2f93c4', '#1b6592'], far: '#2b7fa6', kelp: '#4fa36a', sand: '#f1d99a', sand2: '#e2c27a', ray: 0.09, coral: false, glow: false },
     { name: '산호초 바다', travel: 34, hp: 4, charges: 2, charge: 580, idle: 2.1, warn: 1.55, tired: 3.8,
-      jelly: 5, shark: 4.8, water: ['#48b4d6', '#1f78a8', '#124b77'], far: '#1c6a92', kelp: '#3f9160', sand: '#e7c888', sand2: '#d4ae6a', ray: 0.07, coral: true, glow: false },
+      jelly: 5, shark: 4.8, snack: 'shark', amm: false, surface: true,
+      events: [[4, 'spino'], [12, 'archelon'], [18, 'ptera'], [24, 'pod']], water: ['#48b4d6', '#1f78a8', '#124b77'], far: '#1c6a92', kelp: '#3f9160', sand: '#e7c888', sand2: '#d4ae6a', ray: 0.07, coral: true, glow: false },
     { name: '깊은 바다', travel: 38, hp: 5, charges: 3, charge: 640, idle: 1.9, warn: 1.45, tired: 3.5,
-      jelly: 4, shark: 4, water: ['#23679a', '#123f66', '#07192d'], far: '#0d3354', kelp: '#2e6e55', sand: '#9c8a68', sand2: '#857457', ray: 0.04, coral: true, glow: true }
+      jelly: 4, shark: 4, snack: 'dunkle', amm: true, surface: false,
+      events: [[5, 'pod'], [17, 'archelon'], [27, 'pod']], water: ['#23679a', '#123f66', '#07192d'], far: '#0d3354', kelp: '#2e6e55', sand: '#9c8a68', sand2: '#857457', ray: 0.04, coral: true, glow: true }
   ];
 
   // ---------- 상태 ----------
   const G = { mode: 'title', stage: 0, phase: 'travel', t: 0, travelT: 0, worldX: 0, score: 0, fishEaten: 0,
-              shake: 0, banner: null, spawn: {}, confetti: 0 };
+              shake: 0, banners: [], spawn: {}, confetti: 0,
+              char: 'mosa', evIdx: 0, seen: new Set(), stageMet: [] };
   const P = { x: 300, y: 280, vx: 0, vy: 0, hearts: 3, inv: 0, bite: 0, dash: 0, cd: 0, dizzy: 0, near: 0 };
-  let fish = [], jellies = [], sharks = [], pickups = [], parts = [];
+  let fish = [], jellies = [], sharks = [], pickups = [], parts = [], dinos = [];
   let M = null;
   let best = 0;
   try { best = +localStorage.getItem('mosa-best') || 0; } catch (e) { best = 0; }
@@ -274,6 +299,40 @@
     b.addEventListener('keydown', e => { if (e.code === 'Enter') { audio(); bite(); } });
   }
 
+  // ---------- 주인공과 공룡 친구 ----------
+  const CHARS = {
+    mosa:   { name: '모사사우루스', color: '#3f9a78', draw: (...a) => drawMosa(...a) },
+    plesio: { name: '플레시오사우루스', color: '#cf8a52', draw: (...a) => drawPlesio(...a) },
+    ichthy: { name: '이크티오사우루스', color: '#5b86c2', draw: (...a) => drawIchthy(...a) }
+  };
+  const INFO = {
+    brachio:  ['브라키오사우루스다!', '목이 아주아주 긴 공룡이에요'],
+    ptera:    ['프테라노돈이다!', '하늘에서 물고기를 잡으러 풍덩!'],
+    archelon: ['아르켈론이다!', '커다란 바다거북! 닿으면 보호막을 줘요'],
+    spino:    ['스피노사우루스다!', '등에 돛이 있고 헤엄을 잘 쳐요'],
+    ichthy:   ['이크티오사우루스다!', '눈이 아주 크고 아주 빨라요'],
+    plesio:   ['플레시오사우루스다!', '지느러미 네 개로 노를 저어요'],
+    mosa:     ['모사사우루스다!', '바다의 힘센 사냥꾼이에요'],
+    dunkle:   ['둔클레오스테우스다!', '딱딱한 갑옷을 입은 물고기예요'],
+    ammonite: ['암모나이트다!', '빙글빙글 껍데기! 먹으면 5점']
+  };
+  const NAMES = { brachio: '브라키오사우루스', ptera: '프테라노돈', archelon: '아르켈론', spino: '스피노사우루스',
+                  ichthy: '이크티오사우루스', plesio: '플레시오사우루스', mosa: '모사사우루스', dunkle: '둔클레오스테우스', ammonite: '암모나이트' };
+  function meet(k) {
+    if (!G.stageMet.includes(k)) G.stageMet.push(k);
+    if (!G.seen.has(k)) { G.seen.add(k); banner(INFO[k][0], INFO[k][1], 2.4); }
+  }
+  const pickCards = [...document.querySelectorAll('.pick-card')];
+  function setChar(c) {
+    if (!CHARS[c]) c = 'mosa';
+    G.char = c;
+    pickCards.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.char === c)));
+    try { localStorage.setItem('mosa-char', c); } catch (e) {}
+  }
+  pickCards.forEach(b => { b.onclick = () => { audio(); setChar(b.dataset.char); sfx.eat(); }; });
+  try { setChar(localStorage.getItem('mosa-char') || 'mosa'); } catch (e) { setChar('mosa'); }
+  function withCtx(c, fn) { const old = ctx; ctx = c; try { fn(); } finally { ctx = old; } }
+
   // ---------- 오버레이 ----------
   const ov = {
     title: document.getElementById('ovTitle'), clear: document.getElementById('ovClear'),
@@ -310,15 +369,16 @@
 
   // ---------- 진행 ----------
   function resetPlayer() {
-    Object.assign(P, { x: 220, y: H / 2, vx: 0, vy: 0, hearts: 3, inv: 0, bite: 0, dash: 0, cd: 0, dizzy: 0 });
+    Object.assign(P, { x: 220, y: H / 2, vx: 0, vy: 0, hearts: 3, inv: 0, bite: 0, dash: 0, cd: 0, dizzy: 0, shield: false });
   }
-  function startGame() { G.stage = 0; G.score = 0; startStage(); }
+  function startGame() { G.stage = 0; G.score = 0; G.seen = new Set([G.char]); startStage(); }
   function startStage() {
     const S = STAGES[G.stage];
     resetPlayer();
-    fish = []; jellies = []; sharks = []; pickups = [];
+    fish = []; jellies = []; sharks = []; pickups = []; dinos = [];
     M = null;
     G.phase = 'travel'; G.travelT = 0; G.fishEaten = 0; G.confetti = 0;
+    G.evIdx = 0; G.stageMet = []; G.banners = [];
     G.spawn = { fish: 0.4, jelly: S.jelly * 0.6, shark: S.shark * 0.8, heart: 9 };
     G.mode = 'play';
     showOverlay(null);
@@ -340,7 +400,7 @@
     resetPlayer();
     P.inv = 1.5;
     M = newMeg();
-    sharks = []; jellies = [];
+    sharks = []; jellies = []; G.banners = [];
     G.mode = 'play';
     showOverlay(null);
     banner('다시 도전!', '할 수 있어요!', 2);
@@ -351,18 +411,25 @@
     if (G.score > best) { best = G.score; try { localStorage.setItem('mosa-best', String(best)); } catch (e) {} }
     if (G.stage >= STAGES.length - 1) {
       G.mode = 'win'; G.confetti = 6;
+      const met = [...G.seen].filter(k => k !== G.char).map(k => NAMES[k]);
+      document.getElementById('winTitle').textContent = `바다의 왕 ${CHARS[G.char].name}!`;
       document.getElementById('winMsg').innerHTML =
-        `세 바다의 메갈로돈을 모두 물리쳤어요!<br>모은 점수 <b>${G.score}점</b> · 최고 기록 ${best}점`;
+        `세 바다의 메갈로돈을 모두 물리쳤어요!<br>모은 점수 <b>${G.score}점</b> · 최고 기록 ${best}점` +
+        (met.length ? `<br>만난 친구들: ${met.join(', ')}` : '');
       showOverlay('win');
     } else {
       G.mode = 'clear'; G.confetti = 2.5;
       document.getElementById('clearTitle').textContent = `${G.stage + 1}단계 성공!`;
       document.getElementById('clearMsg').innerHTML =
-        `${S.name}의 메갈로돈을 물리쳤어요.<br>물고기 <b>${G.fishEaten}마리</b> 냠냠 · 지금 점수 <b>${G.score}점</b>`;
+        `${S.name}의 메갈로돈을 물리쳤어요.<br>물고기 <b>${G.fishEaten}마리</b> 냠냠 · 지금 점수 <b>${G.score}점</b>` +
+        (G.stageMet.length ? `<br>만난 친구: ${G.stageMet.map(k => NAMES[k]).join(', ')}` : '');
       showOverlay('clear');
     }
   }
-  function banner(text, sub, dur) { G.banner = { text, sub, t: 0, dur }; }
+  function banner(text, sub, dur) {
+    G.banners.push({ text, sub, t: 0, dur });
+    if (G.banners.length > 3) G.banners.splice(1, 1);
+  }
   function pop(x, y, text, color) {
     parts.push({ type: 'text', x, y, vx: 0, vy: -50, life: 1.1, max: 1.1, text, color: color || '#fff' });
   }
@@ -420,7 +487,7 @@
       }
     }
     updateParts(dt);
-    if (G.banner) { G.banner.t += dt; if (G.banner.t > G.banner.dur) G.banner = null; }
+    if (G.banners.length) { const b = G.banners[0]; b.t += dt; if (b.t > b.dur) G.banners.shift(); }
 
     if (G.mode !== 'play') return;
 
@@ -434,6 +501,75 @@
       updateMeg(dt, S);
     }
     updateThings(dt, speed);
+    updateDinos(dt, speed);
+  }
+
+  // ---------- 공룡 친구 등장 ----------
+  function spawnDino(kind) {
+    if (kind === 'brachio') dinos.push({ kind, x: W + 480, t: 0, hx: 0, hy: 0 });
+    else if (kind === 'ptera') dinos.push({ kind, x: W + 90, y: -90, t: 0, grabbed: false, splashed: false, out: false });
+    else if (kind === 'archelon') dinos.push({ kind, x: W + 120, y: rand(170, H - 170), t: 0, given: false, ph: rand(0, 6) });
+    else if (kind === 'spino') dinos.push({ kind, x: W + 380, y: rand(220, H - 190), t: 0 });
+    else if (kind === 'pod') {
+      const sp = G.char === 'ichthy' ? 'plesio' : 'ichthy';
+      const y0 = rand(130, H - 220);
+      for (let i = 0; i < 3; i++) dinos.push({ kind: 'pod', sp, x: W + 120 + i * 150, y: y0 + [0, 55, 20][i], t: rand(0, 3) });
+      kind = sp;
+    }
+    meet(kind);
+  }
+  function splash(x) {
+    for (let i = 0; i < 14; i++) {
+      parts.push({ type: 'bubble', x: x + rand(-35, 35), y: rand(2, 40), vx: rand(-70, 70), vy: rand(-10, 70), life: 1.4, max: 1.4, size: rand(3, 8) });
+    }
+    tone(700, 200, 0.25, 'sine', 0.06);
+  }
+  function brachioHead(d) {
+    return { x: d.x - 300, y: 190 + Math.sin(d.t * 0.9) * 55 };
+  }
+  function updateDinos(dt, speed) {
+    const pc = playerCircles();
+    for (let i = dinos.length - 1; i >= 0; i--) {
+      const d = dinos[i];
+      d.t += dt;
+      let gone = false;
+      if (d.kind === 'brachio') {
+        d.x -= (speed * 0.45 + 25) * dt;
+        const h = brachioHead(d);
+        if (Math.random() < dt * 2.5) parts.push({ type: 'bubble', x: h.x - 36, y: h.y - 4, vx: -10, vy: -50, life: 3, max: 3, size: rand(3, 6) });
+        gone = d.x < -700;
+      } else if (d.kind === 'ptera') {
+        d.x -= 280 * dt;
+        const p = d.t / 2.4;
+        d.y = -90 + Math.sin(Math.min(1, p) * Math.PI) * 300;
+        if (!d.splashed && d.y > 0) { d.splashed = true; splash(d.x); }
+        if (d.splashed && !d.out && d.t > 1.2 && d.y < 0) { d.out = true; splash(d.x); }
+        if (!d.grabbed && d.t > 0.8 && d.t < 1.6) {
+          const bx = d.x - 50, by = d.y + 10;
+          for (let k = 0; k < fish.length; k++) {
+            if (near(fish[k].x, fish[k].y, bx, by, 70)) { fish.splice(k, 1); d.grabbed = true; pop(bx, by - 30, '냠!', '#fff'); break; }
+          }
+        }
+        gone = p > 1.1;
+      } else if (d.kind === 'archelon') {
+        d.x -= (speed * 0.55 + 40) * dt;
+        d.y += Math.sin(G.t * 1.2 + d.ph) * 12 * dt;
+        if (!d.given && hitAny(pc, [[d.x, d.y, 50], [d.x - 70, d.y + 4, 18]])) {
+          d.given = true; P.shield = true;
+          sfx.heart(); sparks(P.x, P.y, 12, ['#9ef0ff', '#fff']);
+          banner('보호막 선물!', '메갈로돈한테 한 번 안 아파요', 2.2);
+        }
+        gone = d.x < -160;
+      } else if (d.kind === 'spino') {
+        d.x -= (speed * 0.5 + 70) * dt;
+        d.y += Math.sin(G.t * 0.8) * 10 * dt;
+        gone = d.x < -520;
+      } else if (d.kind === 'pod') {
+        d.x -= (speed + 200) * dt;
+        gone = d.x < -200;
+      }
+      if (gone) dinos.splice(i, 1);
+    }
   }
 
   function updatePlayer(dt) {
@@ -462,7 +598,9 @@
   }
 
   function spawnFish(x, y, gold) {
-    fish.push({ x, y, r: gold ? 15 : rand(10, 13), sp: rand(20, 70), ph: rand(0, 6), gold,
+    const amm = gold && STAGES[G.stage].amm;
+    if (amm) meet('ammonite');
+    fish.push({ x, y, r: gold ? 15 : rand(10, 13), sp: rand(20, 70), ph: rand(0, 6), gold, amm,
                 color: ['#ff9f43', '#ffd23f', '#ff6b9a', '#7ee0c3', '#b99cff'][Math.floor(rand(0, 5))] });
   }
   function spawnTravel(dt, S) {
@@ -479,7 +617,12 @@
     sp.jelly -= dt;
     if (sp.jelly <= 0) { sp.jelly = S.jelly * rand(0.7, 1.3); jellies.push({ x: W + 40, y: rand(90, H - 120), ph: rand(0, 6), r: 26, cool: 0 }); }
     sp.shark -= dt;
-    if (sp.shark <= 0) { sp.shark = S.shark * rand(0.7, 1.3); sharks.push({ x: W + 80, y: rand(90, H - 90), vx: -rand(80, 140), vy: 0, ph: rand(0, 6), hit: false, rot: 0 }); }
+    if (sp.shark <= 0) {
+      sp.shark = S.shark * rand(0.7, 1.3);
+      if (S.snack === 'dunkle') meet('dunkle');
+      sharks.push({ x: W + 80, y: rand(90, H - 90), vx: -rand(80, 140), vy: 0, ph: rand(0, 6), hit: false, rot: 0, kind: S.snack });
+    }
+    while (G.evIdx < S.events.length && G.travelT >= S.events[G.evIdx][0]) spawnDino(S.events[G.evIdx++][1]);
     spawnHeart(dt);
   }
   function spawnBoss(dt) {
@@ -509,7 +652,7 @@
         const v = f.gold ? 5 : 1;
         G.score += v; G.fishEaten++;
         P.bite = Math.max(P.bite, 0.22);
-        if (f.gold) { sfx.gold(); sparks(f.x, f.y, 8, ['#ffd23f', '#fff']); pop(f.x, f.y - 20, '+5 반짝!', '#ffd23f'); }
+        if (f.gold) { sfx.gold(); sparks(f.x, f.y, 8, ['#ffd23f', '#fff']); pop(f.x, f.y - 20, f.amm ? '+5 빙글!' : '+5 반짝!', '#ffd23f'); }
         else { sfx.eat(); pop(f.x, f.y - 20, '+1', '#fff'); }
         continue;
       }
@@ -648,9 +791,16 @@
     sparks(m.x - 110, m.y, 14, ['#ffd23f', '#fff', '#ff7b54']);
     pop(m.x - 110, m.y - 70, '콱! +10', '#ffd23f');
     setMeg('hurt');
-    if (m.hp <= 0) banner('메갈로돈이 도망가요!', '모사사우루스 최고!', 2.2);
+    if (m.hp <= 0) banner('메갈로돈이 도망가요!', `${CHARS[G.char].name} 최고!`, 2.2);
   }
   function hurtPlayer() {
+    if (P.shield) {
+      P.shield = false; P.inv = 1.8; G.shake = 0.25;
+      P.vx = -260; P.vy = (P.y < M.y ? -1 : 1) * 320;
+      sfx.boing(); sparks(P.x, P.y, 12, ['#9ef0ff', '#fff']);
+      pop(P.x, P.y - 50, '보호막 펑!', '#9ef0ff');
+      return;
+    }
     P.hearts--; P.inv = 2.2; G.shake = 0.4;
     P.vx = -260; P.vy = (P.y < M.y ? -1 : 1) * 320;
     sfx.hurt();
@@ -700,6 +850,12 @@
       ctx.closePath(); ctx.fill();
     }
 
+    if (S.surface) {
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.beginPath(); ctx.moveTo(-30, -30);
+      for (let x = -30; x <= W + 30; x += 20) ctx.lineTo(x, 5 + Math.sin((x + G.worldX * 0.5) * 0.03 + G.t * 2) * 3);
+      ctx.lineTo(W + 30, -30); ctx.closePath(); ctx.fill();
+    }
     hills(G.worldX * 0.25, H - 125, 28, S.far, 0.006);
 
     // 해초
@@ -898,6 +1054,333 @@
     ctx.restore();
   }
 
+  // ---------- 그리기: 플레시오사우루스 ----------
+  const PLES = { body: '#cf8a52', dark: '#a4643a', belly: '#f6e2bf', line: '#5a3217', mouth: '#7a2330' };
+  function paddle(x, y, rot, s, color) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -6); ctx.quadraticCurveTo(34, -2, 60, 14);
+    ctx.quadraticCurveTo(30, 16, 0, 7);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  function drawPlesio(x, y, t, mouth, tilt, blink, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y); ctx.rotate(tilt); ctx.scale(0.72, 0.72);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = PLES.line;
+    const row = Math.sin(t * 4);
+    paddle(-5, 8, 0.5 + row * 0.45, 1.05, PLES.dark);
+    paddle(-78, 8, 0.6 - row * 0.45, 0.9, PLES.dark);
+    // 꼬리
+    const w = Math.sin(t * 5) * 6;
+    ctx.fillStyle = PLES.body;
+    ctx.beginPath();
+    ctx.moveTo(-80, -12); ctx.quadraticCurveTo(-118, -6 + w, -146, 4 + w);
+    ctx.quadraticCurveTo(-118, 12 + w, -80, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 몸통
+    const body = () => { ctx.beginPath(); ctx.ellipse(-28, 0, 66, 30, 0, 0, Math.PI * 2); };
+    body(); ctx.fillStyle = PLES.body; ctx.fill();
+    ctx.save(); body(); ctx.clip();
+    ctx.fillStyle = PLES.belly; ctx.fillRect(-100, 6, 150, 40);
+    ctx.fillStyle = PLES.dark;
+    for (const [sx, sy] of [[-50, -14], [-20, -18], [8, -12], [-70, -6]]) { ctx.beginPath(); ctx.ellipse(sx, sy, 7, 4, 0, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    body(); ctx.stroke();
+    // 긴 목
+    const nx = 98, ny = -14 + Math.sin(t * 2) * 4;
+    ctx.beginPath(); ctx.moveTo(24, -6); ctx.quadraticCurveTo(62, -42 + Math.sin(t * 2) * 8, nx, ny);
+    ctx.strokeStyle = PLES.line; ctx.lineWidth = 24; ctx.stroke();
+    ctx.strokeStyle = PLES.body; ctx.lineWidth = 17; ctx.stroke();
+    ctx.lineWidth = 3.5; ctx.strokeStyle = PLES.line;
+    // 머리
+    const a = mouth * 0.5;
+    ctx.save(); ctx.translate(nx, ny);
+    if (mouth > 0.05) {
+      ctx.fillStyle = PLES.mouth;
+      ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(38, 3); ctx.lineTo(4 + Math.cos(a) * 34, 5 + Math.sin(a) * 34); ctx.closePath(); ctx.fill();
+    }
+    ctx.save(); ctx.translate(4, 5); ctx.rotate(a);
+    ctx.fillStyle = '#fff';
+    for (let tx = 6; tx < 32; tx += 7) { ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx + 3, -6); ctx.lineTo(tx + 6, 0); ctx.fill(); }
+    ctx.fillStyle = PLES.belly;
+    ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(34, 0); ctx.quadraticCurveTo(36, 5, 30, 7); ctx.lineTo(-8, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#fff';
+    for (let tx = 10; tx < 36; tx += 7) { ctx.beginPath(); ctx.moveTo(tx, 4); ctx.lineTo(tx + 3, 10); ctx.lineTo(tx + 6, 4); ctx.fill(); }
+    ctx.fillStyle = PLES.body;
+    ctx.beginPath(); ctx.moveTo(-8, -10); ctx.quadraticCurveTo(14, -22, 42, 0); ctx.lineTo(40, 5); ctx.lineTo(-6, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(10, -6, 6, blink ? 1.2 : 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    if (!blink) { ctx.fillStyle = '#1c1c1c'; ctx.beginPath(); ctx.arc(12, -6, 3.4, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(13, -7.5, 1.2, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    ctx.lineWidth = 3.5;
+    paddle(10, 16, 0.3 - row * 0.45, 1.15, PLES.body);
+    paddle(-70, 16, 0.4 + row * 0.45, 1.0, PLES.body);
+    ctx.restore();
+  }
+
+  // ---------- 그리기: 이크티오사우루스 ----------
+  const ICH = { body: '#5b86c2', dark: '#3d628f', belly: '#e8f0fa', line: '#1f3552', mouth: '#7a2330' };
+  function drawIchthy(x, y, t, mouth, tilt, blink, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y); ctx.rotate(tilt); ctx.scale(0.8, 0.8);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = ICH.line;
+    const wag = Math.sin(t * 8);
+    // 초승달 꼬리
+    ctx.save(); ctx.translate(-82, 0); ctx.rotate(wag * 0.22);
+    ctx.fillStyle = ICH.dark;
+    ctx.beginPath();
+    ctx.moveTo(4, 0); ctx.quadraticCurveTo(-16, -12, -38, -44); ctx.quadraticCurveTo(-28, -8, -26, 0);
+    ctx.quadraticCurveTo(-28, 8, -38, 44); ctx.quadraticCurveTo(-16, 12, 4, 0);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    // 등지느러미
+    ctx.fillStyle = ICH.dark;
+    ctx.beginPath(); ctx.moveTo(-4, -26); ctx.quadraticCurveTo(-16, -52, -40, -54); ctx.quadraticCurveTo(-32, -38, -38, -22); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 뒷지느러미
+    paddle(-48, 14, 1.1 + wag * 0.2, 0.5, ICH.dark);
+    // 몸통
+    const body = () => {
+      ctx.beginPath();
+      ctx.moveTo(62, -8); ctx.bezierCurveTo(40, -34, -30, -32, -84, -4);
+      ctx.lineTo(-84, 4); ctx.bezierCurveTo(-30, 30, 40, 30, 62, 8); ctx.closePath();
+    };
+    body(); ctx.fillStyle = ICH.body; ctx.fill();
+    ctx.save(); body(); ctx.clip();
+    ctx.fillStyle = ICH.belly;
+    ctx.beginPath(); ctx.moveTo(70, 2); ctx.bezierCurveTo(30, 10, -30, 10, -90, 2); ctx.lineTo(-90, 40); ctx.lineTo(70, 40); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    body(); ctx.stroke();
+    // 긴 주둥이
+    const a = mouth * 0.45;
+    if (mouth > 0.05) {
+      ctx.fillStyle = ICH.mouth;
+      ctx.beginPath(); ctx.moveTo(56, 3); ctx.lineTo(122, 1); ctx.lineTo(56 + Math.cos(a) * 64, 3 + Math.sin(a) * 64); ctx.closePath(); ctx.fill();
+    }
+    ctx.save(); ctx.translate(56, 3); ctx.rotate(a);
+    ctx.fillStyle = '#fff';
+    for (let tx = 6; tx < 60; tx += 7) { ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx + 3, -5); ctx.lineTo(tx + 6, 0); ctx.fill(); }
+    ctx.fillStyle = ICH.belly;
+    ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(64, 0); ctx.lineTo(60, 5); ctx.lineTo(0, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#fff';
+    for (let tx = 66; tx < 120; tx += 7) { ctx.beginPath(); ctx.moveTo(tx, 2); ctx.lineTo(tx + 3, 7); ctx.lineTo(tx + 6, 2); ctx.fill(); }
+    ctx.fillStyle = ICH.body;
+    ctx.beginPath(); ctx.moveTo(52, -12); ctx.quadraticCurveTo(90, -8, 126, -1); ctx.lineTo(124, 3); ctx.lineTo(56, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 아주 큰 눈
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(42, -7, 12, blink ? 2 : 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2.5; ctx.stroke();
+    if (!blink) {
+      ctx.fillStyle = '#2a4f86'; ctx.beginPath(); ctx.arc(45, -7, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0d1422'; ctx.beginPath(); ctx.arc(46, -7, 4.6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(48, -10, 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.lineWidth = 3.5;
+    paddle(18, 14, 0.9 + wag * 0.25, 0.75, ICH.dark);
+    ctx.restore();
+  }
+
+  function drawShield(x, y) {
+    const r = 1 + Math.sin(G.t * 4) * 0.04;
+    ctx.save();
+    ctx.fillStyle = 'rgba(158,240,255,.16)'; ctx.strokeStyle = 'rgba(190,248,255,.8)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(x - 5, y + 2, 118 * r, 62 * r, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.45)';
+    ctx.beginPath(); ctx.ellipse(x - 60, y - 34, 18, 7, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---------- 그리기: 공룡 친구들 ----------
+  function drawFarDino(d) {
+    ctx.save();
+    ctx.globalAlpha = 0.82;
+    if (d.kind === 'brachio') drawBrachio(d);
+    else if (d.kind === 'spino') drawSpino(d);
+    else if (d.kind === 'pod') {
+      ctx.translate(d.x, d.y); ctx.scale(-0.75, 0.75);
+      (d.sp === 'plesio' ? drawPlesio : drawIchthy)(0, 0, d.t * 1.4, 0.12, 0, false, 0.82);
+    }
+    ctx.restore();
+  }
+  function drawBrachio(d) {
+    const C = { body: '#7f9b6a', dark: '#5e7a4f', line: '#2f4428', belly: '#b9c99a' };
+    const bx = d.x, ph = d.t * 2.2;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = C.line; ctx.lineWidth = 4;
+    const leg = (ox, color, off) => {
+      const sway = Math.sin(ph + off) * 12;
+      const x = bx + ox, foot = H - 48;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - 26, -20); ctx.lineTo(x + 26, -20);
+      ctx.lineTo(x + 22 + sway, foot); ctx.lineTo(x - 22 + sway, foot);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e8e0c8';
+      for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.arc(x + sway + k * 13 - 6, foot - 2, 5, Math.PI, 0); ctx.fill(); }
+    };
+    leg(-100, C.dark, Math.PI); leg(140, C.dark, 0);
+    // 배 (수면 위 몸통의 아랫부분)
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.ellipse(bx + 20, -40, 230, 72, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.belly;
+    ctx.beginPath(); ctx.ellipse(bx + 20, -10, 170, 26, 0, 0, Math.PI); ctx.fill();
+    leg(-135, C.body, 0); leg(105, C.body, Math.PI);
+    // 목과 머리
+    const h = brachioHead(d);
+    ctx.beginPath(); ctx.moveTo(bx - 170, -10);
+    ctx.bezierCurveTo(bx - 250, 0, h.x + 30, h.y - 140, h.x + 6, h.y - 12);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 42; ctx.stroke();
+    ctx.strokeStyle = C.body; ctx.lineWidth = 34; ctx.stroke();
+    ctx.lineWidth = 4; ctx.strokeStyle = C.line;
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.ellipse(h.x - 8, h.y, 38, 22, -0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(h.x + 8, h.y - 18, 14, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(h.x - 12, h.y - 8, 6, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(h.x - 14, h.y - 8, 3.2, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(h.x - 26, h.y + 2, 10, 0.2, Math.PI - 0.6); ctx.stroke();
+  }
+  function drawSpino(d) {
+    const C = { body: '#8a6f5a', dark: '#6b5443', line: '#35271d', belly: '#e0cdb3', sail: '#d0603f' };
+    const wag = Math.sin(d.t * 5) * 14;
+    ctx.translate(d.x, d.y); ctx.scale(0.9, 0.9);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = C.line;
+    // 꼬리 (노처럼 넓적)
+    ctx.fillStyle = C.dark;
+    ctx.beginPath(); ctx.moveTo(70, -26);
+    ctx.quadraticCurveTo(160, -58 + wag * 0.5, 268, -6 + wag);
+    ctx.lineTo(268, 3 + wag); ctx.quadraticCurveTo(160, 40 + wag * 0.5, 70, 26);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 돛
+    ctx.fillStyle = C.sail;
+    ctx.beginPath(); ctx.moveTo(-70, -26); ctx.bezierCurveTo(-54, -140, 54, -140, 74, -24); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2.5;
+    for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(i * 18, -30); ctx.lineTo(i * 20, -34 - (100 - Math.abs(i) * 18)); ctx.stroke(); }
+    ctx.lineWidth = 4;
+    // 뒷다리
+    ctx.fillStyle = C.dark;
+    ctx.beginPath(); ctx.moveTo(30, 20); ctx.quadraticCurveTo(60 + wag * 0.4, 60, 50 + wag * 0.4, 78); ctx.lineTo(28, 76); ctx.quadraticCurveTo(28, 50, 10, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 몸통
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.ellipse(0, 0, 96, 38, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.belly;
+    ctx.beginPath(); ctx.ellipse(-4, 16, 78, 16, 0, 0, Math.PI); ctx.fill();
+    // 머리 (악어처럼 긴 주둥이)
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.moveTo(-80, -20); ctx.quadraticCurveTo(-120, -44, -150, -34);
+    ctx.quadraticCurveTo(-190, -30, -222, -16); ctx.lineTo(-220, -8); ctx.lineTo(-120, 0); ctx.quadraticCurveTo(-96, 6, -80, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.belly;
+    ctx.beginPath(); ctx.moveTo(-120, 0); ctx.lineTo(-214, -6); ctx.quadraticCurveTo(-200, 6, -120, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    for (let tx = -206; tx < -130; tx += 10) { ctx.beginPath(); ctx.moveTo(tx, -7); ctx.lineTo(tx + 4, -1); ctx.lineTo(tx + 8, -6); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(-140, -26, 6, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(-142, -26, 3.2, 0, Math.PI * 2); ctx.fill();
+    // 앞발
+    ctx.lineWidth = 4; ctx.fillStyle = C.dark;
+    ctx.beginPath(); ctx.moveTo(-62, 24); ctx.quadraticCurveTo(-74 - wag * 0.3, 44, -84 - wag * 0.3, 52); ctx.lineTo(-70, 56); ctx.quadraticCurveTo(-56, 40, -46, 28); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  function drawArchelon(d) {
+    const C = { shell: '#4f6b52', plate: '#6d8a6c', skin: '#9bb88f', line: '#243325' };
+    const row = Math.sin(G.t * 3 + d.ph);
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = C.line;
+    const fl = (x, y, rot, s) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+      ctx.fillStyle = C.skin;
+      ctx.beginPath(); ctx.moveTo(0, -6); ctx.quadraticCurveTo(-30, 10, -70, 30); ctx.quadraticCurveTo(-30, 26, 0, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    };
+    fl(-22, 8, -0.2 + row * 0.5, 1);
+    fl(46, 14, 0.9 - row * 0.3, -0.45);
+    ctx.fillStyle = C.skin;
+    ctx.beginPath(); ctx.ellipse(-70, 4, 22, 14, 0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-78, -1, 5, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(-80, -1, 2.8, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(-80, 6, 7, 0.3, Math.PI - 0.3); ctx.stroke();
+    ctx.lineWidth = 3.5;
+    ctx.fillStyle = C.shell;
+    ctx.beginPath(); ctx.ellipse(0, 0, 62, 34, 0, Math.PI, 0); ctx.quadraticCurveTo(0, 22, -62, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.plate;
+    for (const [px, py] of [[-28, -14], [0, -20], [28, -14], [-12, -2], [14, -2]]) {
+      ctx.beginPath(); ctx.ellipse(px, py, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    fl(-10, 12, 0.1 - row * 0.5, 0.9);
+    if (!d.given) {
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(G.t * 5);
+      ctx.fillStyle = '#9ef0ff'; ctx.font = `26px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('?', 0, -52);
+    }
+    ctx.restore();
+  }
+  function drawPtera(d) {
+    const C = { body: '#b0643a', wing: '#c98457', line: '#4a2412', crest: '#e0a04a' };
+    const p = Math.min(1, d.t / 2.4);
+    const flap = d.y < 0 ? Math.sin(G.t * 16) * 0.6 : 0.15;
+    ctx.save();
+    ctx.translate(d.x, d.y); ctx.rotate(-0.8 * Math.cos(p * Math.PI));
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = C.line;
+    const wing = (dir, col) => {
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.moveTo(-8, -2);
+      ctx.lineTo(16, dir * (48 + flap * 30)); ctx.lineTo(34, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    };
+    wing(1, C.body);
+    ctx.fillStyle = C.body; ctx.beginPath(); ctx.ellipse(6, 0, 24, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.crest; ctx.beginPath(); ctx.moveTo(-22, -8); ctx.lineTo(8, -22); ctx.lineTo(-14, -1); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.body; ctx.beginPath(); ctx.arc(-22, -3, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#f0c070'; ctx.beginPath(); ctx.moveTo(-28, -7); ctx.lineTo(-68, 2); ctx.lineTo(-28, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(-24, -5, 2.6, 0, Math.PI * 2); ctx.fill();
+    if (d.grabbed) drawFish({ x: -62, y: 6, r: 8, ph: 0, color: '#ffd23f' });
+    wing(-1, C.wing);
+    ctx.restore();
+  }
+  function drawDunkle(s) {
+    const C = { armor: '#4a4f58', plate: '#626874', body: '#8a7f6e', belly: '#d9cfbd', line: '#1d2026' };
+    const wag = Math.sin(G.t * 7 + s.ph) * 0.25;
+    ctx.save();
+    ctx.translate(s.x, s.y); if (s.hit) ctx.rotate(s.rot);
+    ctx.scale(0.62, 0.62);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = C.line;
+    ctx.save(); ctx.translate(70, 0); ctx.rotate(wag);
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(44, -34); ctx.quadraticCurveTo(34, 0, 44, 30); ctx.lineTo(0, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = C.body;
+    ctx.beginPath(); ctx.moveTo(-10, -32); ctx.quadraticCurveTo(40, -24, 74, -6); ctx.lineTo(74, 6); ctx.quadraticCurveTo(40, 26, -10, 32); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 갑옷 머리
+    ctx.fillStyle = C.armor;
+    ctx.beginPath(); ctx.moveTo(10, -36); ctx.quadraticCurveTo(-40, -44, -64, -8); ctx.lineTo(-58, 4); ctx.lineTo(10, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.plate;
+    ctx.beginPath(); ctx.moveTo(-58, 12); ctx.lineTo(8, 14); ctx.lineTo(8, 36); ctx.quadraticCurveTo(-30, 34, -56, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 뼈 이빨
+    ctx.fillStyle = '#f2ecdc';
+    ctx.beginPath(); ctx.moveTo(-60, 2); ctx.lineTo(-48, 14); ctx.lineTo(-42, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-58, 14); ctx.lineTo(-46, 4); ctx.lineTo(-40, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-30, -14, 7, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#b3261e'; ctx.beginPath(); ctx.arc(-32, -14, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function drawAmmonite(f) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.fillStyle = `rgba(255,230,120,${0.3 + 0.2 * Math.sin(G.t * 6)})`;
+    ctx.beginPath(); ctx.arc(0, 0, f.r * 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#e39a5a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); ctx.moveTo(-f.r * 0.7, f.r * 0.1);
+      ctx.quadraticCurveTo(-f.r * 1.5, f.r * (0.1 + i * 0.25) + Math.sin(G.t * 6 + i) * 3, -f.r * 1.9, f.r * (0.2 + i * 0.35));
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#f2c27a'; ctx.strokeStyle = '#8a5a2a'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 0, f.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    for (let a = 0; a < Math.PI * 4; a += 0.2) { const r = f.r * (1 - a / (Math.PI * 4.4)); ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    ctx.stroke();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-f.r * 0.85, -f.r * 0.1, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   // ---------- 그리기: 상어 / 메갈로돈 ----------
   const SHARK = { body: '#6d7f8e', dark: '#4b5b68', belly: '#eef2f2', line: '#26323b', mouth: '#5a1520' };
   function drawShark(x, y, face, scale, t, mouth, o) {
@@ -1015,6 +1498,7 @@
 
   // ---------- 그리기: 작은 친구들 ----------
   function drawFish(f) {
+    if (f.amm) { drawAmmonite(f); return; }
     ctx.save();
     ctx.translate(f.x, f.y);
     const r = f.r, wag = Math.sin(G.t * 12 + f.ph) * 0.25;
@@ -1160,7 +1644,7 @@
       ctx.beginPath(); ctx.moveTo(bx + bw + 8, by + bh + 4); ctx.lineTo(bx + bw + 24, by - 12); ctx.lineTo(bx + bw + 40, by + bh + 4); ctx.closePath(); ctx.fill(); ctx.stroke();
       // 모사사우루스 머리 표시
       const mx = bx + bw * k;
-      ctx.fillStyle = MOSA.body; ctx.beginPath(); ctx.ellipse(mx, by + bh / 2, 16, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = CHARS[G.char].color; ctx.beginPath(); ctx.ellipse(mx, by + bh / 2, 16, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx + 5, by + bh / 2 - 3, 4, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(mx + 6, by + bh / 2 - 3, 2, 0, Math.PI * 2); ctx.fill();
       outlinedText(`${G.stage + 1}단계 · ${S.name}`, W / 2, by + bh + 26, 24, '#fff', '#0b2438');
@@ -1181,7 +1665,7 @@
     ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
   }
   function drawBanner() {
-    const b = G.banner;
+    const b = G.banners[0];
     if (!b) return;
     const inT = Math.min(1, b.t / 0.25), outT = Math.min(1, (b.dur - b.t) / 0.4);
     const s = reduceMotion ? 1 : 0.6 + 0.4 * (1 - Math.pow(1 - inT, 3));
@@ -1200,6 +1684,7 @@
     ctx.save();
     if (G.shake > 0 && !reduceMotion) ctx.translate(rand(-1, 1) * 30 * G.shake, rand(-1, 1) * 30 * G.shake);
     drawBackground(S);
+    for (const d of dinos) if (d.kind === 'brachio' || d.kind === 'spino' || d.kind === 'pod') drawFarDino(d);
     drawParts(false);
 
     if (G.mode === 'title') {
@@ -1212,8 +1697,12 @@
     if (M && M.state === 'warn') drawLane(M);
     for (const h of pickups) drawPickup(h);
     for (const f of fish) drawFish(f);
+    for (const d of dinos) if (d.kind === 'archelon') drawArchelon(d); else if (d.kind === 'ptera') drawPtera(d);
     for (const j of jellies) drawJelly(j);
-    for (const s of sharks) drawShark(s.x, s.y, -1, 0.3, G.t + s.ph, s.hit ? 0.8 : 0.1, { rot: s.hit ? s.rot : 0 });
+    for (const s of sharks) {
+      if (s.kind === 'dunkle') drawDunkle(s);
+      else drawShark(s.x, s.y, -1, 0.3, G.t + s.ph, s.hit ? 0.8 : 0.1, { rot: s.hit ? s.rot : 0 });
+    }
 
     if (M) {
       const shakeX = M.state === 'warn' && !M.off && !reduceMotion ? Math.sin(G.t * 60) * 4 : 0;
@@ -1228,7 +1717,8 @@
     const mouth = P.bite > 0 ? Math.sin(Math.min(1, P.bite / 0.3) * Math.PI) : (P.near ? 0.55 : 0.12 + 0.06 * Math.sin(G.t * 2));
     const alpha = P.inv > 0 && Math.floor(G.t * 12) % 2 ? 0.45 : 1;
     const tilt = clamp(P.vy / 1200, -0.35, 0.35);
-    drawMosa(px, py, G.t, mouth, tilt, blink, alpha);
+    if (P.shield && G.mode !== 'title') drawShield(px, py);
+    CHARS[G.char].draw(px, py, G.t, mouth, tilt, blink, alpha);
     if (P.dizzy > 0) {
       for (let i = 0; i < 3; i++) {
         const a = G.t * 5 + i * 2.1;
@@ -1241,6 +1731,19 @@
     ctx.restore();
     drawHUD();
     drawBanner();
+    if (G.mode === 'title') drawPreviews();
+  }
+  function drawPreviews() {
+    for (const b of pickCards) {
+      const c = b.querySelector('canvas'), c2 = c.getContext('2d');
+      c2.setTransform(1, 0, 0, 1, 0, 0);
+      c2.clearRect(0, 0, c.width, c.height);
+      withCtx(c2, () => {
+        ctx.save(); ctx.translate(122, 66); ctx.scale(0.92, 0.92);
+        CHARS[b.dataset.char].draw(0, 0, G.t, 0.15 + 0.1 * Math.sin(G.t * 2), 0, false, 1);
+        ctx.restore();
+      });
+    }
   }
 
   // ---------- 루프 ----------
