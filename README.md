@@ -54,4 +54,4 @@
 - Kenney – Nature Kit 2.1 (www.kenney.nl): `nature/`
 - Kenney – Survival Kit 2.0 (www.kenney.nl): `survival/`
 
-미리보기: `axe-forest/sample-assets.html` (정적 서버에서 열어야 모델이 로드됨)
+웹 배포용으로 모든 모델을 텍스처·버퍼 내장형 glTF(.json)로 변환해 둠 (아티팩트가 .glb를 서빙하지 않음). 미리보기: `axe-forest/sample-assets.html` (정적 서버에서 열어야 모델이 로드됨)

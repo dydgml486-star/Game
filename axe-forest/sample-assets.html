@@ -115,12 +115,12 @@
   const A = 'assets/';
   const CHARS = ['Barbarian', 'Knight', 'Mage', 'Ranger', 'Rogue', 'Rogue_Hooded'];
   const preload = [
-    ...CHARS.map(c => A + 'chars/' + c + '.glb'), A + 'anims/Rig_Medium_General.glb', A + 'anims/Rig_Medium_MovementBasic.glb',
-    A + 'items/axe_1handed.gltf', A + 'items/bow_withString.gltf', A + 'items/quiver.gltf',
+    ...CHARS.map(c => A + 'chars/' + c + '.json'), A + 'anims/Rig_Medium_General.json', A + 'anims/Rig_Medium_MovementBasic.json',
+    A + 'items/axe_1handed.json', A + 'items/bow_withString.json', A + 'items/quiver.json',
   ];
   try { await Promise.all(preload.map(load)); }
   catch (e) { $('loadTxt').textContent = '모델 파일을 찾지 못했습니다: ' + (e && e.message ? e.message : e); return; }
-  const clips = [...(await load(A + 'anims/Rig_Medium_General.glb')).animations, ...(await load(A + 'anims/Rig_Medium_MovementBasic.glb')).animations];
+  const clips = [...(await load(A + 'anims/Rig_Medium_General.json')).animations, ...(await load(A + 'anims/Rig_Medium_MovementBasic.json')).animations];
   const clip = n => THREE.AnimationClip.findByName(clips, n);
 
   // ---------- 지형 ----------
@@ -171,13 +171,13 @@
     const x = rnd() * 78 - 39, z = rnd() * 66 - 30;
     if (baseEdge(x, z) < 2.5 || (z > 14 && Math.abs(x) < 4)) continue;
     const isPine = rnd() < 0.4, name = isPine ? pick(PINES) : pick(TREES);
-    jobs.push(place(A + 'nature/' + name + '.glb', x, z, (isPine ? 5 : 4.2) * (0.85 + rnd() * 0.4), rnd() * 6.28).then(o => treeObjs.push({ o, ph: rnd() * 6 })));
+    jobs.push(place(A + 'nature/' + name + '.json', x, z, (isPine ? 5 : 4.2) * (0.85 + rnd() * 0.4), rnd() * 6.28).then(o => treeObjs.push({ o, ph: rnd() * 6 })));
   }
-  for (let i = 0; i < 26; i++) { const x = rnd() * 70 - 35, z = rnd() * 56 - 24; if (baseEdge(x, z) < 1.5) continue; jobs.push(place(A + 'nature/' + pick(['rock_largeA', 'rock_largeB', 'rock_largeC', 'rock_smallA', 'rock_smallC', 'rock_tallA', 'stone_largeA']) + '.glb', x, z, 0.6 + rnd() * 1.2, rnd() * 6.28)); }
-  for (let i = 0; i < 90; i++) { const x = rnd() * 60 - 30, z = rnd() * 50 - 20; if (baseEdge(x, z) < 1) continue; jobs.push(place(A + 'nature/' + pick(['flower_redA', 'flower_yellowA', 'flower_purpleA', 'flower_redB', 'flower_yellowB', 'plant_bush', 'plant_bushDetailed', 'mushroom_red', 'grass_large', 'grass_leafs']) + '.glb', x, z, 0.35 + rnd() * 0.35, rnd() * 6.28)); }
-  for (const [x, z] of [[-16, 1], [-15, 9], [16, 12], [15.5, -3]]) jobs.push(place(A + 'nature/' + pick(['stump_round', 'stump_old', 'log_large', 'log_stackLarge']) + '.glb', x, z, 0.7, rnd() * 6));
+  for (let i = 0; i < 26; i++) { const x = rnd() * 70 - 35, z = rnd() * 56 - 24; if (baseEdge(x, z) < 1.5) continue; jobs.push(place(A + 'nature/' + pick(['rock_largeA', 'rock_largeB', 'rock_largeC', 'rock_smallA', 'rock_smallC', 'rock_tallA', 'stone_largeA']) + '.json', x, z, 0.6 + rnd() * 1.2, rnd() * 6.28)); }
+  for (let i = 0; i < 90; i++) { const x = rnd() * 60 - 30, z = rnd() * 50 - 20; if (baseEdge(x, z) < 1) continue; jobs.push(place(A + 'nature/' + pick(['flower_redA', 'flower_yellowA', 'flower_purpleA', 'flower_redB', 'flower_yellowB', 'plant_bush', 'plant_bushDetailed', 'mushroom_red', 'grass_large', 'grass_leafs']) + '.json', x, z, 0.35 + rnd() * 0.35, rnd() * 6.28)); }
+  for (const [x, z] of [[-16, 1], [-15, 9], [16, 12], [15.5, -3]]) jobs.push(place(A + 'nature/' + pick(['stump_round', 'stump_old', 'log_large', 'log_stackLarge']) + '.json', x, z, 0.7, rnd() * 6));
   // 북쪽 울타리 (Kenney 울타리를 이어 붙임)
-  for (let x = -12.5; x <= 12.5; x += 1) if (Math.abs(x) > 2) jobs.push(place(A + 'nature/fence_simple.glb', x, -6.4, 0.9, 0));
+  for (let x = -12.5; x <= 12.5; x += 1) if (Math.abs(x) > 2) jobs.push(place(A + 'nature/fence_simple.json', x, -6.4, 0.9, 0));
 
   // ---------- 기지 (Survival Kit + 직접 만든 판매대·발판·컨베이어) ----------
   const woodTex = canvasTex(128, 128, (g, w, h) => {
@@ -193,13 +193,13 @@
     for (let i = 0; i < p.count; i++) p.setZ(i, Math.cos(p.getY(i) / 2.1 * Math.PI) * 0.35);
     g.computeVertexNormals();
     const aw = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: stripeTex, side: THREE.DoubleSide, roughness: 0.9 })); aw.rotation.x = -Math.PI / 2 + 0.25; aw.position.set(0, 3.05, 6); aw.castShadow = true; scene.add(aw); }
-  jobs.push(place(A + 'survival/resource-wood.glb', -0.9, 5.9, 0.35, 0.2).then(o => o.position.y = 1.12));
-  jobs.push(place(A + 'survival/fish.glb', 0.3, 6, 0.25, 0.4).then(o => o.position.y = 1.12));
-  jobs.push(place(A + 'survival/resource-stone.glb', 1.0, 6.1, 0.3, 0).then(o => o.position.y = 1.12));
+  jobs.push(place(A + 'survival/resource-wood.json', -0.9, 5.9, 0.35, 0.2).then(o => o.position.y = 1.12));
+  jobs.push(place(A + 'survival/fish.json', 0.3, 6, 0.25, 0.4).then(o => o.position.y = 1.12));
+  jobs.push(place(A + 'survival/resource-stone.json', 1.0, 6.1, 0.3, 0).then(o => o.position.y = 1.12));
   for (const [f, x, z, h, r] of [['barrel', -2.5, 7.3, 0.9, 0], ['box-large', 2.7, 7.4, 0.8, 0.3], ['box', 2.6, 6.5, 0.55, -0.2], ['chest', 12.4, 12.4, 0.6, -1.2],
-    ['workbench', -9.8, 13, 1, 0.3], ['tent', -12.2, 16.4, 2.2, 0.6], ['resource-planks', -8, 14.5, 0.4, 0.4], ['barrel-open', -12.8, 3.5, 0.9, 0], ['bucket', 3.4, 7.7, 0.4, 0]]) jobs.push(place(A + 'survival/' + f + '.glb', x, z, h, r));
-  jobs.push(place(A + 'nature/campfire_logs.glb', -9.5, 16.5, 0.45, 0));
-  jobs.push(place(A + 'nature/log_stack.glb', -12.6, 8.4, 0.8, 1.2));
+    ['workbench', -9.8, 13, 1, 0.3], ['tent', -12.2, 16.4, 2.2, 0.6], ['resource-planks', -8, 14.5, 0.4, 0.4], ['barrel-open', -12.8, 3.5, 0.9, 0], ['bucket', 3.4, 7.7, 0.4, 0]]) jobs.push(place(A + 'survival/' + f + '.json', x, z, h, r));
+  jobs.push(place(A + 'nature/campfire_logs.json', -9.5, 16.5, 0.45, 0));
+  jobs.push(place(A + 'nature/log_stack.json', -12.6, 8.4, 0.8, 1.2));
   const fireLight = new THREE.PointLight(0xff8a3a, 1.4, 7, 2); fireLight.position.set(-9.5, 1, 16.5); scene.add(fireLight);
   // 컨베이어
   const beltTex = canvasTex(128, 32, g => { g.fillStyle = '#34383f'; g.fillRect(0, 0, 128, 32); g.strokeStyle = '#4c525c'; g.lineWidth = 3; for (let x = 0; x < 128; x += 16) { g.beginPath(); g.moveTo(x, 2); g.lineTo(x + 8, 16); g.lineTo(x, 30); g.stroke(); } }, [12, 1]);
@@ -209,7 +209,7 @@
   box(new THREE.CylinderGeometry(0.85, 0.55, 0.9, 12), std('#6b737e', { metalness: 0.5, roughness: 0.45 }), -11.8, 0.9, 6);
   box(new THREE.BoxGeometry(0.9, 0.9, 0.9), std('#4d545e'), -11.8, 0.45, 6);
   const beltLogs = [];
-  for (let i = 0; i < 4; i++) jobs.push(place(A + 'survival/resource-wood.glb', -11, 6, 0.3, Math.PI / 2).then(o => beltLogs.push({ o, p: i / 4 })));
+  for (let i = 0; i < 4; i++) jobs.push(place(A + 'survival/resource-wood.json', -11, 6, 0.3, Math.PI / 2).then(o => beltLogs.push({ o, p: i / 4 })));
   // 강화 발판 + 도구 아이콘 (Survival Kit 도구)
   const padM = std('#d9b67a', { roughness: 0.6 }), rimM = std('#e8b440', { metalness: 0.7, roughness: 0.3, emissive: '#3a2400' });
   const icons = [];
@@ -218,7 +218,7 @@
   for (const [x, z, f] of PADS) {
     box(new THREE.CylinderGeometry(0.85, 0.9, 0.1, 28), padM, x, 0.05, z);
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.87, 0.05, 8, 32), rimM); rim.rotation.x = Math.PI / 2; rim.position.set(x, 0.1, z); scene.add(rim);
-    jobs.push(place(A + 'survival/' + f + '.glb', x, z, 0.75, 0).then(o => { o.position.y = 1.1; icons.push({ o, x }); }));
+    jobs.push(place(A + 'survival/' + f + '.json', x, z, 0.75, 0).then(o => { o.position.y = 1.1; icons.push({ o, x }); }));
   }
   // 등불
   const lampLights = [];
@@ -231,7 +231,7 @@
   // ---------- 캐릭터 (KayKit + 애니메이션) ----------
   const mixers = [];
   async function character(name, x, z, h, anim, hand) {
-    const g = await load(A + 'chars/' + name + '.glb');
+    const g = await load(A + 'chars/' + name + '.json');
     const o = THREE.SkeletonUtils.clone(g.scene);
     if (!normScale[name]) { const b = new THREE.Box3().setFromObject(g.scene); normScale[name] = 1 / (b.max.y - b.min.y); }
     o.scale.setScalar(normScale[name] * h); o.position.set(x, 0, z);
@@ -242,7 +242,7 @@
     const play = n => { if (!acts[n]) { const c = clip(n); if (!c) return; acts[n] = mixer.clipAction(c); } for (const k in acts) if (k !== n) acts[k].fadeOut(0.25); acts[n].reset().fadeIn(0.25).play(); };
     play(anim);
     mixer.update(rnd() * 3);
-    if (hand) { const it = (await load(A + 'items/' + hand + '.gltf')).scene.clone(true); it.traverse(m => { if (m.isMesh) m.castShadow = true; }); const slot = o.getObjectByName('handslot.r'); if (slot) slot.add(it); }
+    if (hand) { const it = (await load(A + 'items/' + hand + '.json')).scene.clone(true); it.traverse(m => { if (m.isMesh) m.castShadow = true; }); const slot = o.getObjectByName('handslot.r'); if (slot) slot.add(it); }
     return { o, play, mixer, x, z };
   }
   const hero = await character('Barbarian', -6, 2, 1.9, 'Walking_A', 'axe_1handed');
@@ -253,7 +253,7 @@
   const CUST = ['Knight', 'Rogue', 'Mage', 'Barbarian', 'Ranger'];
   for (let i = 0; i < CUST.length; i++) { const c = await character(CUST[i], 0.6, 7.8 + i * 1.15, 1.7, i % 2 ? 'Idle_A' : 'Idle_B'); c.o.rotation.y = Math.PI; custs.push(c); }
   // 회전 도끼 (KayKit 도끼 모델) + 빛 궤적
-  const axeSrc = (await load(A + 'items/axe_1handed.gltf')).scene;
+  const axeSrc = (await load(A + 'items/axe_1handed.json')).scene;
   const axeScale = (() => { const b = new THREE.Box3().setFromObject(axeSrc); return 1 / (b.max.y - b.min.y); })();
   const orbit = [0, 1, 2].map(() => { const g = new THREE.Group(), a = axeSrc.clone(true); a.scale.setScalar(axeScale * 1.1); a.rotation.z = Math.PI / 2; a.traverse(m => { if (m.isMesh) m.castShadow = true; }); g.add(a); scene.add(g); return g; });
   const trailN = 200, trailPos = new Float32Array(trailN * 3), trailA = new Float32Array(trailN);
