@@ -94,6 +94,14 @@
   .buy .bc small { font-family: "Do Hyeon", sans-serif; color: #ff9b85; font-size: 13px; }
   .btn.primary { background: var(--gold); color: #1d1a16; font-size: 18px; padding: 8px 18px; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .backup { position: fixed; inset: 0; background: rgba(17,13,9,.6); display: flex; align-items: center; justify-content: center; padding-inline: 16px; }
+  .backup .panel { width: 100%; max-width: 440px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-family: "Do Hyeon", sans-serif; box-sizing: border-box; }
+  .backup h2 { margin: 0; font-weight: 400; font-size: 22px; color: var(--gold); }
+  .backup p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .backup label { font-size: 14px; margin-top: 4px; }
+  .backup textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; background: #17120d; color: var(--ink); border: 2px solid var(--edge); border-radius: 3px; padding: 6px; resize: vertical; user-select: text; -webkit-user-select: text; }
+  .backup .row { display: flex; gap: 8px; justify-content: flex-end; }
+  .backup .msg { color: var(--ink); min-height: 1.4em; }
   #toast {
     position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%);
     font-family: "Do Hyeon", sans-serif; font-size: 24px; color: var(--gold); padding: 8px 18px; text-align: center; pointer-events: none;
@@ -129,6 +137,7 @@
     <div class="btns">
       <button class="box btn" id="btnSound">소리 켬</button>
       <button class="box btn" id="btnSave">저장</button>
+      <button class="box btn" id="btnBackup">백업</button>
       <button class="box btn" id="btnReset">처음부터</button>
     </div>
     <div class="status" id="saveStatus">자동 저장 · 이 기기</div>
@@ -143,6 +152,19 @@
 <div class="hint" id="hint">드래그·WASD로 이동 · 발판에 올라가 구매 버튼(E) · 휠이나 +/- 로 시야 조절</div>
 <div id="joy" hidden><i></i></div>
 <div class="box" id="toast" hidden></div>
+<div class="backup" id="backup" hidden>
+  <div class="box panel">
+    <h2>진행 백업</h2>
+    <p>아래 코드를 복사해 두면 기기를 바꾸거나 저장이 지워져도 그대로 이어서 할 수 있습니다.</p>
+    <label for="codeOut">내 백업 코드</label>
+    <textarea id="codeOut" readonly rows="3"></textarea>
+    <div class="row"><button class="box btn primary" id="btnCopy">코드 복사</button></div>
+    <label for="codeIn">백업 코드로 불러오기</label>
+    <textarea id="codeIn" rows="3" placeholder="AXF1. 로 시작하는 코드를 붙여 넣으세요"></textarea>
+    <div class="row"><button class="box btn" id="btnImport">불러오기</button><button class="box btn" id="btnCloseBackup">닫기</button></div>
+    <p class="msg" id="codeMsg" aria-live="polite"></p>
+  </div>
+</div>
 <div id="loading">숲을 불러오는 중…</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1252,6 +1274,7 @@
   let joy = null, zoom = 1;
   const joyEl = $('joy'), knob = joyEl.firstElementChild, gameEl = $('game');
   addEventListener('keydown', e => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
     keys[e.key.toLowerCase()] = true;
     if (e.key.startsWith('Arrow') || e.key === ' ') e.preventDefault();
     if ((e.key === 'e' || e.key === 'E' || e.key === 'Enter' || e.key === ' ') && curPad && !e.repeat && e.target.tagName !== 'BUTTON') { e.preventDefault(); buyPad(curPad); }
@@ -1313,7 +1336,7 @@
     if (!force && body === lastCloudBody) return true;
     cloudBusy = true;
     try { await cloudRef.set({ state: body, savedAt: Date.now() }); lastCloudBody = body; return true; }
-    catch (e) { return false; }
+    catch (e) { setStatus('계정 저장 실패 · 이 기기에만 저장 중'); return false; }
     finally { cloudBusy = false; }
   }
   function clearWorld() {
@@ -1378,30 +1401,61 @@
 
   let localState = null;
   try { localState = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
+  // 진행도: 누적 판매액 + 강화 단계. 새로 연 빈 게임이 더 많이 진행된 저장을 덮어쓰지 않게 비교 기준으로 쓴다.
+  function progressOf(st) {
+    if (!st) return -1;
+    const lv = Object.values(st.L || {}).reduce((a, b) => a + (b | 0), 0);
+    return ((st.stats && st.stats.earned) | 0) + ((st.gold | 0) + (st.cashPile | 0)) * 0.5 + lv * 50;
+  }
   // 계정 저장 연결 (claude.ai 로그인 사용자별 비공개 저장소)
   (async () => {
     try {
       if (!window.claude || !window.claude.use) return;
       const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-      if (!db || !user) return;
+      if (!db || !user) { setStatus('자동 저장 · 이 기기 (계정 저장 미지원 화면)'); return; }
       const uid = await user.id();
-      if (!uid) return;
+      if (!uid) { setStatus('자동 저장 · 이 기기 (로그인 정보 없음)'); return; }
       const ref = db.doc('data/users/' + uid + '/save');
       const snap = await ref.get();
+      let cs = null;
+      if (snap.exists) { const d = snap.data() || {}; try { cs = JSON.parse(d.state); } catch (e) {} }
       cloudRef = ref;
-      if (snap.exists) {
-        const d = snap.data() || {};
-        let cs = null; try { cs = JSON.parse(d.state); } catch (e) {}
-        const localAt = (localState && localState.savedAt) || 0;
-        if (cs && (d.savedAt || 0) > Math.max(localAt, savedAt) + 3000) {
-          applyState(cs); saveLocal();
-          toast('계정에 저장된 진행을 불러왔습니다');
-        }
-        lastCloudBody = d.state || '';
+      if (cs && progressOf(cs) > progressOf(snapshot())) {
+        applyState(cs); saveLocal();
+        lastCloudBody = JSON.stringify(snapshot());
+        toast('계정에 저장된 진행을 불러왔습니다');
+        setStatus('자동 저장 · 계정');
+      } else {
+        const ok = await saveCloud(true);
+        setStatus(ok ? `자동 저장 · 계정 ${hhmm()}` : '계정 저장 실패 · 이 기기에만 저장 중');
       }
-      setStatus('자동 저장 · 계정');
-    } catch (e) { cloudRef = null; }
+    } catch (e) { cloudRef = null; setStatus('계정 저장 실패 · 이 기기에만 저장 중'); }
   })();
+
+  // 백업 코드: 다른 기기·다른 링크로 진행을 옮기는 수동 백업
+  function makeCode() { return 'AXF1.' + btoa(unescape(encodeURIComponent(JSON.stringify(snapshot())))); }
+  function readCode(code) {
+    const c = (code || '').trim().replace(/\s+/g, '');
+    if (!c.startsWith('AXF1.')) return null;
+    try { const st = JSON.parse(decodeURIComponent(escape(atob(c.slice(5))))); return st && st.L ? st : null; } catch (e) { return null; }
+  }
+  $('btnBackup').addEventListener('click', () => { $('codeOut').value = makeCode(); $('codeIn').value = ''; $('codeMsg').textContent = ''; $('backup').hidden = false; });
+  $('btnCloseBackup').addEventListener('click', () => { $('backup').hidden = true; });
+  $('btnCopy').addEventListener('click', () => {
+    const t = $('codeOut');
+    const done = () => { $('codeMsg').textContent = '복사했습니다. 메모장이나 카톡 나에게 보내기에 붙여 두세요.'; };
+    try { navigator.clipboard.writeText(t.value).then(done, () => { t.focus(); t.select(); $('codeMsg').textContent = '자동 복사가 막혀 있어요. 선택된 코드를 길게 눌러 복사하세요.'; }); }
+    catch (e) { t.focus(); t.select(); }
+  });
+  let importArm = 0;
+  $('btnImport').addEventListener('click', async () => {
+    const st = readCode($('codeIn').value);
+    if (!st) { $('codeMsg').textContent = '코드가 올바르지 않습니다. AXF1. 로 시작하는 코드를 통째로 붙여 넣으세요.'; return; }
+    if (Date.now() - importArm > 4000) { importArm = Date.now(); $('codeMsg').textContent = `판매 누적 ${((st.stats && st.stats.earned) | 0)}G 진행입니다. 지금 진행을 덮어씁니다. 한 번 더 누르면 불러옵니다.`; return; }
+    importArm = 0;
+    applyState(st); saveLocal(); await saveCloud(true);
+    $('backup').hidden = true; toast('백업 코드로 불러왔습니다');
+  });
 
   // ================= 시작 =================
   let shownCarry = 0;
