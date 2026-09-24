@@ -29,7 +29,7 @@
     touch-action: none;
   }
   #game { position: fixed; inset: 0; }
-  #game canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #game canvas { width: 100%; height: 100%; display: block; }
 
   .box { background: var(--panel); border: 2px solid var(--edge); box-shadow: 0 3px 0 var(--edge); border-radius: 4px; }
   .hud {
@@ -258,9 +258,90 @@
 <div id="loading">숲을 불러오는 중…</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
-(() => {
+(async () => {
   if (!window.THREE) { document.getElementById('loading').textContent = '3D 엔진을 불러오지 못했습니다. 새로고침해 주세요.'; return; }
+
+  // ================= 색 관리 =================
+  // 코드 안의 '#rrggbb' 색은 화면(sRGB) 기준 값이다. 렌더러가 sRGB로 출력하므로 입력할 때 선형 값으로 바꿔 둔다.
+  {
+    const P = THREE.Color.prototype, sh = P.setHex, ss = P.setStyle;
+    let depth = 0;
+    P.setHex = function (h) { depth++; sh.call(this, h); depth--; return depth ? this : this.convertSRGBToLinear(); };
+    P.setStyle = function (s) { depth++; ss.call(this, s); depth--; return depth ? this : this.convertSRGBToLinear(); };
+  }
+
+  // ================= 3D 모델 (KayKit·Kenney, CC0) =================
+  // 모델은 glTF를 JSON 한 파일로 묶어 둔 것. claude.ai 보안 정책은 data:/blob: 주소 fetch를 막으므로
+  // 버퍼를 직접 풀어 GLB로 조립해 parse 한다. 내장 이미지는 <img> 경로로 읽도록 createImageBitmap을 끈다.
+  const MODELS = {}, CLIPS = {}, MODEL_H = {};
+  const NATURE_PAL = {
+    leafsGreen: '#4f9a45', leafsDark: '#2f6b3f', leafsFall: '#dd8a34', grass: '#5a9e46',
+    woodBark: '#7a5230', woodBarkDark: '#5e4028', woodBirch: '#e6ddcb', woodInner: '#d9b27c', wood: '#9a6a3c', woodDark: '#6b4a2b',
+    stone: '#9fa3a8', dirt: '#8a8d92', colorRed: '#de4a4c', colorYellow: '#f2c14e', colorPurple: '#a67cf0', colorTan: '#d9a86c',
+  };
+  if (THREE.GLTFLoader && THREE.SkeletonUtils) {
+    try { window.createImageBitmap = undefined; } catch (e) {}
+    const loader = new THREE.GLTFLoader();
+    const toGLB = j => {
+      let bin = new Uint8Array(0);
+      const b = j.buffers && j.buffers[0];
+      if (b && b.uri && b.uri.startsWith('data:')) {
+        const s = atob(b.uri.slice(b.uri.indexOf(',') + 1));
+        bin = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) bin[i] = s.charCodeAt(i);
+        delete b.uri;
+      }
+      const js = new TextEncoder().encode(JSON.stringify(j));
+      const jl = Math.ceil(js.length / 4) * 4, bl = Math.ceil(bin.length / 4) * 4;
+      const total = 12 + 8 + jl + (bin.length ? 8 + bl : 0);
+      const out = new ArrayBuffer(total), dv = new DataView(out), u8 = new Uint8Array(out);
+      dv.setUint32(0, 0x46546C67, true); dv.setUint32(4, 2, true); dv.setUint32(8, total, true);
+      dv.setUint32(12, jl, true); dv.setUint32(16, 0x4E4F534A, true); u8.fill(0x20, 20, 20 + jl); u8.set(js, 20);
+      if (bin.length) { const o = 20 + jl; dv.setUint32(o, bl, true); dv.setUint32(o + 4, 0x004E4942, true); u8.set(bin, o + 8); }
+      return out;
+    };
+    const fetchJSON = async url => {
+      for (let i = 0; ; i++) {
+        try { const r = await fetch(url); if (!r.ok) throw new Error(r.status); return await r.json(); }
+        catch (e) { if (i >= 2) throw e; await new Promise(z => setTimeout(z, 400 * (i + 1))); }
+      }
+    };
+    const LIST = [
+      ...['Barbarian', 'Knight', 'Mage', 'Ranger', 'Rogue', 'Rogue_Hooded'].map(n => 'chars/' + n),
+      'anims/Rig_Medium_General', 'anims/Rig_Medium_MovementBasic',
+      'items/axe_1handed', 'items/axe_2handed', 'items/bow_withString', 'items/crossbow_1handed',
+      ...['tree_default', 'tree_oak', 'tree_detailed', 'tree_simple', 'tree_fat', 'tree_tall', 'tree_default_fall', 'tree_oak_fall', 'tree_fat_fall',
+        'tree_pineTallA', 'tree_pineTallB', 'tree_pineRoundA', 'tree_pineRoundC', 'tree_pineDefaultA', 'tree_cone', 'tree_plateau',
+        'stump_round', 'stump_old', 'rock_largeA', 'rock_largeB', 'rock_largeC', 'stone_largeA',
+        'flower_redA', 'flower_yellowA', 'flower_purpleA', 'flower_redB', 'flower_yellowB', 'grass', 'grass_large', 'grass_leafs',
+        'plant_bush', 'plant_bushDetailed', 'mushroom_red', 'mushroom_tanGroup', 'log_stackLarge', 'campfire_logs', 'campfire_stones'].map(n => 'nature/' + n),
+      ...['tool-pickaxe', 'tool-pickaxe-upgraded', 'tent', 'workbench', 'barrel', 'barrel-open', 'box-large', 'box', 'chest', 'bucket', 'resource-planks'].map(n => 'survival/' + n),
+    ];
+    const el = document.getElementById('loading');
+    let done = 0, failed = 0, next = 0;
+    const one = async key => {
+      try {
+        const j = await fetchJSON('assets/' + key + '.json');
+        const base = 'assets/' + key.slice(0, key.lastIndexOf('/') + 1);
+        const g = await new Promise((ok, no) => loader.parse(toGLB(j), base, ok, no));
+        g.scene.traverse(m => {
+          if (!m.isMesh) return;
+          // Kenney 자연 팩은 금속값 1로 저장돼 있어 반사 환경 없이는 검게 보인다 → 무광으로 보정
+          for (const mt of Array.isArray(m.material) ? m.material : [m.material]) {
+            if (mt.metalness > 0.3) { mt.metalness = 0; mt.roughness = 0.85; }
+            // Kenney 자연 팩의 파스텔 색을 게임 팔레트로 바꾼다 (재질 이름 기준)
+            if (key.startsWith('nature/') && NATURE_PAL[mt.name]) mt.color.set(NATURE_PAL[mt.name]);
+          }
+        });
+        MODELS[key] = g;
+      } catch (e) { failed++; console.warn('model', key, e && e.message); }
+      done++; el.textContent = '숲을 불러오는 중… ' + Math.round(done / LIST.length * 100) + '%';
+    };
+    await Promise.all([0, 1, 2, 3].map(async () => { while (next < LIST.length) await one(LIST[next++]); }));
+    for (const k of ['anims/Rig_Medium_General', 'anims/Rig_Medium_MovementBasic']) if (MODELS[k]) for (const c of MODELS[k].animations) CLIPS[c.name] = c;
+  }
   document.getElementById('loading').hidden = true;
 
   // ================= 상수 =================
@@ -366,26 +447,27 @@
   scene.background = new THREE.Color('#20352f');
   scene.fog = new THREE.Fog('#20352f', 55, 110);
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 300);
-  const renderer = new THREE.WebGLRenderer({ antialias: false });
-  renderer.setPixelRatio(1);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(1.5, devicePixelRatio || 1));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.BasicShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   $('game').appendChild(renderer.domElement);
   const allPS = [];   // 발광 파티클 시스템 목록 (해상도 변경 시 크기 보정)
   function resize() {
     const w = innerWidth, h = innerHeight;
-    const px = Math.max(2, Math.min(4, Math.round(Math.min(w, h) / 250)));
-    renderer.setSize(Math.ceil(w / px), Math.ceil(h / px), false);
+    renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
-    const sc = Math.ceil(h / px) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    const sc = h * renderer.getPixelRatio() / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
     for (const ps of allPS) ps.mat.uniforms.scale.value = sc;
   }
   addEventListener('resize', resize); resize();
 
-  scene.add(new THREE.HemisphereLight(0xe8f4ff, 0x4d5b36, 0.5));
-  const sun = new THREE.DirectionalLight(0xfff0d0, 0.72);
+  scene.add(new THREE.HemisphereLight(0xe8f4ff, 0x5a4a30, 0.6));
+  const sun = new THREE.DirectionalLight(0xfff0d8, 1.25);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03;
   Object.assign(sun.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 90 });
   scene.add(sun, sun.target);
   const auraLight = new THREE.PointLight(0xffd84a, 0, 7); scene.add(auraLight);
@@ -426,17 +508,100 @@
   const FXM = {};
   const FX = c => FXM[c] || (FXM[c] = new THREE.MeshBasicMaterial({ color: c }));
 
+  // ---- 3D 모델 도우미 (모델이 없으면 null → 복셀로 대신 그린다) ----
+  const hasM = k => !!MODELS[k];
+  function heightOf(k) {
+    if (MODEL_H[k] == null) { const b = new THREE.Box3().setFromObject(MODELS[k].scene); MODEL_H[k] = Math.max(0.001, b.max.y - b.min.y); }
+    return MODEL_H[k];
+  }
+  // 가로 폭 기준으로 맞추기 (납작한 바위 등)
+  function propW(k, w) {
+    const o = prop(k, 1); if (!o) return null;
+    const b = new THREE.Box3().setFromObject(MODELS[k].scene), sz = b.getSize(new THREE.Vector3());
+    o.scale.setScalar(w / Math.max(sz.x, sz.z, 0.001)); return o;
+  }
+  function prop(k, h, shadow = true) {
+    if (!MODELS[k]) return null;
+    const o = MODELS[k].scene.clone(true); o.scale.setScalar(h / heightOf(k));
+    o.traverse(m => { if (m.isMesh) { m.castShadow = shadow; m.receiveShadow = true; } });
+    return o;
+  }
+  const hashXZ = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
+  // 복제한 모델의 재질에만 색을 입힌다 (같은 조합은 재질을 공유)
+  const TINT = {};
+  function tintObj(o, col, emi, amt) {
+    const key = (col || '') + '|' + (emi || '') + '|' + amt;
+    o.traverse(m => {
+      if (!m.isMesh) return;
+      const id = m.material.uuid + key;
+      if (!TINT[id]) {
+        const mt = m.material.clone();
+        if (col) mt.color.lerp(new THREE.Color(col), amt);
+        if (emi) { mt.emissive = new THREE.Color(emi); mt.emissiveIntensity = 0.55; }
+        TINT[id] = mt;
+      }
+      m.material = TINT[id];
+    });
+    return o;
+  }
+  // 풀·꽃처럼 많이 까는 모델은 인스턴싱으로 한 번에 그린다. pts: [x, z, 높이, 회전]
+  function scatterModel(k, pts) {
+    if (!MODELS[k] || !pts.length) return;
+    const src = MODELS[k].scene; src.updateMatrixWorld(true);
+    const H = heightOf(k), d = new THREE.Object3D(), mm = new THREE.Matrix4();
+    src.traverse(m => {
+      if (!m.isMesh) return;
+      const im = new THREE.InstancedMesh(m.geometry, m.material, pts.length);
+      pts.forEach(([x, z, h, r], i) => {
+        d.position.set(x, 0, z); d.rotation.set(0, r, 0); d.scale.setScalar(h / H); d.updateMatrix();
+        im.setMatrixAt(i, mm.multiplyMatrices(d.matrix, m.matrixWorld));
+      });
+      im.receiveShadow = true; scene.add(im);
+    });
+  }
+  // 캐릭터 (KayKit, 공용 골격 Rig_Medium + 공용 애니메이션)
+  function charModel(name, h) {
+    const k = 'chars/' + name;
+    if (!MODELS[k] || !CLIPS.Idle_A) return null;
+    const o = THREE.SkeletonUtils.clone(MODELS[k].scene);
+    o.scale.setScalar(h / heightOf(k));
+    o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; } });
+    const rig = { o, mixer: new THREE.AnimationMixer(o), acts: {}, cur: null };
+    playAnim(rig, 'Idle_A', 0); rig.mixer.update(Math.random() * 2);
+    return rig;
+  }
+  function playAnim(rig, n, fade) {
+    if (rig.cur === n || !CLIPS[n]) return;
+    const f = fade == null ? 0.2 : fade;
+    let a = rig.acts[n];
+    if (!a) {
+      a = rig.acts[n] = rig.mixer.clipAction(CLIPS[n]);
+      if (n.startsWith('Death')) { a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; }
+    }
+    if (rig.cur) rig.acts[rig.cur].fadeOut(f);
+    a.reset().fadeIn(f).play(); rig.cur = n;
+  }
+  // 손 슬롯에 물건 쥐여 주기 (h: 월드 높이, 없으면 모델 원래 크기)
+  const _ws = new THREE.Vector3();
+  function holdIn(slot, obj, h, k) {
+    if (!slot || !obj) return null;
+    slot.updateWorldMatrix(true, false); slot.getWorldScale(_ws);
+    if (h) obj.scale.setScalar(h / (k ? heightOf(k) : 1) / _ws.x);
+    obj.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    slot.add(obj); return obj;
+  }
+
   function noiseTex(cols, n, rep) {
     const c = document.createElement('canvas'); c.width = c.height = n;
     const g = c.getContext('2d');
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { g.fillStyle = cols[(Math.random() * cols.length) | 0]; g.fillRect(x, y, 1, 1); }
     const t = new THREE.CanvasTexture(c);
-    t.magFilter = t.minFilter = THREE.NearestFilter;
+    t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
     t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]);
     return t;
   }
   function flat(w, d, x, z, y, tex) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ map: tex }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ map: tex, color: '#cfcfcf' }));
     m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); m.receiveShadow = true; scene.add(m); return m;
   }
 
@@ -449,7 +614,31 @@
   const SAND = ['#c9ad74', '#c2a56c', '#cfb47d', '#bb9f66'];
   flat(26, 22, 0, 5, 0.02, noiseTex(SAND, 32, [4, 3.5]));
   flat(4, 16, 0, 24, 0.02, noiseTex(SAND, 16, [1, 4]));
-  {
+  if (hasM('nature/grass')) {
+    // 풀·꽃·덤불 (Kenney) — 기지와 길은 비워 둔다
+    const r = mulberry32(3), K = {};
+    const DECO = [['grass', 0.3, 0.32], ['grass_large', 0.12, 0.4], ['grass_leafs', 0.1, 0.35], ['flower_redA', 0.07, 0.3], ['flower_yellowA', 0.07, 0.3],
+      ['flower_purpleA', 0.06, 0.3], ['flower_redB', 0.05, 0.32], ['flower_yellowB', 0.05, 0.32], ['plant_bush', 0.06, 0.45], ['plant_bushDetailed', 0.04, 0.5],
+      ['mushroom_red', 0.04, 0.22], ['mushroom_tanGroup', 0.04, 0.25]];
+    const pickDeco = () => { let v = r(); for (const d of DECO) { if ((v -= d[1]) < 0) return d; } return DECO[0]; };
+    const free = (x, z) => !(Math.abs(x) < 13.5 && z > -6.5 && z < 18.5) && !(Math.abs(x) < 3 && z < -6) && !(Math.abs(x + 6) < 1.4 && z > -21 && z < -5) && !(Math.abs(z - 6) < 1.4 && x > 12 && x < 36);
+    for (const [n, x0, x1, z0, z1] of [[700, -35, 35, -46, 20], [260, -35, 35, -78, -46], [160, 36, 59, -21, 17]]) {
+      for (let i = 0; i < n; i++) {
+        const x = x0 + r() * (x1 - x0), z = z0 + r() * (z1 - z0);
+        if (!free(x, z)) continue;
+        const d = pickDeco(); (K[d[0]] = K[d[0]] || []).push([x, z, d[2] * (0.75 + r() * 0.6), r() * 6.28]);
+      }
+    }
+    for (const k in K) scatterModel('nature/' + k, K[k]);
+    // 기지 가장자리 소품 (Survival Kit) — 발판·통로와 겹치지 않는 자리만
+    for (const [k, x, z, h, ry] of [['survival/tent', -12.3, 16.6, 2.0, 0.6], ['nature/campfire_stones', -9.6, 16.9, 0.3, 0], ['nature/campfire_logs', -9.6, 16.9, 0.4, 0.5],
+      ['survival/workbench', 11.6, 16.4, 0.95, -0.3], ['survival/barrel', 12.8, 14.6, 0.85, 0], ['survival/barrel-open', 13.0, 15.7, 0.8, 0.4],
+      ['survival/box-large', -2.6, 8.4, 0.75, 0.3], ['survival/box', -2.9, 7.5, 0.55, -0.2], ['survival/bucket', 2.7, 8.2, 0.4, 0],
+      ['survival/chest', 12.6, -4.8, 0.6, -1.2], ['nature/log_stackLarge', -12.7, -4.5, 0.8, 1.2], ['survival/resource-planks', 9.6, 16.8, 0.35, 0.4]]) {
+      const o = prop(k, h); if (!o) continue; o.position.set(x, 0, z); o.rotation.y = ry; scene.add(o);
+    }
+    const fire = new THREE.PointLight(0xff8a3a, 1.2, 6, 2); fire.position.set(-9.6, 0.9, 16.9); scene.add(fire);
+  } else {
     const r = mulberry32(3), N = 520;
     const deco = new THREE.InstancedMesh(BOX, M('#ffffff'), N);
     const cols = ['#f4e36b', '#f3f0e6', '#e86a6a', '#7dc35b', '#4f8a3c'];
@@ -511,6 +700,15 @@
 
   function person(o) {
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+    const rig = o.model && charModel(o.model, o.h || 1.9);
+    if (rig) {
+      body.add(rig.o);
+      if (o.tint || o.emi) tintObj(rig.o, o.tint, o.emi, o.tintAmt == null ? 0.55 : o.tintAmt);
+      const d = () => new THREE.Object3D();   // 복셀용 팔·다리 자리 (모델에서는 쓰지 않음)
+      g.userData = { body, legL: d(), legR: d(), armL: d(), armR: d(), rig, gait: o.gait || 'Running_A',
+        handR: rig.o.getObjectByName('handslot.r'), handL: rig.o.getObjectByName('handslot.l') };
+      scene.add(g); return g;
+    }
     const key = 'p' + JSON.stringify(o);
     const list = () => {
       const L = [
@@ -536,8 +734,14 @@
     g.userData = { body, legL, legR, armL, armR };
     scene.add(g); return g;
   }
+  let frameDt = 0;
   function animPerson(p, moving, t, amt) {
     const u = p.userData, a = amt == null ? 1 : amt, s = moving ? Math.sin(t * 14) * a : 0;
+    if (u.rig) {
+      playAnim(u.rig, u.dead ? 'Death_A' : moving ? (a < 0.45 ? 'Walking_A' : u.gait) : u.busy ? 'Use_Item' : 'Idle_A');
+      u.rig.mixer.update(frameDt);
+      return;
+    }
     u.legL.rotation.x = s * 0.6; u.legR.rotation.x = -s * 0.6;
     if (!u.aim) u.armL.rotation.x = -s * 0.5;
     if (!u.busy) u.armR.rotation.x = s * 0.5;
@@ -784,9 +988,22 @@
       pts.push([x, z]); make(x, z, r);
     }
   }
+  const TREE_M = {
+    0: ['tree_default', 'tree_oak', 'tree_detailed', 'tree_simple'],
+    1: ['tree_fat', 'tree_tall', 'tree_oak', 'tree_default'],
+    2: ['tree_default_fall', 'tree_oak_fall', 'tree_fat_fall'],
+    big: ['tree_pineTallA', 'tree_pineTallB', 'tree_pineRoundA', 'tree_pineRoundC', 'tree_pineDefaultA', 'tree_cone'],
+    jungle: ['tree_plateau', 'tree_detailed', 'tree_fat'],
+  };
   function addTree(x, z, variant, big, jungle) {
-    const g = new THREE.Group(); g.add(vmesh(stumpGeo));
-    const top = new THREE.Group(); top.add(vmesh(topGeo(variant))); g.add(top);
+    const g = new THREE.Group(), top = new THREE.Group();
+    const r = hashXZ(x, z), tk = 'nature/' + TREE_M[variant][Math.floor(r * TREE_M[variant].length)];
+    const tm = prop(tk, (jungle ? 3.6 : big ? 3.3 : 2.8) * (0.9 + r * 0.25));
+    if (tm) {
+      tm.rotation.y = r * 40; top.add(tm);
+      const st = prop('nature/stump_round', 0.3); if (st) { st.scale.x *= 1.3; st.scale.z *= 1.3; g.add(st); } else g.add(vmesh(stumpGeo));
+    } else { g.add(vmesh(stumpGeo)); top.add(vmesh(topGeo(variant))); }
+    g.add(top);
     g.position.set(x, 0, z); if (big) g.scale.setScalar(jungle ? 1.4 : 1.25);
     scene.add(g);
     const hp = jungle ? 9 : big ? 6 : 3;
@@ -795,8 +1012,15 @@
   scatter(100, -34, 34, -20.5, 17.5, 2.05, blocked, 11, (x, z, r) => addTree(x, z, r() < 0.14 ? 2 : (r() < 0.5 ? 1 : 0), false));
   scatter(46, -33, 33, -45, -24, 2.8, (x, z) => Math.abs(x) < 3 && (z > -28 || z < -40), 29, (x, z) => addTree(x, z, 'big', true));
   scatter(30, -33, 33, -77, -50, 4.2, (x, z) => Math.abs(x) < 3.5 && (z > -54 || z < -72), 31, (x, z) => addTree(x, z, 'jungle', true, true));
+  const ROCK_M = ['rock_largeA', 'rock_largeB', 'rock_largeC', 'stone_largeA'];
+  const crystalTopGeo = cgeo('crystalTop', () => [[-1, 1.5, -1, 1.4, 4.5, 1.4, '#9b6cf0'], [0.8, 1, 0, 1.1, 3.2, 1.1, '#b48cff'], [-2.5, 1, 0.5, 1, 2.6, 1, '#7b4fd0'], [-0.7, 6, -0.7, 0.8, 0.8, 0.8, '#e2d2ff']]);
   function addRock(x, z, crystal) {
-    const m = vmesh(crystal ? crystalGeo : rockGeo);
+    const rkM = propW('nature/' + ROCK_M[Math.floor(hashXZ(x, z) * ROCK_M.length)], crystal ? 1.5 : 1.7);
+    let m;
+    if (rkM) {
+      m = new THREE.Group(); rkM.rotation.y = hashXZ(z, x) * 6.28; m.add(rkM);
+      if (crystal) m.add(vmesh(crystalTopGeo));
+    } else m = vmesh(crystal ? crystalGeo : rockGeo);
     m.position.set(x, 0, z); m.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2; m.scale.setScalar(crystal ? 1.15 : 1);
     scene.add(m);
     const hp = crystal ? 9 : 4;
@@ -845,7 +1069,7 @@
       const i = ps.head; ps.head = (ps.head + 1) % max;
       ps.x[i] = x; ps.y[i] = y; ps.z[i] = z; ps.vx[i] = vx; ps.vy[i] = vy; ps.vz[i] = vz;
       ps.t[i] = 0; ps.life[i] = life; ps.s0[i] = s0; ps.s1[i] = s1 == null ? 0 : s1; ps.grav[i] = grav || 0; ps.drag[i] = drag || 0; ps.peak[i] = peak == null ? 1 : peak;
-      _c.set(c); col[i * 3] = _c.r; col[i * 3 + 1] = _c.g; col[i * 3 + 2] = _c.b;
+      _c.set(c).convertLinearToSRGB(); col[i * 3] = _c.r; col[i * 3 + 1] = _c.g; col[i * 3 + 2] = _c.b;
     };
     ps.update = dt => {
       let alive = 0;
@@ -1229,26 +1453,26 @@
 
   // ================= 외형 (의상실) =================
   const SKINS = [
-    { name: '기본', price: 0, desc: '처음 입는 작업복', look: { shirt: '#c8553d', arm: '#c8553d', pants: '#3b4a6b', hair: '#4a2f1b' } },
-    { name: '나무꾼', price: 500, desc: '체크 셔츠와 비니', look: { shirt: '#3f7a3a', arm: '#3f7a3a', pants: '#4a3a2a', hair: '#4a2f1b',
+    { name: '기본', price: 0, desc: '처음 입는 작업복', look: { model: 'Barbarian', shirt: '#c8553d', arm: '#c8553d', pants: '#3b4a6b', hair: '#4a2f1b' } },
+    { name: '나무꾼', price: 500, desc: '체크 셔츠와 비니', look: { model: 'Rogue', tint: '#b9e3a0', tintAmt: 0.45, shirt: '#3f7a3a', arm: '#3f7a3a', pants: '#4a3a2a', hair: '#4a2f1b',
       extra: [[-2.6, 4.2, 1.5, 5.2, 0.5, 0.1, '#244d22'], [-2.6, 5.6, 1.5, 5.2, 0.5, 0.1, '#244d22'], [-0.4, 3, 1.5, 0.6, 4, 0.1, '#244d22'], [-2.3, 10, -2.3, 4.6, 1.8, 4.6, '#c8453d'], [-0.6, 11.8, -0.6, 1.2, 0.8, 1.2, '#f4efe2']] } },
-    { name: '사냥꾼', price: 1500, desc: '초록 두건과 화살통', look: { shirt: '#7a5a3a', arm: '#7a5a3a', pants: '#4a3a2a', hair: '#2b1d12',
+    { name: '사냥꾼', price: 1500, desc: '초록 두건과 화살통', look: { model: 'Ranger', shirt: '#7a5a3a', arm: '#7a5a3a', pants: '#4a3a2a', hair: '#2b1d12',
       extra: [[-2.4, 8, -2.5, 4.8, 3.6, 1, '#3f5a2a'], [-2.4, 10.6, -2.4, 4.8, 1, 4.8, '#3f5a2a'], [-1, 3.5, -2.6, 1.4, 5, 1, '#8a5a32'], [-0.8, 8.5, -2.6, 0.4, 1.5, 0.4, '#f4efe2'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#5b3a1e']] } },
-    { name: '광부', price: 3000, desc: '안전모와 멜빵바지', look: { shirt: '#c9b27a', arm: '#c9b27a', pants: '#3d5a80', hair: '#2b1d12',
+    { name: '광부', price: 3000, desc: '안전모와 멜빵바지', look: { model: 'Rogue_Hooded', tint: '#ffd27a', tintAmt: 0.5, shirt: '#c9b27a', arm: '#c9b27a', pants: '#3d5a80', hair: '#2b1d12',
       extra: [[-2.6, 3, 1.4, 5.2, 3, 0.2, '#3d5a80'], [-2, 5.5, 1.4, 0.8, 1.6, 0.2, '#3d5a80'], [1.2, 5.5, 1.4, 0.8, 1.6, 0.2, '#3d5a80'], [-2.5, 10.2, -2.5, 5, 1.4, 5, '#f2c14e'], [-3, 10, -3, 6, 0.4, 6, '#f2c14e'], [-0.6, 10.4, 2.5, 1.2, 0.8, 0.4, '#fff6c0']] } },
-    { name: '기사', price: 8000, desc: '강철 갑옷과 붉은 망토', look: { shirt: '#aab4bd', arm: '#9aa5ad', pants: '#5a616a', hair: '#2b1d12',
+    { name: '기사', price: 8000, desc: '강철 갑옷과 붉은 망토', look: { model: 'Knight', shirt: '#aab4bd', arm: '#9aa5ad', pants: '#5a616a', hair: '#2b1d12',
       extra: [[-2.4, 9.8, -2.4, 4.8, 2.2, 4.8, '#9aa5ad'], [-0.5, 12, -2, 1, 1.5, 3, '#d0483a'], [-3.8, 6.2, -1.6, 1.8, 1.2, 3.2, '#9aa5ad'], [2, 6.2, -1.6, 1.8, 1.2, 3.2, '#9aa5ad'], [-2.7, 3.5, 1.5, 5.4, 3.2, 0.4, '#c7d0d6'], [-2.4, 2.2, -2, 4.8, 5, 0.4, '#b33a2e'], [-0.6, 4.5, 1.9, 1.2, 1.2, 0.2, '#d0483a']] } },
-    { name: '닌자', price: 15000, desc: '검은 복면과 붉은 머리띠', look: { shirt: '#1f1f24', arm: '#1f1f24', pants: '#1f1f24', hair: '#1f1f24',
+    { name: '닌자', price: 15000, desc: '검은 복면과 붉은 머리띠', look: { model: 'Rogue_Hooded', tint: '#4a4a5a', tintAmt: 0.75, shirt: '#1f1f24', arm: '#1f1f24', pants: '#1f1f24', hair: '#1f1f24',
       extra: [[-2.1, 7, 1.9, 4.2, 1.6, 0.3, '#1f1f24'], [-2.3, 9.6, -2.3, 4.6, 0.7, 4.6, '#c8453d'], [-0.5, 9.4, -3.6, 1, 0.5, 1.4, '#c8453d'], [0.3, 9, -4.4, 0.8, 0.4, 1, '#c8453d'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#c8453d'], [0.5, 4, -2.2, 0.6, 6, 0.6, '#9aa5ad']] } },
-    { name: '해적', price: 25000, desc: '삼각모와 붉은 코트', look: { shirt: '#f4efe2', arm: '#8a2a2a', pants: '#2b2b33', hair: '#1d1a16',
+    { name: '해적', price: 25000, desc: '삼각모와 붉은 코트', look: { model: 'Rogue', tint: '#ff8a7a', tintAmt: 0.5, shirt: '#f4efe2', arm: '#8a2a2a', pants: '#2b2b33', hair: '#1d1a16',
       extra: [[-2.7, 2.5, -1.7, 5.4, 4.5, 0.4, '#8a2a2a'], [-2.7, 2.5, 1.4, 1.5, 4.5, 0.4, '#8a2a2a'], [1.2, 2.5, 1.4, 1.5, 4.5, 0.4, '#8a2a2a'], [-3.2, 10.6, -3.2, 6.4, 0.8, 6.4, '#1d1a16'], [-2.2, 11.4, -2.2, 4.4, 1.4, 4.4, '#1d1a16'], [-0.6, 11.6, 2.2, 1.2, 1, 0.3, '#f2c14e'], [0.5, 8.3, 2, 1, 1.1, 0.3, '#1d1a16'], [-1.5, 6.4, 1.9, 3, 1.2, 0.3, '#2b1d12']] } },
-    { name: '대마법사', price: 40000, desc: '별 모자, 반짝이는 마력', fx: 'sparkle', look: { shirt: '#4a3a9a', arm: '#4a3a9a', pants: '#4a3a9a', hair: '#dcd6ff',
+    { name: '대마법사', price: 40000, desc: '별 모자, 반짝이는 마력', fx: 'sparkle', look: { model: 'Mage', shirt: '#4a3a9a', arm: '#4a3a9a', pants: '#4a3a9a', hair: '#dcd6ff',
       extra: [[-2.7, 0, -1.7, 5.4, 3.2, 3.4, '#4a3a9a'], [-2.9, 10.6, -2.9, 5.8, 0.6, 5.8, '#3a2a7a'], [-1.9, 11.2, -1.9, 3.8, 1.8, 3.8, '#3a2a7a'], [-1.1, 13, -1.1, 2.2, 1.8, 2.2, '#3a2a7a'], [-0.4, 14.8, -0.4, 0.8, 1.2, 0.8, '#3a2a7a'],
         [0.8, 11.8, 1.9, 0.7, 0.7, 0.2, '#f2c14e'], [-1.4, 12.4, 1.9, 0.5, 0.5, 0.2, '#f2c14e'], [-1.8, 6.2, 1.9, 3.6, 2.2, 0.4, '#f4efe2'], [-2.6, 3, -1.6, 5.2, 0.6, 3.2, '#f2c14e']] } },
-    { name: '황금 영웅', price: 65000, desc: '황금 갑옷과 금빛 오라', fx: 'gold', look: { shirt: '#e0b040', arm: '#e0b040', pants: '#8a6a20', hair: '#4a2f1b',
+    { name: '황금 영웅', price: 65000, desc: '황금 갑옷과 금빛 오라', fx: 'gold', look: { model: 'Knight', tint: '#ffd24a', tintAmt: 0.7, emi: '#5a3a00', shirt: '#e0b040', arm: '#e0b040', pants: '#8a6a20', hair: '#4a2f1b',
       extra: [[-2.4, 9.8, -2.4, 4.8, 2, 4.8, '#e0b040'], [-3.2, 10.5, -0.5, 0.8, 2.4, 1, '#f4efe2'], [2.4, 10.5, -0.5, 0.8, 2.4, 1, '#f4efe2'], [-3.8, 6.2, -1.6, 1.8, 1.2, 3.2, '#f2c14e'], [2, 6.2, -1.6, 1.8, 1.2, 3.2, '#f2c14e'],
         [-2.7, 3.5, 1.5, 5.4, 3.2, 0.4, '#f2c14e'], [-2.4, 2.2, -2, 4.8, 5, 0.4, '#6a3cc0'], [-0.6, 4.5, 1.9, 1.2, 1.2, 0.2, '#5aa0ff']] } },
-    { name: '살라스', price: 100000, desc: '황금빛 머리, 타오르는 기운과 번개', fx: 'salas', scale: 1.15, look: { shirt: '#1d1a24', arm: '#1d1a24', pants: '#1d1a24', hair: '#ffe14a', eye: '#3ff2ff',
+    { name: '살라스', price: 100000, desc: '황금빛 머리, 타오르는 기운과 번개', fx: 'salas', scale: 1.15, look: { model: 'Barbarian', tint: '#fff0a0', tintAmt: 0.35, emi: '#8a6a00', shirt: '#1d1a24', arm: '#1d1a24', pants: '#1d1a24', hair: '#ffe14a', eye: '#3ff2ff',
       extra: [[-2.6, 3, -1.6, 5.2, 0.7, 3.2, '#f2c14e'], [-0.7, 5, 1.5, 1.4, 1.4, 0.2, '#f2c14e'], [-2.7, 6, -1.7, 5.4, 1, 3.4, '#2a2436'], [-2.6, 6.8, 1.5, 5.2, 0.3, 0.2, '#f2c14e']],
       glow: [[-2.4, 10, -2.4, 4.8, 1.4, 4.8, '#ffe14a'], [-2.2, 11.4, -1.6, 1.2, 2.4, 1.2, '#ffe14a'], [-0.6, 11.4, -2, 1.2, 3.4, 1.2, '#fff07a'], [1, 11.4, -1.6, 1.2, 2.6, 1.2, '#ffe14a'],
         [-1.8, 8, -3, 3.6, 3, 1.2, '#ffe14a'], [-1, 9.4, -3.9, 2, 2.8, 1, '#fff07a'], [-3.1, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [2.2, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [-0.4, 10.6, 2, 0.8, 1.2, 0.6, '#fff07a'],
@@ -1259,15 +1483,22 @@
   function buildPlayer() {
     if (pg) scene.remove(pg);
     const s = SKINS[skin] || SKINS[0];
-    pg = person(s.look);
+    pg = person(Object.assign({ h: 2.4 }, s.look));
     pg.scale.setScalar(s.scale || 1);
     stackG.position.set(0, 0.8, -0.62); pg.add(stackG);
-    const rw = eqW('ranged');
+    const rw = eqW('ranged'), u = pg.userData;
     handW = null;
     if (rw) {
       const anc = rw.grade === 'ancient';
-      handW = vmesh(rw.type === 'bow' ? bowHandGeo(rw.grade) : gunHandGeo(rw.grade), true, anc ? ANCIENT : null);
-      handW.position.set(0, -0.6, 0.12); pg.userData.armL.add(handW);
+      if (u.rig && rw.type === 'bow' && hasM('items/bow_withString')) {
+        handW = MODELS['items/bow_withString'].scene.clone(true);
+        if (rw.grade !== 'normal') tintObj(handW, GRADES[rw.grade].col, anc ? '#ff00ff' : null, 0.6);
+        holdIn(u.handL, handW);
+      } else {
+        handW = vmesh(rw.type === 'bow' ? bowHandGeo(rw.grade) : gunHandGeo(rw.grade), true, anc ? ANCIENT : null);
+        if (u.rig) { holdIn(u.handR, handW, 1, null); }
+        else { handW.position.set(0, -0.6, 0.12); u.armL.add(handW); }
+      }
     }
   }
   function rebuildStack(g, list, maxShow) {
@@ -1290,11 +1521,28 @@
     const k = key + '|' + sc + '|' + D.axes;
     if (k !== axeKey) {
       axes.forEach(a => scene.remove(a)); axes.length = 0; axeKey = k;
-      for (let i = 0; i < D.axes; i++) { const m = vmesh(axeGeo(h, e, key, big), true, mat); m.scale.setScalar(sc); scene.add(m); axes.push(m); }
+      const ak = big ? 'items/axe_2handed' : 'items/axe_1handed';
+      for (let i = 0; i < D.axes; i++) {
+        let m;
+        if (hasM(ak)) {
+          // 모델 도끼: 눕혀서 칼날이 바깥을 향하게 돌린다. 등급·강화 색은 재질에 살짝 입힌다
+          m = new THREE.Group();
+          const a = prop(ak, sc * (big ? 1.2 : 1.1)); a.rotation.z = Math.PI / 2;
+          if (aw || h !== TOOL_COL[0][0]) tintObj(a, h, mat ? '#ff00ff' : big ? big : null, aw ? 0.55 : 0.4);
+          m.add(a);
+        } else { m = vmesh(axeGeo(h, e, key, big), true, mat); m.scale.setScalar(sc); }
+        scene.add(m); axes.push(m);
+      }
     }
     const pt = Math.min(3, Math.floor(L.pick / 2));
     if (pt !== pickTier) { picks.forEach(a => scene.remove(a)); picks.length = 0; pickTier = pt; }
-    while (picks.length < D.picks) { const m = vmesh(pickGeo(pt)); m.scale.setScalar(1.3 + 0.1 * pt); scene.add(m); picks.push(m); }
+    while (picks.length < D.picks) {
+      const pk = pt >= 2 ? 'survival/tool-pickaxe-upgraded' : 'survival/tool-pickaxe';
+      let m;
+      if (hasM(pk)) { m = new THREE.Group(); const a = prop(pk, 1.1 + 0.12 * pt); a.position.y = -0.55 - 0.06 * pt; if (pt % 2) tintObj(a, TOOL_COL[pt][0], null, 0.45); m.add(a); }
+      else { m = vmesh(pickGeo(pt)); m.scale.setScalar(1.3 + 0.1 * pt); }
+      scene.add(m); picks.push(m);
+    }
     while (picks.length > D.picks) scene.remove(picks.pop());
   }
 
@@ -1320,7 +1568,7 @@
       const seg = new THREE.Group(); seg.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); seg.rotation.y = ang;
       const base = new THREE.Mesh(BOX, M('#454a52')); base.scale.set(len + 0.7, 0.16, 0.85); base.position.y = 0.08; base.receiveShadow = true; base.castShadow = true; seg.add(base);
       for (const s of [-1, 1]) { const rail = new THREE.Mesh(BOX, M('#f2c14e')); rail.scale.set(len + 0.7, 0.1, 0.08); rail.position.set(0, 0.2, s * 0.42); seg.add(rail); }
-      const tex = new THREE.CanvasTexture(beltTex); tex.magFilter = tex.minFilter = THREE.NearestFilter;
+      const tex = new THREE.CanvasTexture(beltTex); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.encoding = THREE.sRGBEncoding;
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(len / 0.5, 1);
       const top = new THREE.Mesh(new THREE.PlaneGeometry(len + 0.6, 0.7), new THREE.MeshLambertMaterial({ map: tex }));
       top.rotation.x = -Math.PI / 2; top.position.y = 0.17; seg.add(top);
@@ -1484,6 +1732,7 @@
   const custs = [];
   let custTimer = 1;
   const SHIRTS = ['#3f7cc0', '#d98c3a', '#8a5bb0', '#e0e0d6', '#3aa08a', '#c2476e', '#5a8f3a', '#c9a13a'];
+  const CUST_MODELS = ['Knight', 'Rogue', 'Mage', 'Barbarian', 'Ranger', 'Rogue_Hooded'];
   const HAIRS = ['#2b1d12', '#6b4424', '#1d1a16', '#b9853e', '#8a8a8a'];
   const lanes = () => L.lane2 ? 2 : 1;
   function spawnCustomer() {
@@ -1493,7 +1742,7 @@
     if (lanes() === 2 && counts[1] < counts[0]) lane = 1;
     if (counts[lane] >= 8) return;
     const shirt = pick(SHIRTS);
-    const p = person({ shirt, arm: shirt, pants: '#44464f', hair: pick(HAIRS), hat: Math.random() < 0.3 ? '#d9c68f' : null });
+    const p = person({ model: pick(CUST_MODELS), gait: 'Walking_A', h: rand(2.05, 2.3), shirt, arm: shirt, pants: '#44464f', hair: pick(HAIRS), hat: Math.random() < 0.3 ? '#d9c68f' : null });
     const c = { p, lane, x: rand(-1.5, 1.5), z: 25, face: Math.PI, state: 'walk', want: 3 + irand(5), wait: 0, serveT: 0, qi: 0, tx: 0, tz: 0 };
     p.position.set(c.x, 0, c.z);
     custs.push(c);
@@ -1550,7 +1799,7 @@
     const want = [L.cashier > 0, L.lane2 > 0];
     for (let i = 0; i < 2; i++) {
       if (want[i] && !cashiers[i]) {
-        const p = person({ shirt: '#2f6f8f', arm: '#2f6f8f', pants: '#2b2f36', hair: i ? '#6b4424' : '#2b1d12', apron: true });
+        const p = person({ model: 'Mage', h: 2.2, shirt: '#2f6f8f', arm: '#2f6f8f', pants: '#2b2f36', hair: i ? '#6b4424' : '#2b1d12', apron: true });
         p.position.set(CHECK[i].x + (i ? -0.3 : 0.3), 0, CHECK[i].z + 0.2);
         cashiers[i] = p;
       } else if (!want[i] && cashiers[i]) { scene.remove(cashiers[i]); cashiers[i] = null; }
@@ -1559,16 +1808,23 @@
     chkPads[1].g.visible = false;
   }
   const NPC_LOOK = {
-    lumber: { shirt: '#4c7a3a', arm: '#4c7a3a', pants: '#3b3b46', hair: '#3a2716', hat: '#e0b33a' },
-    hunter: { shirt: '#7a5a3a', arm: '#7a5a3a', pants: '#3f4a2a', hair: '#1d1a16', hat: '#3f5a2a' },
-    miner: { shirt: '#3d5a80', arm: '#3d5a80', pants: '#3b3b46', hair: '#2b1d12', hat: '#f2c14e' },
+    lumber: { model: 'Rogue_Hooded', shirt: '#4c7a3a', arm: '#4c7a3a', pants: '#3b3b46', hair: '#3a2716', hat: '#e0b33a' },
+    hunter: { model: 'Ranger', shirt: '#7a5a3a', arm: '#7a5a3a', pants: '#3f4a2a', hair: '#1d1a16', hat: '#3f5a2a' },
+    miner: { model: 'Knight', shirt: '#3d5a80', arm: '#3d5a80', pants: '#3b3b46', hair: '#2b1d12', hat: '#f2c14e' },
   };
   const npcs = [];
   const NPC_CAP = 14, NPC_ACT = 0.45, NPC_SPEED = 4.2;
   function addNpc(kind, x, z) {
-    const p = person(NPC_LOOK[kind]);
-    const tool = vmesh(kind === 'miner' ? pickGeo(0) : axeGeo(kind === 'hunter' ? '#6fa8d6' : '#9aa5ad', '#e8eef2', kind === 'hunter' ? 'npcH' : 'npcL'));
-    tool.scale.setScalar(0.6); tool.position.set(0, -0.35, 0.2); p.userData.armR.add(tool);
+    const p = person(Object.assign({ h: 2.2 }, NPC_LOOK[kind]));
+    p.position.set(x, 0, z);
+    const hk = kind === 'miner' ? 'survival/tool-pickaxe' : kind === 'hunter' ? 'items/crossbow_1handed' : 'items/axe_1handed';
+    if (p.userData.rig && hasM(hk)) {
+      if (kind === 'miner') holdIn(p.userData.handR, prop(hk, 1), 0.75, hk);
+      else holdIn(p.userData.handR, MODELS[hk].scene.clone(true));
+    } else {
+      const tool = vmesh(kind === 'miner' ? pickGeo(0) : axeGeo(kind === 'hunter' ? '#6fa8d6' : '#9aa5ad', '#e8eef2', kind === 'hunter' ? 'npcH' : 'npcL'));
+      tool.scale.setScalar(0.6); tool.position.set(0, -0.35, 0.2); p.userData.armR.add(tool);
+    }
     p.userData.busy = false;
     const sg = new THREE.Group(); sg.position.set(0, 0.8, -0.62); p.add(sg);
     const n = { kind, p, sg, x: x + rand(-0.5, 0.5), z, face: 0, state: 'seek', carry: [], cap: NPC_CAP, target: null, actT: 0, shown: -1 };
@@ -1823,7 +2079,6 @@
     if (auraRing.visible) {
       auraRing.position.set(player.x, 0.1, player.z); auraRing.rotation.y += dt * 1.2;
       if (Math.random() < dt * 30) { const a = rand(0, 6.28); glow.spawn('#' + new THREE.Color().setHSL(rand(0, 1), 1, 0.65).getHexString(), player.x + Math.cos(a) * 4.8, 0.2, player.z + Math.sin(a) * 4.8, 0, rand(1, 2.5), 0, 0.6, 0.6, 0.05, 0, 0, 1); }
-      auraRing.children.forEach((c, i) => c.material.color.setHSL((clock * 0.25 + i / auraRing.children.length) % 1, 1, 0.6));
       auraT -= dt;
       if (auraT <= 0) {
         auraT = 0.5;
@@ -1835,14 +2090,22 @@
       }
     }
   }
+  // 신성 오라: 무지개빛 고리 (정점 색을 한 번 칠해 두고 돌리기만 한다)
   const auraRing = new THREE.Group();
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); m.scale.set(0.3, 0.08, 0.3); m.position.set(Math.cos(a) * 4.8, 0, Math.sin(a) * 4.8); auraRing.add(m); }
+  for (const [r0, r1, op] of [[4.55, 4.95, 0.75], [4.2, 5.3, 0.22]]) {
+    const g = new THREE.RingGeometry(r0, r1, 96, 1), pa = g.attributes.position, cl = new Float32Array(pa.count * 3), c = new THREE.Color();
+    for (let i = 0; i < pa.count; i++) { c.setHSL((Math.atan2(pa.getY(i), pa.getX(i)) / 6.283 + 1) % 1, 1, 0.6).convertSRGBToLinear(); cl[i * 3] = c.r; cl[i * 3 + 1] = c.g; cl[i * 3 + 2] = c.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(cl, 3));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    m.rotation.x = -Math.PI / 2; auraRing.add(m);
+  }
   auraRing.visible = false; scene.add(auraRing);
 
   // 외형·에인션트 이펙트
   let fxAcc = 0, boltT = 0;
   const orbs = [];
-  for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(BOX, new THREE.MeshBasicMaterial({ color: '#ffffff' })); m.scale.setScalar(0.22); m.visible = false; scene.add(m); orbs.push(m); }
+  const ORB_G = new THREE.SphereGeometry(0.13, 16, 10);
+  for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(ORB_G, new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false })); m.visible = false; scene.add(m); orbs.push(m); }
   function updateFx(dt) {
     const s = SKINS[skin] || SKINS[0];
     const fx = player.dead ? null : s.fx;
@@ -1878,7 +2141,7 @@
       if (!anc) return;
       const a = clock * 2.2 + i / orbs.length * Math.PI * 2;
       m.position.set(px + Math.cos(a) * 1.4, 1.3 + Math.sin(clock * 3 + i) * 0.3, pz + Math.sin(a) * 1.4);
-      m.material.color.setHSL((clock * 0.4 + i / 6) % 1, 1, 0.6);
+      m.material.color.setHSL((clock * 0.4 + i / 6) % 1, 1, 0.6).convertSRGBToLinear();
       if (Math.random() < dt * 6) emit('#ffffff', m.position.x, m.position.y, m.position.z, 0, 0.3, 0, 0.3, 0.08);
     });
   }
@@ -2358,6 +2621,7 @@
   showOffline(localState);
   if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
     get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
+    MODELS, MODEL_H, get pg() { return pg; }, scene, renderer,
     get cashPile() { return cashPile; }, merge, offlineCalc, showOffline, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
   let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
@@ -2379,8 +2643,20 @@
     player.x = nx; player.z = nz;
   }
 
+  // 저사양 기기: 2초 평균 프레임이 40fps 아래면 해상도를 한 단계 낮추고, 여유가 생기면 되돌린다
+  const PR_MAX = Math.min(1.5, devicePixelRatio || 1);
+  let prAcc = 0, prN = 0;
+  function adaptRes(raw) {
+    if (!(raw > 0 && raw < 0.5)) return;
+    prAcc += raw; prN++;
+    if (prAcc < 2) return;
+    const avg = prAcc / prN, pr = renderer.getPixelRatio(); prAcc = 0; prN = 0;
+    const np = avg > 1 / 40 && pr > 0.75 ? pr - 0.25 : avg < 1 / 57 && pr < PR_MAX ? Math.min(PR_MAX, pr + 0.25) : pr;
+    if (np !== pr) { renderer.setPixelRatio(np); resize(); }
+  }
   function frame(now) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    adaptRes((now - last) / 1000);
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; frameDt = dt;
     if (shopOpen) {                 // 상점이 열려 있으면 게임은 멈춘다
       renderer.render(scene, camera);
       requestAnimationFrame(frame);
@@ -2404,7 +2680,7 @@
     if (player.stun > 0) { player.stun -= dt; mag = 0; }
     if (player.dead > 0) {
       mag = 0; player.dead -= dt;
-      pg.rotation.x = -Math.min(1, (2.2 - player.dead) * 4) * Math.PI / 2;
+      if (!pg.userData.rig) pg.rotation.x = -Math.min(1, (2.2 - player.dead) * 4) * Math.PI / 2;
       if (player.dead <= 0) revivePlayer();
     } else {
       if (player.inv > 0) player.inv -= dt;
@@ -2428,6 +2704,7 @@
     if (moving) { walkT += dt * Math.min(1.3, spd / 4.6); stepT += dt; if (stepT > 0.32) { stepT = 0; SFX.step(); puff(player.x, 0.1, player.z, '#d8ccb0', 2, 0.45, 0.4); } }
     pg.position.set(player.x, 0, player.z); if (!player.dead) pg.rotation.y = player.face;
     pg.userData.aim = player.aimT > 0 && !!eqW('ranged');
+    pg.userData.dead = player.dead > 0;
     if (pg.userData.aim) pg.userData.armL.rotation.x = -1.4;
     animPerson(pg, moving, walkT, Math.min(1, spd / 4));
 
