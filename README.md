@@ -43,3 +43,15 @@
 - 저장: 자동 저장(4초, 이 기기) + 계정 저장(30초) + 저장/불러오기 버튼(수동 슬롯) + 백업 코드
 - 이전 저장 호환: 대검은 사용 금액 환불, 발판으로 산 활은 무기점 사냥 활로 이전
 - 주소 끝에 `#debug`를 붙이면 테스트용 `window.__dbg` 노출
+
+---
+
+## 3D 에셋 (axe-forest/assets)
+
+모두 CC0(퍼블릭 도메인, 상업 이용 가능, 출처 표기 의무 없음). 원본 라이선스 파일을 같은 폴더에 둠.
+
+- KayKit – Adventurers Character Pack 2.0 (Kay Lousberg, www.kaylousberg.com): `chars/`, `anims/`, `items/`
+- Kenney – Nature Kit 2.1 (www.kenney.nl): `nature/`
+- Kenney – Survival Kit 2.0 (www.kenney.nl): `survival/`
+
+미리보기: `axe-forest/sample-assets.html` (정적 서버에서 열어야 모델이 로드됨)
