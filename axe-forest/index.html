@@ -82,6 +82,18 @@
   #joy { position: fixed; width: 96px; height: 96px; margin: -48px 0 0 -48px; border: 3px solid rgba(246,236,210,.45); border-radius: 50%; pointer-events: none; }
   #joy i { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; background: rgba(246,236,210,.55); border-radius: 50%; }
   #hurt { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 90px 30px rgba(217,87,59,.7); opacity: 0; }
+  .buy {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: center; gap: 14px; padding: 8px 10px 8px 14px; font-family: "Do Hyeon", sans-serif;
+    width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box;
+  }
+  .buy .bt { display: flex; gap: 8px; align-items: baseline; font-size: 17px; }
+  .buy .bt span { font-size: 13px; color: var(--muted); }
+  .buy .bd { font-size: 13px; color: var(--muted); }
+  .buy .bc { display: flex; align-items: center; gap: 5px; font-family: "Silkscreen", sans-serif; font-size: 14px; color: var(--gold); }
+  .buy .bc small { font-family: "Do Hyeon", sans-serif; color: #ff9b85; font-size: 13px; }
+  .btn.primary { background: var(--gold); color: #1d1a16; font-size: 18px; padding: 8px 18px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
   #toast {
     position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%);
     font-family: "Do Hyeon", sans-serif; font-size: 24px; color: var(--gold); padding: 8px 18px; text-align: center; pointer-events: none;
@@ -127,7 +139,8 @@
   <button class="box btn" id="zoomIn" aria-label="가까이">+</button>
   <button class="box btn" id="zoomOut" aria-label="멀리">-</button>
 </div>
-<div class="hint" id="hint">화면을 드래그하거나 WASD·방향키로 이동 · 휠이나 +/- 로 시야 조절</div>
+<div class="box buy" id="buyPanel" hidden><div id="buyInfo"></div><button class="box btn primary" id="btnBuy">구매</button></div>
+<div class="hint" id="hint">드래그·WASD로 이동 · 발판에 올라가 구매 버튼(E) · 휠이나 +/- 로 시야 조절</div>
 <div id="joy" hidden><i></i></div>
 <div class="box" id="toast" hidden></div>
 <div id="loading">숲을 불러오는 중…</div>
@@ -902,29 +915,37 @@
     const t = tierOf();
     if (t !== curTier) { buildPlayer(t); SFX.level(); toast('더 강해졌다! ' + RANKS[t]); spawnChips(player.x, 1.5, player.z, '#f2c14e', 18); }
   }
+  // 발판: 밟기만 해서는 돈이 나가지 않는다. 구매 창에서 버튼을 눌러야 결제.
+  const PAD_DESC = {
+    axeCount: '회전 도끼 +1개', axeDmg: '도끼 피해 +1', spin: '도끼 회전 속도·반경 증가', bag: '가방 +5칸',
+    speed: '이동 속도 +10%', price: '판매가 +20%, 손님 증가', worker: '나무를 베어 납품하는 일꾼', hunter: '곰을 잡아 납품하는 일꾼',
+    miner: '바위를 캐서 납품하는 일꾼', cashier: '계산대 자동 판매', lane2: '계산대 한 줄 추가(계산원 포함)', beltSpeed: '컨베이어 속도 증가',
+    magnet: '아이템 줍는 범위 증가', bank: '금괴 더미 자동 수거', beltForest: '투입구 → 판매대 자동 운반', beltBear: '투입구 → 판매대 자동 운반',
+    beltQuarry: '투입구 → 판매대 자동 운반', gateBear: '곰 숲 입장 (고기 8G)', gateQuarry: '채석장 입장, 곡괭이 획득', gateDino: '공룡 계곡 입장 (공룡 고기 40G)',
+    pick: '곡괭이 피해 +1, 2단계마다 +1개', armor: '최대 체력 +5', bow: '가까운 짐승 자동 사격', sword: '주기적으로 주변 360도 베기',
+  };
+  let curPad = null, buyHtml = '';
+  const remain = p => cost(p) - (padPaid[p.k] || 0);
+  function buyPad(p) {
+    if (!p || L[p.k] >= p.max || (p.req && !p.req())) return;
+    const r = remain(p);
+    if (gold < r) { SFX.hurt(); floatText(`${r - gold}G 부족`, player.x, 2.6, player.z, 'bad'); return; }
+    gold -= r; padPaid[p.k] = 0; L[p.k]++;
+    SFX.buy();
+    spawnChips(p.x, 0.5, p.z, '#f2c14e', 12);
+    if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + (p.buyName ? 0 : 1)), p.x, 1.4, p.z, 'note');
+    applyUpgrade(p.k);
+    buyHtml = '';
+  }
   function updatePads(dt) {
+    let here = null;
     for (const p of PADS) {
       const maxed = L[p.k] >= p.max;
       const hide = (p.once && maxed) || (p.req && !p.req());
       p.pad.g.visible = !hide; p.tag.hidden = hide;
       if (hide) continue;
-      const c = cost(p);
-      let paid = padPaid[p.k] || 0;
-      if (p.cool > 0) p.cool -= dt;
-      if (!maxed && p.cool <= 0 && onPad(p.x, p.z, player.x, player.z) && gold > 0) {
-        p.acc += Math.max(c * 1.1, 40) * dt;
-        const step = Math.min(gold, Math.floor(p.acc), c - paid);
-        p.acc -= Math.floor(p.acc);
-        if (step > 0) { gold -= step; paid += step; SFX.pay(); }
-        if (paid >= c) {
-          paid = 0; L[p.k]++; p.cool = 0.5;
-          SFX.buy();
-          spawnChips(p.x, 0.5, p.z, '#f2c14e', 12);
-          if (!p.once) floatText(p.name + ' Lv.' + (L[p.k] + (p.buyName ? 0 : 1)), p.x, 1.4, p.z, 'note');
-          applyUpgrade(p.k);
-        }
-        padPaid[p.k] = paid;
-      }
+      const c = cost(p), paid = padPaid[p.k] || 0;
+      if (!player.dead && onPad(p.x, p.z, player.x, player.z)) here = p;
       setPadFill(p.pad, maxed ? 0 : paid / c);
       const html = maxed
         ? `${p.name}<div class="c">MAX</div>`
@@ -933,6 +954,18 @@
       p.tag.classList.toggle('max', maxed);
       p.tag.classList.toggle('poor', !maxed && gold + paid < c);
     }
+    curPad = here;
+    const panel = $('buyPanel');
+    panel.hidden = !here;
+    if (!here) { buyHtml = ''; return; }
+    const maxed = L[here.k] >= here.max, r = remain(here);
+    const title = here.buyName && !L[here.k] ? here.buyName : here.name;
+    const lv = here.once ? '' : here.buyName ? (L[here.k] ? ` Lv.${L[here.k]} → ${L[here.k] + 1}` : '') : ` Lv.${L[here.k] + 1} → ${L[here.k] + 2}`;
+    const html = `<div class="bt"><b>${title}</b><span>${maxed ? '최대 단계' : lv}</span></div><div class="bd">${PAD_DESC[here.k] || ''}</div>` +
+      (maxed ? '' : `<div class="bc"><i class="coin"></i>${r}${gold < r ? `<small> · ${r - gold}G 부족</small>` : ''}</div>`);
+    if (html !== buyHtml) { $('buyInfo').innerHTML = html; buyHtml = html; }
+    $('btnBuy').hidden = maxed;
+    $('btnBuy').disabled = gold < r;
   }
   function syncBelts() { BELTS.forEach(b => { b.group.visible = !!L[b.k]; }); }
 
@@ -1183,7 +1216,7 @@
     { txt: '노란 판매대 발판에 올라가 나무를 내려놓으세요', done: () => stats.deposited > 0, target: () => DEPOSIT },
     { txt: '초록 계산대 발판에 서서 손님에게 파세요', done: () => stats.sales >= 2, target: () => CHECK[0] },
     { txt: '쌓인 금괴 위로 가서 돈을 챙기세요', done: () => stats.collected > 0, target: () => CASH },
-    { txt: '도끼 추가 발판에 서서 도끼를 늘리세요', done: () => L.axeCount >= 1, target: () => padOf('axeCount') },
+    { txt: '도끼 추가 발판에 올라가 구매 버튼을 누르세요', done: () => L.axeCount >= 1, target: () => padOf('axeCount') },
     { txt: '계산원을 고용하면 자리를 비워도 팔립니다', done: () => L.cashier >= 1, target: () => padOf('cashier') },
     { txt: '일꾼을 고용해 벌목을 맡기세요', done: () => L.worker >= 1, target: () => padOf('worker') },
     { txt: '숲 컨베이어를 설치하세요', done: () => L.beltForest >= 1, target: () => padOf('beltForest') },
@@ -1221,6 +1254,7 @@
   addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if (e.key.startsWith('Arrow') || e.key === ' ') e.preventDefault();
+    if ((e.key === 'e' || e.key === 'E' || e.key === 'Enter' || e.key === ' ') && curPad && !e.repeat && e.target.tagName !== 'BUTTON') { e.preventDefault(); buyPad(curPad); }
     if (e.key === '+' || e.key === '=') setZoom(zoom - 0.12);
     if (e.key === '-') setZoom(zoom + 0.12);
   });
@@ -1324,6 +1358,7 @@
     setStatus((a || b) ? `저장 완료 ${hhmm()} · ${cloudRef && b ? '계정' : '이 기기'}` : '저장할 수 없는 환경입니다');
     toast((a || b) ? '저장했습니다' : '이 화면에서는 저장이 막혀 있어요');
   });
+  $('btnBuy').addEventListener('click', () => buyPad(curPad));
   $('btnSound').addEventListener('click', () => { SFX.init(); const m = SFX.toggle(); $('btnSound').textContent = m ? '소리 끔' : '소리 켬'; });
   let resetArm = 0;
   $('btnReset').addEventListener('click', async () => {
