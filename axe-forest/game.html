@@ -87,6 +87,7 @@
   .tag.poor .c { color: var(--muted); }
   .tag.info { background: rgba(17,13,9,.72); }
   .tag.shop { background: rgba(60,30,80,.9); color: #f1dcff; }
+  .tag.mon { background: rgba(24,52,36,.85); color: #eaffe0; font-size: 11px; border-width: 1px; }
   .float {
     position: absolute; left: 0; top: 0;
     font-family: "Silkscreen", "Do Hyeon", sans-serif; font-size: 15px; color: var(--gold);
@@ -206,7 +207,7 @@
 </div>
 
 <div class="box bossbar" id="bossBar" hidden>
-  <div class="top"><b>뿌잉뿌잉</b><span id="bossHp"></span></div>
+  <div class="top"><b id="bossName">뿌잉뿌잉</b><span id="bossHp"></span></div>
   <div class="bar"><i id="bossFill"></i></div>
 </div>
 
@@ -226,6 +227,7 @@
       <button data-tab="gacha">뽑기</button>
       <button data-tab="inv">장비</button>
       <button data-tab="skin">의상실</button>
+      <button data-tab="mon">몬</button>
       <span class="sp"></span>
       <button id="shopClose">닫기</button>
     </div>
@@ -860,6 +862,7 @@
     armor: () => [[-3, -3, -1, 6, 6, 2, '#aab4bd'], [-4.5, 1.5, -1.2, 2, 1.5, 2.4, '#9aa5ad'], [2.5, 1.5, -1.2, 2, 1.5, 2.4, '#9aa5ad'], [-1, -1, 1, 2, 2, 0.4, '#d9573b'], [-1.5, 3, -1, 3, 1, 2, '#5b646e']],
     shopWeapon: () => [[-4, -0.5, -0.6, 7, 1.4, 1.2, '#4a4f57'], [2.5, -0.3, -0.4, 3, 1, 0.8, '#2b2f36'], [-3.8, -2.5, -0.5, 1.4, 2.2, 1, '#3b2a1a'], [-0.3, -4, 1, 0.6, 8, 0.6, '#a0693a'], [0.2, -3.5, 1.2, 0.2, 7, 0.2, '#f4efe2']],
     shopGacha: () => [[-3, -4, -2.5, 6, 3.5, 5, '#d0483a'], [-2.5, -0.5, -2, 5, 5, 4, '#9fd8ff'], [-1.5, 0, -1, 1.4, 1.4, 1.4, '#ff4fd8'], [0.4, 0.5, -0.5, 1.4, 1.4, 1.4, '#f2c14e'], [-0.8, 2, 0.2, 1.4, 1.4, 1.4, '#5aa0ff'], [-0.8, -3, 2.5, 1.6, 1.6, 0.4, '#f2c14e']],
+    shopMon: () => [[-2, -3.5, -2, 4, 5, 4, '#f4efe2'], [-1.5, 1.5, -1.5, 3, 1.5, 3, '#f4efe2'], [-1, 3, -1, 2, 0.8, 2, '#f4efe2'], [-1.6, -1.5, 2, 1.1, 1.1, 0.2, '#5fc46a'], [0.4, 0, 2, 1.1, 1.1, 0.2, '#ff9ccf'], [-0.8, 1.6, 1.5, 1, 1, 0.2, '#62b6ff'], [0.9, -2.6, 2, 1, 1, 0.2, '#ff8a3a']],
     shopSkin: () => [[-0.3, 3, -0.3, 0.6, 1.5, 0.6, '#c7d0d6'], [-3.5, 2.5, -0.3, 7, 0.6, 0.6, '#c7d0d6'], [-3, -3, -0.8, 6, 5.5, 1.6, '#5aa0ff'], [-5, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [3, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [-1, -1, 0.8, 2, 2, 0.3, '#f2c14e']],
   };
 
@@ -901,6 +904,20 @@
   const padPaid = {};
   let gold = 0, cashPile = 0, goal = 0, gems = 0;
   let weapons = [], nextWid = 1, skinsOwned = [0], skin = 0;
+  // 몬 (동료 몬스터): 레벨 0 = 아직 부화 전. 10·20레벨에서 진화 (20레벨 진화에는 보스가 주는 진화석 필요)
+  const MONS = [
+    { k: 'yunwoo', name: '윤우몬', role: '벌목', price: 1000, col: '#5fc46a', col2: '#2f8a45', belly: '#d8f5c8', req: () => true, reqTxt: '',
+      desc: '가까운 나무에 나뭇잎 탄을 날려 벱니다' },
+    { k: 'junwoo', name: '준우몬', role: '회복·자석', price: 3000, col: '#ff9ccf', col2: '#e0609e', belly: '#fff0f7', req: () => L.gateBear, reqTxt: '곰 숲을 열면 부화할 수 있습니다',
+      desc: '체력을 채워 주고, 떨어진 채집품을 멀리서도 끌어옵니다' },
+    { k: 'chaea', name: '채아몬', role: '채굴', price: 8000, col: '#62b6ff', col2: '#2f6fd0', belly: '#e4f3ff', req: () => L.gateQuarry, reqTxt: '채석장을 열면 부화할 수 있습니다',
+      desc: '가까운 바위에 수정 탄을 날려 캡니다' },
+    { k: 'yeonjun', name: '연준몬', role: '전투', price: 20000, col: '#ff8a3a', col2: '#d8452a', belly: '#fff0d0', req: () => L.gateDino, reqTxt: '공룡 계곡을 열면 부화할 수 있습니다',
+      desc: '곰·공룡·보스에게 불꽃 탄을 쏩니다' },
+  ];
+  const MON_MAX = 30, monLv = {};
+  let evoStones = 0;
+  for (const m of MONS) monLv[m.k] = 0;
   const eq = { ranged: null, axe: null };
   const stock = [];
   const player = { x: 0, z: 1.5, vx: 0, vz: 0, face: 0, carry: [], reserved: 0, fullMsgT: 0, depT: 0, kx: 0, kz: 0, stun: 0, hurtT: 0, hp: 10, calm: 0, dead: 0, inv: 0 };
@@ -960,7 +977,7 @@
       spin: 4.4 * (1 + 0.15 * L.spin) * Math.pow(1.4, c('whirl')), radius: 1.8 + 0.3 * L.spin + 0.8 * c('giant'), axeHitR: 0.35 * c('giant'),
       picks: L.gateQuarry ? 1 + Math.floor(L.pick / 2) : 0, pickDmg: 1 + L.pick,
       caps: { w: 10 + 5 * L.bag, m: 6 + 3 * L.bag, s: 8 + 4 * L.bag },
-      speed: 4.6 * (1 + 0.1 * L.speed), magnet: 4 + 1.6 * L.magnet,
+      speed: 4.6 * (1 + 0.1 * L.speed), magnet: 4 + 1.6 * L.magnet + monMagnet(),
       price: 1 + 0.2 * L.price, custEvery: 1.25 / (1 + 0.25 * L.price),
       beltSpeed: 3 + 1.2 * L.beltSpeed,
       maxHp: 10 + 8 * L.armor + 3 * curTier, armorRed: 0.04 * L.armor,
@@ -1172,8 +1189,8 @@
     rk.alive = false; rk.state = 'dead'; rk.t = 0; rk.m.visible = false;
     spawnChips(rk.x, 0.8, rk.z, '#8d8f93', 10);
     puff(rk.x, 0.4, rk.z, '#9a9aa0', 7, 1.1); if (rk.crystal) sparkleColumn(rk.x, rk.z, '#c9a8ff', 14);
-    if (rk.crystal) return ['s', 'g', 'g', ...(Math.random() < 0.4 ? ['g'] : [])];
-    return ['s', 's', ...(Math.random() < 0.15 ? ['g'] : [])];
+    if (rk.crystal) return ['s', 's', 'g', ...(Math.random() < 0.3 ? ['g'] : [])];
+    return ['s', 's', ...(Math.random() < 0.05 ? ['g'] : [])];
   }
   function updateWorld(dt, t) {
     for (const tr of trees) {
@@ -1292,6 +1309,11 @@
   for (let i = 0; i < 6; i++) addBeast('dino');
   addBeast('boss');
   const boss = bears[bears.length - 1];
+  // 최종 보스는 잡을 때마다 한 단계씩 강해진다 (★1 ~ ★11). 체력 +60%, 공격력 +20%씩, 보상도 늘어난다
+  const BOSS_TIER_MAX = 10;
+  const bossTier = () => Math.min(BOSS_TIER_MAX, stats.boss | 0);
+  const bossDmgMul = () => 1 + 0.2 * bossTier();
+  function syncBossTier() { boss.maxHp = Math.round(BEAST.boss.hp * (1 + 0.6 * bossTier())); if (boss.hp > boss.maxHp || !boss.alive) boss.hp = boss.maxHp; }
 
   function hitBear(b, dmg, fromX, fromZ, noKb) {
     if (!b.alive) return 0;
@@ -1310,13 +1332,13 @@
       stats.dino++; floatText('티라노 사냥!', b.x, 3, b.z, 'note big'); shake = 0.4; SFX.trex();
       if (Math.random() < 0.25) spawnDrop('g', b.x, b.z);
     } else if (b.kind === 'boss') {
-      const first = stats.boss === 0;
+      const first = stats.boss === 0, tier = bossTier();
       stats.boss++;
-      const g = first ? 50000 : 15000, gm = first ? 30 : 10;
-      gold += g; gems += gm; bumpGold(); shake = 1;
+      const g = first ? 50000 : Math.round(15000 * (1 + 0.5 * tier)), gm = first ? 30 : 10, st = tier >= 5 ? 2 : 1;
+      gold += g; gems += gm; evoStones += st; bumpGold(); shake = 1;
       for (let i = 0; i < 40; i++) { const a = rand(0, 6.28); emit(pick(['#ff4fd8', '#f2c14e', '#5aa0ff', '#ffffff']), b.x, 4, b.z, Math.cos(a) * rand(3, 9), rand(3, 10), Math.sin(a) * rand(3, 9), 1.2, 0.35); }
       SFX.level();
-      toast(`뿌잉뿌잉 격파! +${fmt(g)}G, 보석 +${gm}`);
+      toast(`뿌잉뿌잉 ★${tier + 1} 격파! +${fmt(g)}G, 보석 +${gm}, 진화석 +${st}` + (tier < BOSS_TIER_MAX ? ` · 다음은 ★${Math.min(BOSS_TIER_MAX, tier + 1) + 1}` : ''));
     } else floatText('곰 사냥!', b.x, 2, b.z, 'note');
     return b.def.drops.length;
   }
@@ -1326,7 +1348,7 @@
       for (let i = 0; i < 12; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
       if (!b.alive) {
         b.respawnT -= dt;
-        if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
+        if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); if (b.kind === 'boss') syncBossTier(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
         continue;
       }
       // 지속 피해
@@ -1360,7 +1382,7 @@
         if (d < def.reach && b.atkCd <= 0) {
           b.atkCd = def.cd * (enraged ? 0.75 : 1); b.bite = 0.3;
           const k = d > 0.01 ? 1 / d : 0;
-          damagePlayer(def.dmg, dx * k * def.knock, dz * k * def.knock, b.kind === 'boss' ? '뿌잉!' : b.kind === 'dino' ? '콱!' : '쿵!');
+          damagePlayer(def.dmg * (b.kind === 'boss' ? bossDmgMul() : 1), dx * k * def.knock, dz * k * def.knock, b.kind === 'boss' ? '뿌잉!' : b.kind === 'dino' ? '콱!' : '쿵!');
           if (b.kind === 'dino') SFX.trex(); else if (b.kind === 'bear') SFX.roar();
         }
         // 보스: 점프 후 충격파
@@ -1392,7 +1414,7 @@
           const w = b.wave; w.r += 9 * dt;
           w.m.position.set(b.x, 0.1, b.z); w.m.scale.setScalar(w.r); w.m.material.opacity = Math.max(0, 0.9 - w.r / 14);
           const pd = dist(player.x, player.z, b.x, b.z);
-          if (!w.hit && Math.abs(pd - w.r) < 0.9 && !player.dead) { w.hit = true; const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(24, (player.x - b.x) * k * 14, (player.z - b.z) * k * 14, '충격파!'); }
+          if (!w.hit && Math.abs(pd - w.r) < 0.9 && !player.dead) { w.hit = true; const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(24 * bossDmgMul(), (player.x - b.x) * k * 14, (player.z - b.z) * k * 14, '충격파!'); }
           if (Math.random() < 0.6) { const a = rand(0, 6.28); dust.spawn('#6a5060', b.x + Math.cos(a) * w.r, 0.2, b.z + Math.sin(a) * w.r, 0, 0.8, 0, 0.6, 1, 2, 0, 1, 0.5); }
           if (w.r > 13) { scene.remove(w.m); ringPool.push(w.m); b.wave = null; }
         }
@@ -1620,6 +1642,7 @@
     { k: 'shopGacha', name: '뽑기', x: 4.5, z: 12.5, open: 'gacha' },
     { k: 'shopSkin', name: '의상실', x: 7.5, z: 12.5, open: 'skin' },
     { k: 'bank', name: '자동 입금', x: 10.5, z: 12.5, base: 300, mul: 1, max: 1, once: true },
+    { k: 'shopMon', name: '몬 부화장', x: -4.5, z: 15.5, open: 'mon' },
     { k: 'beltForest', name: '숲 컨베이어', x: -12, z: 6, base: 200, mul: 1, max: 1, once: true },
     { k: 'gateBear', name: '곰 숲 개방', x: 0, z: -19.5, base: 250, mul: 1, max: 1, once: true },
     { k: 'beltBear', name: '곰숲 컨베이어', x: -6, z: -19.5, base: 600, mul: 1, max: 1, once: true, req: () => L.gateBear },
@@ -1888,7 +1911,7 @@
           let got = null;
           // 일꾼 생산량 2배: 한 번 캘 때마다 두 배로 챙긴다
           if (n.kind === 'lumber') { const k = hitTree(o, 2 + Math.floor(L.axeDmg / 2)); if (k) { got = Array(k * 2).fill('w'); SFX.fell(); } else SFX.chop(); }
-          else if (n.kind === 'miner') { const g = hitRock(o, 2 + L.pick); if (g) { got = g.concat(g); SFX.crack(); } else SFX.clink(); }
+          else if (n.kind === 'miner') { const g = hitRock(o, 2 + L.pick); if (g) { got = g.concat(g.filter(t => t !== 'g')); SFX.crack(); } else SFX.clink(); }   // 광석만 2배, 보석은 그대로
           else { const k = hitBear(o, 6 + L.axeDmg * 1.5, n.x, n.z); if (k) got = Array(k * 2).fill('m'); }
           if (got) {
             for (const it of got) { if (it === 'g') { gems++; continue; } if (n.carry.length < n.cap) n.carry.push(it); }
@@ -2144,6 +2167,126 @@
     });
   }
 
+
+  // ================= 몬 (동료 몬스터) =================
+  const monForm = lv => lv >= 20 ? 2 : lv >= 10 ? 1 : 0;
+  const FORM_NAME = ['아기', '성장', '최종'];
+  const monPower = lv => (1 + 0.22 * (lv - 1)) * [1, 2.2, 4.5][monForm(lv)];
+  // 다음 레벨 비용: 9→10, 19→20은 진화라 3배 (19→20은 진화석 3개도 필요)
+  function monCost(m, lv) {
+    if (lv <= 0) return { gold: m.price, stones: 0 };
+    const g = Math.round(m.price * 0.35 * Math.pow(1.17, lv - 1)) * (lv === 9 || lv === 19 ? 3 : 1);
+    return { gold: g, stones: lv === 19 ? 3 : 0 };
+  }
+  function monMagnet() { const lv = monLv.junwoo; return lv ? 1.5 + 0.1 * lv * [1, 1.3, 1.7][monForm(lv)] : 0; }
+  function monEffect(m, lv) {
+    const p = monPower(lv);
+    if (m.k === 'junwoo') return `1.5초마다 체력 +${(0.6 * p).toFixed(1)} · 자석 범위 +${(1.5 + 0.1 * lv * [1, 1.3, 1.7][monForm(lv)]).toFixed(1)}`;
+    const dmg = m.k === 'yeonjun' ? 12 * p : 2.5 * p;
+    return `피해 ${dmg.toFixed(1)} · ${m.k === 'yeonjun' ? '0.9' : '0.8'}초마다 · 사거리 ${m.k === 'yeonjun' ? 10 : 7}`;
+  }
+
+  // 모양: 공 모양 몸 + 종류별 장식. 진화할수록 커지고 장식이 늘어난다
+  const MON_BODY = new THREE.SphereGeometry(0.34, 24, 16), MON_EYE = new THREE.SphereGeometry(0.075, 12, 8), MON_PUP = new THREE.SphereGeometry(0.04, 10, 6);
+  const MON_CONE = new THREE.ConeGeometry(0.12, 0.34, 10), MON_LEAF = new THREE.SphereGeometry(0.16, 12, 8);
+  const monMat = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0 }, o || {}));
+  function buildMonMesh(m, form) {
+    const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+    const main = monMat(m.col), dark = monMat(m.col2), bell = monMat(m.belly), white = monMat('#ffffff', { roughness: 0.3 }), black = monMat('#1d1a16', { roughness: 0.3 });
+    const add = (geo, mat, x, y, z, sx, sy, sz, rx, rz) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.scale.set(sx || 1, sy || sx || 1, sz || sx || 1); if (rx) o.rotation.x = rx; if (rz) o.rotation.z = rz; o.castShadow = true; body.add(o); return o; };
+    add(MON_BODY, main, 0, 0, 0, 1, 0.92, 1);
+    add(MON_BODY, bell, 0, -0.06, 0.16, 0.62, 0.55, 0.45);
+    for (const sx of [-1, 1]) { add(MON_EYE, white, sx * 0.13, 0.08, 0.28); add(MON_PUP, black, sx * 0.13, 0.08, 0.345); add(MON_PUP, monMat('#ff9aa8'), sx * 0.21, -0.03, 0.29, 1.3, 0.7, 0.6); }
+    for (const sx of [-1, 1]) add(MON_BODY, dark, sx * 0.17, -0.3, 0.05, 0.28, 0.2, 0.32);   // 발
+    if (m.k === 'yunwoo') {        // 새싹 → 잎 두 장 → 꽃 왕관
+      add(MON_LEAF, dark, 0.06, 0.4, 0, 0.5, 1.1, 0.25, 0, -0.5);
+      if (form >= 1) add(MON_LEAF, dark, -0.08, 0.4, 0, 0.5, 1.0, 0.25, 0, 0.6);
+      if (form >= 2) for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283; add(MON_EYE, monMat(['#ffe14a', '#ff8fc8', '#ffffff'][i % 3], { emissive: '#402a00' }), Math.cos(a) * 0.2, 0.3, Math.sin(a) * 0.2, 1.3); }
+    } else if (m.k === 'junwoo') { // 토끼 귀 → 더 긴 귀 → 날개
+      for (const sx of [-1, 1]) add(MON_BODY, main, sx * 0.13, 0.42, -0.02, 0.22, form >= 1 ? 0.75 : 0.55, 0.15, 0, sx * -0.2);
+      if (form >= 2) for (const sx of [-1, 1]) add(MON_BODY, monMat('#ffffff', { emissive: '#402030' }), sx * 0.36, 0.1, -0.2, 0.5, 0.3, 0.12, 0, sx * 0.5);
+    } else if (m.k === 'chaea') {  // 수정 뿔 1 → 3 → 등의 수정
+      add(MON_CONE, monMat('#bfe6ff', { emissive: '#103050', roughness: 0.2 }), 0, 0.42, 0.05, 1, form >= 1 ? 1.3 : 1);
+      if (form >= 1) for (const sx of [-1, 1]) add(MON_CONE, monMat('#bfe6ff', { emissive: '#103050', roughness: 0.2 }), sx * 0.17, 0.33, 0, 0.7, 0.8, 0.7, 0, sx * -0.5);
+      if (form >= 2) for (let i = 0; i < 3; i++) add(MON_CONE, monMat('#d9b8ff', { emissive: '#301050', roughness: 0.2 }), (i - 1) * 0.14, 0.18, -0.3, 0.8, 1, 0.8, -0.8);
+    } else {                       // 불꽃 머리 → 꼬리 불꽃 → 큰 불꽃
+      const fl = monMat('#ffd04a', { emissive: '#ff6a00', emissiveIntensity: 0.9 });
+      add(MON_CONE, fl, 0, 0.42, 0, 1.1, form >= 2 ? 1.6 : 1.1);
+      if (form >= 1) add(MON_CONE, fl, 0, 0.0, -0.4, 0.9, 1.2, 0.9, -1.2);
+      if (form >= 2) for (const sx of [-1, 1]) add(MON_CONE, fl, sx * 0.2, 0.35, -0.05, 0.8, 1.1, 0.8, 0, sx * -0.6);
+    }
+    g.scale.setScalar([1, 1.25, 1.55][form]);
+    return g;
+  }
+
+  const mons = [];            // 소환된 몬: { m, lv, form, g, tag, x, y, z, cd }
+  const monShots = [];        // 날아가는 탄
+  function syncMons() {
+    for (const mo of mons) { scene.remove(mo.g); mo.tag.remove(); }
+    mons.length = 0;
+    MONS.forEach((m, i) => {
+      const lv = monLv[m.k]; if (!lv) return;
+      const form = monForm(lv), g = buildMonMesh(m, form);
+      const tag = mkTag('mon'); tag.innerHTML = `${m.name} <small>Lv.${lv}</small>`;
+      g.position.set(player.x, 1, player.z); scene.add(g);
+      mons.push({ m, lv, form, g, tag, x: player.x, y: 1, z: player.z, cd: rand(0, 0.8), slot: i });
+    });
+  }
+  function monTarget(mo, range) {
+    let best = null, bd = range;
+    const consider = o => { if (!o.alive) return; const d = dist(o.x, o.z, mo.x, mo.z); if (d < bd) { bd = d; best = o; } };
+    if (mo.m.k === 'yunwoo') trees.forEach(consider);
+    else if (mo.m.k === 'chaea') rocks.forEach(consider);
+    else bears.forEach(consider);
+    return best;
+  }
+  const SHOT_COL = { yunwoo: '#8fe86a', chaea: '#9fe0ff', yeonjun: '#ff8a2a' };
+  function updateMons(dt, t) {
+    mons.forEach((mo, i) => {
+      // 주인공 뒤쪽에 부채꼴로 따라다닌다
+      const a = player.face + Math.PI + (i - (mons.length - 1) / 2) * 0.75, r = 1.5 + 0.15 * mo.form;
+      const tx = player.x + Math.sin(a) * r, tz = player.z + Math.cos(a) * r;
+      const k = 1 - Math.exp(-5 * dt);
+      mo.x += (tx - mo.x) * k; mo.z += (tz - mo.z) * k;
+      mo.y = 1.0 + 0.12 * mo.form + Math.sin(t * 3 + i * 1.7) * 0.12;
+      mo.g.position.set(mo.x, player.dead ? 0.35 : mo.y, mo.z);
+      mo.g.rotation.y = lerpAngle(mo.g.rotation.y, player.face, dt * 6);
+      mo.g.children[0].scale.y = 1 + Math.sin(t * 6 + i) * 0.04;
+      project(mo.x, mo.y + 0.55 + 0.25 * mo.form, mo.z, mo.tag, -8);
+      if (player.dead) return;
+      mo.cd -= dt;
+      if (mo.m.k === 'junwoo') {
+        if (mo.cd <= 0) {
+          mo.cd = 1.5;
+          const D = derived();
+          if (player.hp < D.maxHp) { player.hp = Math.min(D.maxHp, player.hp + 0.6 * monPower(mo.lv)); emit('#ff8fc8', player.x, 2.2, player.z, 0, 1.2, 0, 0.6, 0.18); }
+          if (Math.random() < 0.5) emit('#ffd0ea', mo.x, mo.y + 0.3, mo.z, 0, 0.8, 0, 0.5, 0.1);
+        }
+        return;
+      }
+      if (mo.cd > 0) return;
+      const range = mo.m.k === 'yeonjun' ? 10 : 7, o = monTarget(mo, range);
+      if (!o) { mo.cd = 0.3; return; }
+      mo.cd = mo.m.k === 'yeonjun' ? 0.9 : 0.8;
+      const dmg = (mo.m.k === 'yeonjun' ? 12 : 2.5) * monPower(mo.lv);
+      monShots.push({ x: mo.x, y: mo.y, z: mo.z, o, dmg, c: SHOT_COL[mo.m.k], big: mo.form });
+      mo.g.children[0].scale.y = 0.8;
+    });
+    for (let i = monShots.length - 1; i >= 0; i--) {
+      const s = monShots[i], o = s.o;
+      const ty = o.kind === 'boss' ? 3 : o.kind === 'dino' ? 1.6 : 0.9;
+      const dx = o.x - s.x, dy = ty - s.y, dz = o.z - s.z, d = Math.hypot(dx, dy, dz), step = 16 * dt;
+      if (!o.alive) { monShots.splice(i, 1); continue; }
+      if (d <= step + 0.3) {
+        applyHit(o, s.dmg, []);
+        sparks(o.x, ty, o.z, s.c, 5 + s.big * 3, 4);
+        monShots.splice(i, 1); continue;
+      }
+      s.x += dx / d * step; s.y += dy / d * step; s.z += dz / d * step;
+      glow.spawn(s.c, s.x, s.y, s.z, 0, 0, 0, 0.18, 0.55 + s.big * 0.2, 0.1, 0, 0, 1.2);
+    }
+  }
+
   // ================= 상점 (무기점·뽑기·장비·의상실) =================
   let shopOpen = false, shopTab = 'inv', shopAtPad = false, lastPull = [], armedScrap = 0;
   const WEAPON_PREFIX = { rare: ['단단한', '날렵한', '푸른'], unique: ['폭풍의', '서리의', '맹독의', '번개의'], legend: ['용사의', '불사조의', '천둥신의', '심연의'], ancient: ['태초의', '창세의', '무한의', '신성한'] };
@@ -2259,6 +2402,18 @@
       if (!weapons.length) h += '<p class="note">아직 무기가 없습니다. 무기점에서 사거나 뽑기로 얻으세요.</p>';
       const list = weapons.slice().sort((x, y) => (isEquipped(y) - isEquipped(x)) || GRADE_ORDER.indexOf(y.grade) - GRADE_ORDER.indexOf(x.grade) || y.lv - x.lv);
       h += '<div class="cards">' + list.map(w => weaponCard(w)).join('') + '</div>';
+    } else if (shopTab === 'mon') {
+      h += `<p class="note">몬은 주인공을 따라다니며 일을 돕습니다. 10레벨·20레벨에 진화하고, 20레벨 진화에는 뿌잉뿌잉이 주는 <b>진화석 3개</b>가 필요합니다. 보유 진화석 <b>${evoStones}</b>개</p>` +
+        (shopAtPad ? '' : '<p class="note warn">부화·레벨업은 기지의 몬 부화장 발판에서 할 수 있습니다.</p>');
+      h += '<div class="cards">' + MONS.map(m => {
+        const lv = monLv[m.k], c = monCost(m, lv), can = shopAtPad && gold >= c.gold && evoStones >= c.stones;
+        let btn;
+        if (!lv) btn = m.req() ? `<button class="box btn primary" data-act="monUp" data-k="${m.k}" ${can ? '' : 'disabled'}>부화 ${fmt(c.gold)}G</button>` : `<button class="box btn" disabled>${m.reqTxt}</button>`;
+        else if (lv >= MON_MAX) btn = '<button class="box btn" disabled>최대 레벨</button>';
+        else btn = `<button class="box btn primary" data-act="monUp" data-k="${m.k}" ${can ? '' : 'disabled'}>${lv === 9 || lv === 19 ? '진화' : '레벨업'} ${fmt(c.gold)}G${c.stones ? ' + 진화석 ' + c.stones : ''}</button>`;
+        return `<div class="card ${lv >= 20 ? 'ancient' : lv >= 10 ? 'legend' : lv ? 'unique' : 'normal'}"><div class="nm"><span>${m.name}</span><span class="grade">${m.role}${lv ? ' · ' + FORM_NAME[monForm(lv)] + ' Lv.' + lv : ''}</span></div>` +
+          `<div class="st">${m.desc}</div>${lv ? `<div class="st">${monEffect(m, lv)}</div>` : ''}<div class="acts">${btn}</div></div>`;
+      }).join('') + '</div>';
     } else {
       h += '<p class="note">돈을 모아 외형을 사고, 산 외형은 언제든 갈아입을 수 있습니다.</p>' + padNote('옷 구매');
       h += '<div class="cards">' + SKINS.map((s, i) => {
@@ -2309,6 +2464,16 @@
       toast(i === 9 ? '살라스 각성!!' : s.name + ' 외형 구매!');
       if (i === 9) { flashT = 1; shake = 0.6; }
     } else if (act === 'wear') { skin = +b.dataset.i; buildPlayer(); SFX.buy(); }
+    else if (act === 'monUp') {
+      const m = MONS.find(x => x.k === b.dataset.k); if (!m) return;
+      const lv = monLv[m.k], c = monCost(m, lv);
+      if (!shopAtPad || !m.req() || lv >= MON_MAX || gold < c.gold || evoStones < c.stones) return;
+      gold -= c.gold; evoStones -= c.stones; monLv[m.k] = lv + 1; syncMons(); SFX.level(); bumpGold();
+      const nl = lv + 1, evo = nl === 10 || nl === 20;
+      toast(nl === 1 ? `${m.name} 부화!` : evo ? `${m.name}이(가) ${FORM_NAME[monForm(nl)]} 단계로 진화했습니다!` : `${m.name} Lv.${nl}`);
+      if (nl === 1 || evo) { sparkleColumn(player.x, player.z, m.col, evo ? 30 : 16); flashT = evo ? 0.6 : 0.3; }
+      saveLocal();
+    }
     renderShop();
   });
 
@@ -2410,7 +2575,7 @@
     return {
       v: 3, gold, cashPile, goal, gems, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
       stock: stock.concat(beltItems.map(b => b.type)), carry: player.carry.slice(), npcCarry: npcs.flatMap(n => n.carry),
-      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
+      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, mons: { ...monLv }, evoStones, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
     };
   }
   function saveLocal() {
@@ -2454,6 +2619,8 @@
     skinsOwned = s && Array.isArray(s.skinsOwned) ? s.skinsOwned.filter(i => SKINS[i]) : [0];
     if (!skinsOwned.includes(0)) skinsOwned.unshift(0);
     skin = s && skinsOwned.includes(s.skin) ? s.skin : 0;
+    for (const m of MONS) monLv[m.k] = Math.max(0, Math.min(MON_MAX, (s && s.mons && s.mons[m.k]) | 0));
+    evoStones = Math.max(0, (s && s.evoStones) | 0);
     // 이전 버전 호환: 대검은 없어져서 쓴 돈을 돌려주고, 발판으로 산 활은 무기점 활로 바꿔 준다
     const notes = [];
     if (sl.sword > 0) { const r = SWORD_COST(sl.sword); gold += r; notes.push(`대검 환불 +${fmt(r)}G`); }
@@ -2472,7 +2639,7 @@
     curTier = tierOf();
     syncCashiers(); syncBelts(); syncTools();
     gateBearG.visible = !L.gateBear; gateQuarryG.visible = !L.gateQuarry; gateDinoG.visible = !L.gateDino; gateBossG.visible = !L.gateBoss;
-    buildPlayer();
+    buildPlayer(); syncMons(); syncBossTier();
     player.dead = 0; player.hp = derived().maxHp;
     rebuildStack(stackG, player.carry, 60); shownCarry = player.carry.length;
     stockDirty = true; cashShown = -1; goalShown = -1;
@@ -2527,7 +2694,7 @@
   function progressOf(st) {
     if (!st) return -1;
     const lv = Object.values(st.L || {}).reduce((a, b) => a + (b | 0), 0);
-    return ((st.stats && st.stats.earned) | 0) + ((st.gold | 0) + (st.cashPile | 0)) * 0.5 + lv * 50 + ((st.gems | 0) + (st.weapons ? st.weapons.length : 0)) * 20;
+    return ((st.stats && st.stats.earned) | 0) + ((st.gold | 0) + (st.cashPile | 0)) * 0.5 + lv * 50 + ((st.gems | 0) + (st.weapons ? st.weapons.length : 0)) * 20 + Object.values(st.mons || {}).reduce((a, b) => a + (b | 0), 0) * 100;
   }
   (async () => {
     try {
@@ -2581,7 +2748,7 @@
   });
 
   // 오프라인 수익: 자리를 비운 동안(최대 8시간) 일꾼·사냥꾼·광부가 번 돈과 보석
-  const OFFLINE_CAP = 8 * 3600;
+  const OFFLINE_CAP = 6 * 3600, OFFLINE_RATE = 0.3, OFFLINE_GEM_MAX = 12;   // 접속 중 수익의 30%, 최대 6시간
   let offlinePending = null;
   function offlineCalc(st) {
     if (!st || !st.lastSeen || !st.L) return null;
@@ -2590,7 +2757,7 @@
     const l = st.L;
     const belts = (l.beltForest ? 1 : 0) + (l.beltBear ? 1 : 0) + (l.beltQuarry ? 1 : 0);
     const rate = ((l.worker | 0) * 1.2 + (l.hunter | 0) * 3 + (l.miner | 0) * 1.5) * (1 + 0.2 * (l.price | 0)) * (l.cashier ? 1 : 0.5) * (1 + 0.05 * belts);
-    const g = Math.round(rate * secs), gm = Math.floor((l.miner | 0) * secs / 300);
+    const g = Math.round(rate * OFFLINE_RATE * secs), gm = Math.min(OFFLINE_GEM_MAX, Math.floor((l.miner | 0) * secs / 3600));
     if (g <= 0 && gm <= 0) return null;
     return { secs, gold: g, gems: gm, capped: (Date.now() - st.lastSeen) / 1000 > OFFLINE_CAP };
   }
@@ -2601,7 +2768,7 @@
     const h = Math.floor(r.secs / 3600), m = Math.floor(r.secs % 3600 / 60);
     $('offTxt').innerHTML = `자리를 비운 <b>${h ? h + '시간 ' : ''}${m}분</b> 동안 일꾼들이 일했습니다.<br>` +
       `<span style="color:var(--gold)">+${fmt(r.gold)}G</span>${r.gems ? ` · <span style="color:var(--gem)">보석 +${r.gems}</span>` : ''}` +
-      (r.capped ? '<br><small>최대 8시간까지만 쌓입니다.</small>' : '');
+      (r.capped ? '<br><small>최대 6시간까지만 쌓입니다.</small>' : '');
     $('offline').hidden = false;
   }
   $('offTake').addEventListener('click', () => {
@@ -2619,7 +2786,7 @@
   showOffline(localState);
   if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
     get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
-    MODELS, MODEL_H, get pg() { return pg; }, scene, renderer,
+    MODELS, MODEL_H, get pg() { return pg; }, scene, renderer, monLv, mons, bossTier, offlineCalc,
     get cashPile() { return cashPile; }, merge, offlineCalc, showOffline, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
   let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
@@ -2802,6 +2969,7 @@
     updateNpcs(dt, clock);
     for (const c of cashiers) if (c) animPerson(c, false, clock);
     updateFx(dt);
+    updateMons(dt, clock);
 
     // ---- 파편 / 코인 / 이펙트 ----
     for (let i = chips.length - 1; i >= 0; i--) {
@@ -2879,7 +3047,7 @@
     $('hHpBar').style.width = Math.max(0, Math.min(100, player.hp / D.maxHp * 100)) + '%';
     const showBoss = L.gateBoss && player.z < BOSS_Z + 8 && boss.alive;
     $('bossBar').hidden = !showBoss;
-    if (showBoss) { $('bossFill').style.width = (boss.hp / boss.maxHp * 100) + '%'; $('bossHp').textContent = fmt(Math.max(0, boss.hp)) + ' / ' + fmt(boss.maxHp); }
+    if (showBoss) { $('bossName').textContent = '뿌잉뿌잉 ★' + (bossTier() + 1); $('bossFill').style.width = (boss.hp / boss.maxHp * 100) + '%'; $('bossHp').textContent = fmt(Math.max(0, boss.hp)) + ' / ' + fmt(boss.maxHp); }
     if (goldBumpT > 0) { goldBumpT -= dt; if (goldBumpT <= 0) $('goldBox').classList.remove('bump'); }
     if (player.hurtT > 0) player.hurtT -= dt;
     $('hurt').style.opacity = Math.max(0, player.hurtT / 0.35);
