@@ -43,6 +43,7 @@
   .gemi { display: inline-block; width: 12px; height: 12px; background: var(--gem); transform: rotate(45deg); box-shadow: inset -2px -2px 0 #7b4fd0; flex: none; }
   .bag { padding: 5px 10px; font-size: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 3px 8px; align-items: center; min-width: 150px; font-family: "Do Hyeon", sans-serif; }
   .bag .rank { grid-column: 1 / -1; font-size: 14px; color: var(--gold); }
+  .bag > span { white-space: nowrap; }
   .bag .num { font-family: "Silkscreen", sans-serif; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
   .bar { height: 6px; background: var(--edge); min-width: 50px; }
   .bar > i { display: block; height: 100%; width: 0; background: var(--leaf); }
@@ -67,11 +68,11 @@
   .bossbar b { font-weight: 400; color: #ff8ac4; letter-spacing: .04em; }
   .bossbar .bar { height: 10px; }
   .bossbar .bar > i { background: linear-gradient(90deg, #ff4f8a, #ffb0d0); }
-  .raidbar { top: calc(140px + env(safe-area-inset-top, 0px)); }
-  .raidbar b { color: #ffb070; }
-  .raidbar .bar > i { background: linear-gradient(90deg, #3fae5a, #a8e88a); }
-  .raidbar .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-  .raidbar button { pointer-events: auto; font-size: 13px; padding: 3px 10px; }
+  .raidpill { display: flex; align-self: flex-start; white-space: nowrap; align-items: center; gap: 8px; padding: 4px 6px 4px 10px; font-family: "Do Hyeon", sans-serif; font-size: 14px; pointer-events: none; }
+  .raidpill b { font-weight: 400; color: #ffb070; }
+  .raidpill button { pointer-events: auto; font-size: 13px; padding: 2px 8px; }
+  #raidCount { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); font-family: "Silkscreen", sans-serif; font-size: 72px; color: #ffb070; text-shadow: 0 4px 0 #110d09; pointer-events: none; opacity: .85; }
+  #carryTag { font-family: "Silkscreen", sans-serif; font-size: 11px; color: var(--gold); padding: 0 4px; }
 
   .hint {
     position: fixed; left: 16px; right: 72px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
@@ -141,6 +142,17 @@
   .grade { font-size: 12px; padding: 0 5px; border-radius: 3px; color: #1d1a16; background: var(--muted); white-space: nowrap; }
   .grade.rare { background: var(--rare); } .grade.unique { background: var(--unique); color: #fff; } .grade.legend { background: var(--legend); }
   .grade.ancient { background: linear-gradient(90deg, #ff4fd8, #5aa0ff, #f2c14e); color: #fff; }
+  .card.boss { border-left-color: #3fd8a0; background: linear-gradient(135deg, #1f3a2e, #2a2119 70%); }
+  .grade.boss { background: #3fd8a0; color: #10231a; }
+  .card.mythic { border-left-color: #ffe066; background: linear-gradient(135deg, #4a3210, #3a1a10 50%, #2a1f3a); animation: glowc 1.2s linear infinite; }
+  .grade.mythic { background: linear-gradient(90deg, #ffe066, #ff6a2a, #fff2b0); color: #2a1a00; }
+  .card .sd { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .card .sd b { color: #9ff0c8; font-weight: 400; }
+  .mats { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+  .mats span { font-size: 13px; padding: 2px 8px; border-radius: 10px; background: #2a2119; border: 1px solid var(--edge); }
+  .need { font-size: 13px; line-height: 1.5; }
+  .need .ok { color: var(--leaf); } .need .no { color: var(--danger); }
+  .sect { margin: 10px 0 4px; font-size: 17px; color: var(--gold); }
   .card .st { font-size: 13px; color: var(--muted); }
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip { font-size: 12px; padding: 1px 6px; border-radius: 10px; background: #4a3b2c; color: var(--ink); }
@@ -165,6 +177,16 @@
   .backup textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; background: #17120d; color: var(--ink); border: 2px solid var(--edge); border-radius: 3px; padding: 6px; resize: vertical; user-select: text; -webkit-user-select: text; }
   .backup .row { display: flex; gap: 8px; justify-content: flex-end; }
   .backup .msg { color: var(--ink); min-height: 1.4em; }
+  .backup .panel.scroll { max-height: calc(100vh - 40px); overflow-y: auto; }
+  .backup .row.left { justify-content: flex-start; }
+  .backup .row .sp { flex: 1; }
+  .backup h3 { margin: 6px 0 0; font-weight: 400; font-size: 17px; color: var(--ink); }
+  .backup .help p b, .backup p b { color: var(--gold); font-weight: 400; }
+  .autolist { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .autolist .it { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .tipbody { font-size: 15px; line-height: 1.5; color: var(--ink); }
+  .tipbody li { margin: 2px 0; }
+  .tipbody ul { margin: 4px 0; padding-left: 20px; }
   #toast {
     position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%);
     font-family: "Do Hyeon", sans-serif; font-size: 24px; color: var(--gold); padding: 8px 18px; text-align: center; pointer-events: none;
@@ -179,7 +201,9 @@
     .btn { font-size: 13px; padding: 4px 7px; }
     .btns { max-width: 190px; }
     .bossbar { top: calc(236px + env(safe-area-inset-top, 0px)); }
-    .raidbar { top: calc(292px + env(safe-area-inset-top, 0px)); }
+    .raidpill { font-size: 12px; }
+    .bag .rank { font-size: 12px; }
+    #raidCount { font-size: 56px; }
   }
 </style>
 
@@ -198,26 +222,21 @@
       <span>광물</span><div class="bar s"><i id="bS"></i></div><span class="num" id="nS">0/8</span>
       <span>HP</span><div class="bar hp"><i id="hHpBar"></i></div><span class="num" id="hHp">10/10</span>
     </div>
+    <div class="box raidpill" id="raidBar" hidden><b id="raidName">⚔ 습격</b><span id="raidInfo"></span><button class="box btn primary" id="raidGo">시작</button></div>
   </div>
   <div class="box goal" id="goal"><small id="goalNo">GOAL 1</small><span id="goalTxt"></span></div>
   <div class="right">
     <div class="btns">
       <button class="box btn primary" id="btnGear">장비</button>
-      <button class="box btn" id="btnSave">저장</button>
-      <button class="box btn" id="btnLoad">불러오기</button>
-      <button class="box btn" id="btnBackup">백업</button>
+      <button class="box btn" id="btnHelp">도움말</button>
+      <button class="box btn" id="btnBackup">저장 관리</button>
       <button class="box btn" id="btnSound">소리 켬</button>
-      <button class="box btn" id="btnReset">처음부터</button>
     </div>
     <div class="status" id="saveStatus">자동 저장 · 이 기기</div>
   </div>
 </div>
 
-<div class="box bossbar raidbar" id="raidBar" hidden>
-  <div class="top"><b id="raidName">습격</b><span id="raidInfo"></span></div>
-  <div class="bar" id="raidHpBar"><i id="raidFill"></i></div>
-  <div class="row"><span id="raidSub"></span><button class="box btn primary" id="raidGo">지금 시작</button></div>
-</div>
+<div id="raidCount" hidden></div>
 <div class="box bossbar" id="bossBar" hidden>
   <div class="top"><b id="bossName">뿌잉뿌잉</b><span id="bossHp"></span></div>
   <div class="bar"><i id="bossFill"></i></div>
@@ -240,6 +259,8 @@
       <button data-tab="inv">장비</button>
       <button data-tab="skin">의상실</button>
       <button data-tab="mon">몬</button>
+      <button data-tab="forge">대장간</button>
+      <button data-tab="rebirth">환생</button>
       <span class="sp"></span>
       <button id="shopClose">닫기</button>
     </div>
@@ -248,16 +269,54 @@
 </div>
 
 <div class="backup" id="backup" hidden>
-  <div class="box panel">
-    <h2>진행 백업</h2>
-    <p>아래 코드를 복사해 두면 기기를 바꾸거나 저장이 지워져도 그대로 이어서 할 수 있습니다.</p>
+  <div class="box panel scroll">
+    <h2>저장 관리</h2>
+    <p id="saveInfo">게임은 이 기기에 4초마다 자동 저장됩니다.</p>
+    <div class="row left"><button class="box btn primary" id="btnSave">지금 저장</button><button class="box btn" id="btnLoad">저장한 시점으로</button></div>
+    <label>자동 백업 (10분마다, 최근 3개)</label>
+    <div id="autoList" class="autolist"></div>
+    <p>기기를 바꾸거나 브라우저 기록을 지우면 저장이 사라집니다. 아래 <b>백업 코드</b>를 복사해 메모장이나 카톡 "나에게 보내기"에 붙여 두세요.</p>
     <label for="codeOut">내 백업 코드</label>
     <textarea id="codeOut" readonly rows="3"></textarea>
     <div class="row"><button class="box btn primary" id="btnCopy">코드 복사</button></div>
     <label for="codeIn">백업 코드로 불러오기</label>
     <textarea id="codeIn" rows="3" placeholder="AXF1. 로 시작하는 코드를 붙여 넣으세요"></textarea>
-    <div class="row"><button class="box btn" id="btnImport">불러오기</button><button class="box btn" id="btnCloseBackup">닫기</button></div>
+    <div class="row"><button class="box btn" id="btnImport">코드로 불러오기</button></div>
     <p class="msg" id="codeMsg" aria-live="polite"></p>
+    <div class="row"><button class="box btn" id="btnReset">처음부터</button><span class="sp"></span><button class="box btn primary" id="btnCloseBackup">닫기</button></div>
+  </div>
+</div>
+<div class="backup" id="help" hidden>
+  <div class="box panel scroll help">
+    <h2>빙글도끼 숲 안내</h2>
+    <h3>1. 기본 조작</h3>
+    <p>화면을 끌거나 WASD·방향키로 움직입니다. 캐릭터 주위를 도는 <b>도끼</b>가 가까운 나무·짐승을 저절로 벱니다. 휠·두 손가락·+/- 버튼으로 시야를 조절합니다.</p>
+    <h3>2. 채집 → 판매 → 강화</h3>
+    <p>나무·고기·광석은 자동으로 가방에 들어옵니다. 노란 <b>판매대 발판</b>에 올라가 내려놓고, 초록 <b>계산대</b>에 서면 손님에게 팝니다. 쌓인 <b>금괴</b>를 밟아 돈을 챙기세요. 기지의 발판에 올라가 <b>구매</b>를 누르면 강화됩니다.</p>
+    <h3>3. 자동화</h3>
+    <p>계산원·일꾼·사냥꾼·광부를 고용하면 자리를 비워도 돈이 법니다. 컨베이어 투입구 근처에 가면 가방 속 채집품이 판매대로 실려 갑니다.</p>
+    <h3>4. 구역</h3>
+    <p>숲 → 곰 숲(250G) → 채석장(800G, 보석) → 공룡 계곡(3,000G) → 최종 보스 경기장(10,000G). 짐승은 반격하니 체력(HP)과 갑옷을 챙기세요. 쓰러지면 가방을 잃고 기지에서 다시 일어납니다.</p>
+    <h3>5. 무기 · 뽑기</h3>
+    <p>무기점에서 활·총을 사면 자동으로 쏩니다. 보석 5개로 뽑기를 하면 레어~에인션트 무기가 나오고, 같은 등급을 모아 합성할 수 있습니다. 쓰지 않는 무기는 분해하면 <b>무기 조각</b>과 약간의 금화를 줍니다.</p>
+    <h3>6. 구역 보스와 대장간</h3>
+    <p>각 구역의 <b>제단 발판</b>에 채집품을 바치면 보스가 나타납니다(숲 우드킹 · 곰 숲 불곰대장 · 채석장 바위골렘 · 공룡 계곡 티라노 킹). 보스가 떨어뜨린 재료로 <b>대장간</b>에서 보스 무기를 만들고, 모든 보스의 희귀 재료를 모으면 가장 강한 <b>신화 무기</b>를 만들 수 있습니다.</p>
+    <h3>7. 몬 (동료)</h3>
+    <p>몬 부화장에서 몬을 부화시키면 뒤따라 다니며 벌목·채굴·회복·전투를 돕습니다. 10·20레벨에 진화하고, 20레벨 진화에는 뿌잉뿌잉이 주는 진화석이 필요합니다.</p>
+    <h3>8. 습격</h3>
+    <p>모든 강화 발판이 MAX가 되면 옆마을 부족이 주기적으로 쳐들어옵니다. 왼쪽 위의 시간이 다 되면 적이 판매대로 몰려오니 막아 내세요. 막으면 금화·보석·진화석, 못 막으면 금괴와 재고를 빼앗깁니다. 습격 중에는 손님이 오지 않습니다.</p>
+    <h3>9. 환생</h3>
+    <p>습격을 3웨이브 막으면 <b>환생의 제단</b>이 열립니다. 강화·구역·금화는 처음으로 돌아가지만 무기·몬·옷·재료는 남고, 벌어 둔 만큼 <b>환생석</b>을 받습니다. 환생석 1개마다 모든 판매 수익 +2%, 환생 상점에서 영구 특전도 살 수 있습니다.</p>
+    <h3>10. 저장</h3>
+    <p>이 기기에 자동 저장됩니다. 다른 기기로 옮기거나 만일을 대비하려면 <b>저장 관리 → 백업 코드</b>를 복사해 두세요.</p>
+    <div class="row"><button class="box btn primary" id="btnCloseHelp">닫기</button></div>
+  </div>
+</div>
+<div class="backup" id="tip" hidden>
+  <div class="box panel">
+    <h2 id="tipTitle"></h2>
+    <div id="tipBody" class="tipbody"></div>
+    <div class="row"><button class="box btn primary" id="btnTipOk">알겠어요</button></div>
   </div>
 </div>
 <div class="backup" id="offline" hidden>
@@ -512,6 +571,7 @@
   const VCM = new THREE.MeshLambertMaterial({ vertexColors: true });
   const GLOW = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#7a5c00') });
   const ANCIENT = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#ff00ff') });
+  const MYTHM = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#ffa000') });
   const GC = {};
   const cgeo = (key, fn) => GC[key] || (GC[key] = geo(fn()));
   function vmesh(g, shadow = true, mat) { const m = new THREE.Mesh(g, mat || VCM); m.castShadow = shadow; m.receiveShadow = true; return m; }
@@ -644,9 +704,9 @@
     for (const k in K) scatterModel('nature/' + k, K[k]);
     // 기지 가장자리 소품 (Survival Kit) — 발판·통로와 겹치지 않는 자리만
     for (const [k, x, z, h, ry] of [['survival/tent', -12.3, 16.6, 2.0, 0.6], ['nature/campfire_stones', -9.6, 16.9, 0.3, 0], ['nature/campfire_logs', -9.6, 16.9, 0.4, 0.5],
-      ['survival/workbench', 11.6, 16.4, 0.95, -0.3], ['survival/barrel', 12.8, 14.6, 0.85, 0], ['survival/barrel-open', 13.0, 15.7, 0.8, 0.4],
+      ['survival/workbench', 13.0, 17.4, 0.9, -0.3], ['survival/barrel', 12.8, 14.6, 0.85, 0], ['survival/barrel-open', 13.0, 15.7, 0.8, 0.4],
       ['survival/box-large', -2.6, 8.4, 0.75, 0.3], ['survival/box', -2.9, 7.5, 0.55, -0.2], ['survival/bucket', 2.7, 8.2, 0.4, 0],
-      ['survival/chest', 12.6, -4.8, 0.6, -1.2], ['nature/log_stackLarge', -12.7, -4.5, 0.8, 1.2], ['survival/resource-planks', 9.6, 16.8, 0.35, 0.4]]) {
+      ['survival/chest', 12.6, -4.8, 0.6, -1.2], ['nature/log_stackLarge', -12.7, -4.5, 0.8, 1.2], ['survival/resource-planks', 8.2, 17.4, 0.35, 0.4]]) {
       const o = prop(k, h); if (!o) continue; o.position.set(x, 0, z); o.rotation.y = ry; scene.add(o);
     }
     const fire = new THREE.PointLight(0xff8a3a, 1.2, 6, 2); fire.position.set(-9.6, 0.9, 16.9); scene.add(fire);
@@ -777,8 +837,10 @@
     unique: { name: '유니크', col: '#b36bff', col2: '#7b3fd0', mult: 2.3, n: 2, cost: 1.6, scrap: 800 },
     legend: { name: '레전드', col: '#ff9a2e', col2: '#d0601a', mult: 3.6, n: 3, cost: 2.6, scrap: 3000 },
     ancient: { name: '에인션트', col: '#ff4fd8', col2: '#5aa0ff', mult: 9, n: 6, cost: 4, scrap: 15000 },
+    boss: { name: '보스', col: '#3fd8a0', col2: '#1f8a60', mult: 5, n: 3, cost: 3, scrap: 0 },
+    mythic: { name: '신화', col: '#ffe066', col2: '#ff6a2a', mult: 14, n: 6, cost: 6, scrap: 0 },
   };
-  const GRADE_ORDER = ['normal', 'rare', 'unique', 'legend', 'ancient'];
+  const GRADE_ORDER = ['normal', 'rare', 'unique', 'legend', 'boss', 'ancient', 'mythic'];
   const TOOL_COL = [['#9aa5ad', '#e8eef2'], ['#6fa8d6', '#d6f0ff'], ['#f2c14e', '#fff2b0'], ['#b07cff', '#f1dcff']];
   const axeGeo = (h, e, key, big) => cgeo('axe' + key, () => {
     const L = [[-0.5, -3, -0.5, 1, 6, 1, '#7a4b28'], [0.5, 0.5, -0.5, 2.5, 2.5, 1, h], [3, 0, -0.5, 0.7, 3.5, 1, e]];
@@ -885,6 +947,12 @@
     shopWeapon: () => [[-4, -0.5, -0.6, 7, 1.4, 1.2, '#4a4f57'], [2.5, -0.3, -0.4, 3, 1, 0.8, '#2b2f36'], [-3.8, -2.5, -0.5, 1.4, 2.2, 1, '#3b2a1a'], [-0.3, -4, 1, 0.6, 8, 0.6, '#a0693a'], [0.2, -3.5, 1.2, 0.2, 7, 0.2, '#f4efe2']],
     shopGacha: () => [[-3, -4, -2.5, 6, 3.5, 5, '#d0483a'], [-2.5, -0.5, -2, 5, 5, 4, '#9fd8ff'], [-1.5, 0, -1, 1.4, 1.4, 1.4, '#ff4fd8'], [0.4, 0.5, -0.5, 1.4, 1.4, 1.4, '#f2c14e'], [-0.8, 2, 0.2, 1.4, 1.4, 1.4, '#5aa0ff'], [-0.8, -3, 2.5, 1.6, 1.6, 0.4, '#f2c14e']],
     shopMon: () => [[-2, -3.5, -2, 4, 5, 4, '#f4efe2'], [-1.5, 1.5, -1.5, 3, 1.5, 3, '#f4efe2'], [-1, 3, -1, 2, 0.8, 2, '#f4efe2'], [-1.6, -1.5, 2, 1.1, 1.1, 0.2, '#5fc46a'], [0.4, 0, 2, 1.1, 1.1, 0.2, '#ff9ccf'], [-0.8, 1.6, 1.5, 1, 1, 0.2, '#62b6ff'], [0.9, -2.6, 2, 1, 1, 0.2, '#ff8a3a']],
+    shopForge: () => [[-3, -3, -1.5, 6, 2, 3, '#4a4f57'], [-3.8, -1, -1.2, 7.6, 1.2, 2.4, '#5d646e'], [2.5, -1, -0.6, 2, 1, 1.2, '#5d646e'], [-0.4, 0.4, -0.3, 0.8, 4, 0.6, '#8a5a32'], [-1.6, 3.6, -0.6, 3.2, 1.6, 1.2, '#9aa5ad'], [-0.6, -3, -0.6, 1.2, 0.6, 1.2, '#ff7a2a']],
+    shopRebirth: () => [[-3, -4, -3, 6, 1.2, 6, '#6a5a8a'], [-2, -2.8, -2, 4, 1, 4, '#8a7ab0'], [-0.6, -1.8, -0.6, 1.2, 4, 1.2, '#c9b4ff'], [-1.4, 2.2, -1.4, 2.8, 2.8, 2.8, '#e2d2ff'], [-0.6, 5, -0.6, 1.2, 1.2, 1.2, '#ffffff']],
+    altarWood: () => [[-3, -4, -3, 6, 1.5, 6, '#7d7f84'], [-0.6, -2.5, -0.6, 1.2, 5, 1.2, '#6b4a2b'], [-2.5, 2, -2.5, 5, 2.5, 5, '#4f9a45'], [-0.5, 1, 1.8, 1, 1, 0.3, '#c8ff6a']],
+    altarBear: () => [[-3, -4, -3, 6, 1.5, 6, '#7d7f84'], [-2, -2.5, -1.5, 4, 3, 3, '#8a2f1a'], [-1.2, 0.5, -0.5, 2.4, 2, 2, '#8a2f1a'], [-1, 2.5, 0, 0.6, 1, 0.6, '#f2c14e'], [0.4, 2.5, 0, 0.6, 1, 0.6, '#f2c14e']],
+    altarGolem: () => [[-3, -4, -3, 6, 1.5, 6, '#7d7f84'], [-2, -2.5, -1.5, 4, 4, 3, '#8d8f93'], [-0.8, -1, 1.4, 1.6, 1.6, 0.3, '#ffb050'], [-1.2, 1.5, -1, 2.4, 2, 2, '#6c6e73']],
+    altarRex: () => [[-3, -4, -3, 6, 1.5, 6, '#7d7f84'], [-1.5, -2.5, -2, 3, 3, 4, '#5a4a6e'], [-1.2, 0.5, 0, 2.4, 1.6, 3.5, '#5a4a6e'], [-1, 0.2, 3.2, 2, 0.4, 0.4, '#f4efe2'], [-0.6, 2.1, 0.5, 1.2, 0.8, 1.2, '#f2c14e']],
     shopSkin: () => [[-0.3, 3, -0.3, 0.6, 1.5, 0.6, '#c7d0d6'], [-3.5, 2.5, -0.3, 7, 0.6, 0.6, '#c7d0d6'], [-3, -3, -0.8, 6, 5.5, 1.6, '#5aa0ff'], [-5, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [3, 0, -0.8, 2, 2.5, 1.6, '#5aa0ff'], [-1, -1, 0.8, 2, 2, 0.3, '#f2c14e']],
   };
 
@@ -926,6 +994,7 @@
   const padPaid = {};
   let gold = 0, cashPile = 0, goal = 0, gems = 0;
   let weapons = [], nextWid = 1, skinsOwned = [0], skin = 0;
+  const seen = {};   // 처음 보는 기능 안내를 이미 봤는지
   // 몬 (동료 몬스터): 레벨 0 = 아직 부화 전. 10·20레벨에서 진화 (20레벨 진화에는 보스가 주는 진화석 필요)
   const MONS = [
     { k: 'yunwoo', name: '윤우몬', role: '벌목', price: 1000, col: '#5fc46a', col2: '#2f8a45', belly: '#d8f5c8', req: () => true, reqTxt: '',
@@ -947,7 +1016,21 @@
       desc: '전설의 용. 거대한 불덩이를 뿜어 주변 적을 한꺼번에 태웁니다' },
   ];
   // 습격 모드: 모든 강화를 끝내면 옆마을 부족이 주기적으로 쳐들어온다
-  const raid = { wave: 1, best: 0, phase: 'off', t: 0, hp: 100, left: 0, queue: [], spawnT: 0 };
+  const raid = { wave: 1, best: 0, runBest: 0, phase: 'off', t: 0, hp: 100, left: 0, queue: [], spawnT: 0 };
+  // 보스 재료 (희귀 재료는 신화 무기용)
+  const MAT = {
+    knot: { name: '단단한 옹이', col: '#c9924f' }, sprout: { name: '정령의 새싹', col: '#8fe86a', rare: true },
+    claw: { name: '곰 발톱', col: '#e0c090' }, firehide: { name: '불꽃 가죽', col: '#ff7a2a', rare: true },
+    shard: { name: '골렘 파편', col: '#a9abb0' }, core: { name: '빛나는 핵', col: '#ffb050', rare: true },
+    fang: { name: '거대 이빨', col: '#f4efe2' }, fossil: { name: '고대 화석', col: '#cbb4dc', rare: true },
+    heart: { name: '뿌잉 하트', col: '#ff7ab4' }, orb: { name: '무지개 구슬', col: '#ff4fd8', rare: true },
+    totem: { name: '부족 토템', col: '#d8452a' }, frag: { name: '무기 조각', col: '#9fd8ff' },
+  };
+  const mats = {}, fbKills = {};
+  // 환생: 환생석(보유·누적), 특전 단계
+  const rb = { count: 0, stones: 0, total: 0, earnedBase: 0, perks: {} };
+  const perkLv = k => rb.perks[k] | 0;
+  for (const k in MAT) mats[k] = 0;
   const MON_MAX = 30, monLv = {};
   let evoStones = 0;
   for (const m of MONS) monLv[m.k] = 0;
@@ -974,6 +1057,13 @@
     more: { name: '도끼 증식', desc: '회전 도끼 +2개' },
     giant: { name: '거대화', desc: '도끼 크기·범위 증가' },
     whirl: { name: '회오리', desc: '도끼 회전 +40%' },
+    root: { name: '뿌리 속박', desc: '20% 확률로 적을 1.5초 묶고 추가 피해', boss: true },
+    blaze: { name: '화염 폭발', desc: '25% 확률로 맞은 곳이 폭발 (주변 피해)', boss: true },
+    quake: { name: '대지 진동', desc: '15% 확률로 충격파, 주변 적 피해·둔화', boss: true },
+    rend: { name: '찢기', desc: '강한 출혈 피해, 20% 확률 2배 피해', boss: true },
+    worldtree: { name: '세계수의 일격', desc: '7초마다 주변 전체를 거대한 나무 칼날로 벰 (공격력 ×8)', boss: true },
+    thunder: { name: '천둥 폭풍', desc: '5초마다 하늘에서 번개 6줄기 (각 공격력 ×5)', boss: true },
+    dragon: { name: '용의 숨결', desc: '6초마다 정면으로 불을 뿜어 연속 피해', boss: true },
   };
   const RANGED_POOL = ['multi', 'poison', 'fire', 'explode', 'chain', 'crit', 'freeze', 'rapid', 'pierce', 'vamp', 'loot'];
   const AXE_POOL = ['poison', 'fire', 'explode', 'chain', 'crit', 'freeze', 'vamp', 'loot', 'more', 'giant', 'whirl'];
@@ -991,14 +1081,17 @@
     if (w.shop) return SHOP_W[w.type].unlock.filter(([lv]) => w.lv >= lv).map(a => a[1]);
     return w.skills;
   }
-  const wMult = w => GRADES[w.grade].mult * (1 + 0.3 * (w.lv - 1));
+  const wMult = w => (w.mult || GRADES[w.grade].mult) * (1 + 0.3 * (w.lv - 1));
   function rStats(w) {
     const b = WBASE[w.type], sk = wSkills(w), c = n => sk.filter(s => s === n).length;
     return { dmg: b.dmg * wMult(w), rate: b.rate * (1 + 0.05 * (w.lv - 1)) * Math.pow(1.5, c('rapid')),
-      range: b.range + (w.grade === 'ancient' ? 4 : w.grade === 'legend' ? 2 : 0), speed: b.speed, count: 1 + 2 * c('multi'), pierce: 2 * c('pierce'), sk };
+      range: b.range + (w.grade === 'mythic' ? 5 : w.grade === 'ancient' ? 4 : w.grade === 'legend' || w.grade === 'boss' ? 2 : 0), speed: b.speed, count: 1 + 2 * c('multi'), pierce: 2 * c('pierce'), sk };
   }
   const upCost = w => Math.round((w.shop ? SHOP_W[w.type].up : 400 * GRADES[w.grade].cost) * Math.pow(1.55, w.lv - 1));
-  const scrapValue = w => Math.round(GRADES[w.grade].scrap * (1 + 0.5 * (w.lv - 1)));
+  const scrapValue = w => Math.round(GRADES[w.grade].scrap * 0.2 * (1 + 0.5 * (w.lv - 1)));   // 분해 금화는 예전의 20%
+  const SCRAP_FRAG = { normal: 1, rare: 1, unique: 3, legend: 10, ancient: 40, boss: 20, mythic: 100 };
+  const scrapFrags = w => Math.round(SCRAP_FRAG[w.grade] * (1 + 0.3 * (w.lv - 1)));
+  const fragCost = w => w.craft ? w.lv * (w.grade === 'mythic' ? 8 : 3) : 0;   // 제작 무기 강화에는 무기 조각도 든다
   function activeSkills() { return wSkills(eqW('ranged')).concat(wSkills(eqW('axe'))); }
   const hasAncient = () => ['ranged', 'axe'].some(s => { const w = eqW(s); return w && w.grade === 'ancient'; });
 
@@ -1009,9 +1102,9 @@
       sk, axes: 1 + L.axeCount + 2 * c('more'), dmg: (1 + L.axeDmg) * axeMult,
       spin: 4.4 * (1 + 0.15 * L.spin) * Math.pow(1.4, c('whirl')), radius: 1.8 + 0.3 * L.spin + 0.8 * c('giant'), axeHitR: 0.35 * c('giant'),
       picks: L.gateQuarry ? 1 + Math.floor(L.pick / 2) : 0, pickDmg: 1 + L.pick,
-      caps: (() => { const k = 1 + monBag(); return { w: Math.round((10 + 5 * L.bag) * k), m: Math.round((6 + 3 * L.bag) * k), s: Math.round((8 + 4 * L.bag) * k) }; })(),
+      caps: (() => { const k = 1 + monBag() + 0.1 * perkLv('bag'); return { w: Math.round((10 + 5 * L.bag) * k), m: Math.round((6 + 3 * L.bag) * k), s: Math.round((8 + 4 * L.bag) * k) }; })(),
       speed: 6.4 * (1 + 0.12 * L.speed) * (1 + monSpeed()), magnet: 4 + 1.6 * L.magnet + monMagnet(),
-      price: 1 + 0.2 * L.price, custEvery: 1.25 / (1 + 0.25 * L.price),
+      price: (1 + 0.2 * L.price) * (1 + 0.02 * rb.total), custEvery: 1.25 / (1 + 0.25 * L.price),
       beltSpeed: 3 + 1.2 * L.beltSpeed,
       maxHp: 10 + 8 * L.armor + 3 * curTier, armorRed: Math.min(0.7, 0.04 * L.armor + monArmor()),
     };
@@ -1022,12 +1115,15 @@
 
   // ================= 나무 / 바위 =================
   const trees = [], rocks = [];
+  const ALTARS = [[-19, 2], [14, -27], [48, 12], [16, -54]];
   const blocked = (x, z) =>
     (Math.abs(x) < 13.5 && z > -6.5 && z < 18) ||
     (Math.abs(x) < 3.5 && z < -14) ||
     (Math.abs(x + 6) < 1.6 && z > -21 && z < -5) ||
     (Math.abs(z - 6) < 1.6 && x > 12 && x < 36) ||
-    (x > 29 && x < 36 && z > -4 && z < 9);
+    (x > 29 && x < 36 && z > -4 && z < 9) || nearAltar(x, z);
+  // 구역 보스 제단 자리 (나무·바위가 자라지 않게 비워 둔다)
+  function nearAltar(x, z) { return ALTARS.some(a => Math.hypot(a[0] - x, a[1] - z) < 2.8); }
   function scatter(n, x0, x1, z0, z1, gap, avoid, seed, make) {
     const r = mulberry32(seed), pts = []; let tries = 0;
     while (pts.length < n && tries++ < 8000) {
@@ -1058,8 +1154,8 @@
     trees.push({ kind2: 'tree', g, top, x, z, big, jungle, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(12).fill(0), shake: 0, dir: 1, claimed: null });
   }
   scatter(100, -34, 34, -20.5, 17.5, 2.05, blocked, 11, (x, z, r) => addTree(x, z, r() < 0.14 ? 2 : (r() < 0.5 ? 1 : 0), false));
-  scatter(46, -33, 33, -45, -24, 2.8, (x, z) => Math.abs(x) < 3 && (z > -28 || z < -40), 29, (x, z) => addTree(x, z, 'big', true));
-  scatter(30, -33, 33, -77, -50, 4.2, (x, z) => Math.abs(x) < 3.5 && (z > -54 || z < -72), 31, (x, z) => addTree(x, z, 'jungle', true, true));
+  scatter(46, -33, 33, -45, -24, 2.8, (x, z) => (Math.abs(x) < 3 && (z > -28 || z < -40)) || nearAltar(x, z), 29, (x, z) => addTree(x, z, 'big', true));
+  scatter(30, -33, 33, -77, -50, 4.2, (x, z) => (Math.abs(x) < 3.5 && (z > -54 || z < -72)) || nearAltar(x, z), 31, (x, z) => addTree(x, z, 'jungle', true, true));
   const ROCK_M = ['rock_largeA', 'rock_largeB', 'rock_largeC', 'stone_largeA'];
   const crystalTopGeo = cgeo('crystalTop', () => [[-1, 1.5, -1, 1.4, 4.5, 1.4, '#9b6cf0'], [0.8, 1, 0, 1.1, 3.2, 1.1, '#b48cff'], [-2.5, 1, 0.5, 1, 2.6, 1, '#7b4fd0'], [-0.7, 6, -0.7, 0.8, 0.8, 0.8, '#e2d2ff']]);
   function addRock(x, z, crystal) {
@@ -1074,7 +1170,7 @@
     const hp = crystal ? 9 : 4;
     rocks.push({ kind2: 'rock', m, x, z, crystal, hp, maxHp: hp, alive: true, state: 'idle', t: 0, hitCd: new Array(12).fill(0), shake: 0, claimed: null });
   }
-  scatter(58, 38.5, 58, -20, 16, 2.1, (x, z) => x < 41 && Math.abs(z - QZ) < 3, 47, (x, z, r) => addRock(x, z, r() < 0.3));
+  scatter(58, 38.5, 58, -20, 16, 2.1, (x, z) => (x < 41 && Math.abs(z - QZ) < 3) || nearAltar(x, z), 47, (x, z, r) => addRock(x, z, r() < 0.3));
 
   // ================= 파편 / 떨어진 아이템 / 코인 / 이펙트 =================
   const drops = [], chips = [], coins = [];
@@ -1270,8 +1366,20 @@
       if (k) for (let i = 0; i < loot; i++) o.def.drops.forEach(t => spawnDrop(t, o.x, o.z));
     }
   }
+  const skGate = {};
+  const gate = (k, gap) => { if ((skGate[k] || 0) > clock) return false; skGate[k] = clock + gap; return true; };
   function applyHit(o, dmg, sk) {
     if (!o.alive) return;
+    const beast0 = o.kind2 === 'beast';
+    if (beast0 && sk.length) {
+      if (sk.includes('rend') && Math.random() < 0.2) { dmg *= 2; if (gate('rendT', 0.3)) floatText('찢기!', o.x, 2.6, o.z, 'bad'); }
+      if (sk.includes('root') && Math.random() < 0.2 && gate('root', 0.4)) {
+        o.rootT = 1.5; dmg *= 1.5;
+        rings.push({ x: o.x, z: o.z, r0: 0.3, r1: 1.6 * (o.def.hitR || 1), t: 0, life: 0.5, c: '#6fd04a' });
+        for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; emit(pick(['#6fd04a', '#3f8a3a', '#c8ff6a']), o.x + Math.cos(a) * 0.8, 0.2, o.z + Math.sin(a) * 0.8, 0, rand(1.5, 3), 0, 0.6, 0.18); }
+        floatText('속박!', o.x, 2.8, o.z, 'note');
+      }
+    }
     if (sk.includes('crit') && Math.random() < 0.25) { dmg *= 3; if (Math.random() < 0.4) floatText('치명타!', o.x, 2.6, o.z, 'bad'); }
     const beast = o.kind2 === 'beast';
     const hy = o.kind === 'boss' ? 3.5 : o.kind === 'dino' ? 2 : beast ? 1 : o.kind2 === 'tree' ? 1.2 : 0.8;
@@ -1281,6 +1389,18 @@
       if (sk.includes('poison')) addDot(o, 'p', dmg * 0.35, 4);
       if (sk.includes('fire')) addDot(o, 'f', dmg * 0.6, 3);
       if (sk.includes('freeze')) o.slowT = 2;
+    }
+    if (beast0 && sk.includes('rend')) addDot(o, 'b', dmg * 0.5, 4);
+    if (sk.includes('blaze') && Math.random() < 0.25 && gate('blaze', 0.25)) {
+      SFX.boom(); boomFx(o.x, o.z, 2.2, '#ff6a2a'); flashAt(o.x, 1.5, o.z, '#ff8a3a', 2.5);
+      for (let i = 0; i < 14; i++) { const a = rand(0, 6.28); emit(pick(['#ff4a1a', '#ffb040', '#ffe08a']), o.x, 1, o.z, Math.cos(a) * rand(2, 5), rand(1, 4), Math.sin(a) * rand(2, 5), 0.5, 0.25); }
+      for (const b of bears) if (b !== o && b.alive && dist(b.x, b.z, o.x, o.z) < 2.2 + b.def.hitR * 0.5) dealDirect(b, dmg * 0.6, [], o.x, o.z);
+    }
+    if (sk.includes('quake') && Math.random() < 0.15 && gate('quake', 0.5)) {
+      SFX.stomp(); shake = Math.max(shake, 0.25);
+      rings.push({ x: o.x, z: o.z, r0: 0.5, r1: 3.2, t: 0, life: 0.45, c: '#d8a860' });
+      puff(o.x, 0.2, o.z, '#8a6a4a', 10, 1.2, 0.5); spawnChips(o.x, 0.4, o.z, '#8d8f93', 8);
+      for (const b of bears) if (b.alive && dist(b.x, b.z, o.x, o.z) < 3.2 + b.def.hitR * 0.5) { b.slowT = 1.5; if (b !== o) dealDirect(b, dmg * 0.5, [], o.x, o.z); }
     }
     if (sk.includes('explode')) {
       SFX.boom(); boomFx(o.x, o.z, 2.6, '#ff9a3a');
@@ -1333,7 +1453,7 @@
 
   // 곰: 몸통 + 다리 4개 (앞이 +z)
   const BR = '#7a4a28', BR2 = '#5a3419', BRS = '#c9a07a', INK = '#1d1a16';
-  const bearBodyG = bake([
+  const bearParts = (BR, BR2, BRS) => [
     [ICO, BR, [0, 0.95, -0.05], [0.62, 0.55, 0.85]], [ICO, BR, [0, 1.13, 0.38], [0.58, 0.5, 0.5]], [ICO, BR, [0, 0.95, -0.55], [0.55, 0.48, 0.45]],
     [ICO, '#8a5a34', [0, 0.66, 0.05], [0.45, 0.28, 0.62]],
     [ICO, BR, [0, 1.3, 0.98], [0.42, 0.4, 0.42]], [ICO, BRS, [0, 1.2, 1.33], [0.2, 0.16, 0.22]], [SPH, INK, [0, 1.27, 1.53], [0.08, 0.06, 0.06]],
@@ -1341,12 +1461,13 @@
     [ICO, BR, [-0.28, 1.66, 0.9], [0.14, 0.14, 0.08]], [ICO, BR, [0.28, 1.66, 0.9], [0.14, 0.14, 0.08]],
     [SPH, BRS, [-0.28, 1.66, 0.96], [0.08, 0.08, 0.03]], [SPH, BRS, [0.28, 1.66, 0.96], [0.08, 0.08, 0.03]],
     [ICO, BR2, [0, 1.02, -1.0], 0.12],
-  ]);
-  const bearLegG = bake([[CYL, BR, [0, -0.36, 0], [0.18, 0.74, 0.2]], [ICO, BR2, [0, -0.7, 0.06], [0.2, 0.1, 0.25]]]);
+  ];
+  const bearBodyG = bake(bearParts(BR, BR2, BRS));
+  const bearLegParts = (BR, BR2) => [[CYL, BR, [0, -0.36, 0], [0.18, 0.74, 0.2]], [ICO, BR2, [0, -0.7, 0.06], [0.2, 0.1, 0.25]]];
+  const bearLegG = bake(bearLegParts(BR, BR2));
 
   // 티라노: 몸통 + 다리 2개 + 아래턱
-  const RG = '#5f8f3f', RG2 = '#40662b', RB = '#d8c48a';
-  const trexParts = [
+  const trexPartsFn = (RG, RG2, RB) => { const trexParts = [
     [ICO, RG, [0, 1.95, -0.05], [0.62, 0.7, 1.05], [-0.15, 0, 0]], [ICO, RB, [0, 1.72, 0.2], [0.45, 0.5, 0.78], [-0.15, 0, 0]],
     [ICO, RG, [0, 2.4, 0.85], [0.42, 0.5, 0.48], [-0.4, 0, 0]], [ICO, RG, [0, 2.72, 1.35], [0.45, 0.4, 0.75]],
     [SPH, '#f2c14e', [-0.34, 2.86, 1.35], 0.075], [SPH, '#f2c14e', [0.34, 2.86, 1.35], 0.075], [SPH, INK, [-0.4, 2.86, 1.38], 0.035], [SPH, INK, [0.4, 2.86, 1.38], 0.035],
@@ -1356,12 +1477,49 @@
   ];
   for (let i = 0; i < 7; i++) { const z = 1.0 - i * 0.42; trexParts.push([CONE, RG2, [0, 2.62 - Math.max(0, -z) * 0.18 + (z > 0.6 ? 0.1 : 0), z], [0.1, 0.26 - i * 0.02, 0.14]]); }
   for (let i = 0; i < 4; i++) for (const sx of [-1, 1]) trexParts.push([CONE, '#f4efe2', [sx * 0.3, 2.43, 1.55 + i * 0.13], [0.04, 0.12, 0.04], [Math.PI, 0, 0]]);
-  const trexBodyG = bake(trexParts);
-  const trexLegG = bake([[ICO, RG, [0, -0.2, 0.05], [0.3, 0.52, 0.42]], [CYL, RG2, [0, -0.9, -0.12], [0.13, 0.8, 0.13], [0.25, 0, 0]], [ICO, RG2, [0, -1.52, 0.12], [0.2, 0.09, 0.38]],
-    [CONE, '#f4efe2', [-0.1, -1.52, 0.5], [0.04, 0.1, 0.04], [Math.PI / 2, 0, 0]], [CONE, '#f4efe2', [0.1, -1.52, 0.5], [0.04, 0.1, 0.04], [Math.PI / 2, 0, 0]]]);
-  const jawParts = [[ICO, RG2, [0, -0.08, 0.45], [0.38, 0.13, 0.62]], [ICO, '#b8453a', [0, -0.02, 0.4], [0.26, 0.05, 0.44]]];
-  for (let i = 0; i < 4; i++) for (const sx of [-1, 1]) jawParts.push([CONE, '#f4efe2', [sx * 0.27, 0.05, 0.5 + i * 0.12], [0.035, 0.1, 0.035]]);
-  const trexJawG = bake(jawParts);
+  return trexParts; };
+  const trexLegParts = (RG, RG2) => [[ICO, RG, [0, -0.2, 0.05], [0.3, 0.52, 0.42]], [CYL, RG2, [0, -0.9, -0.12], [0.13, 0.8, 0.13], [0.25, 0, 0]], [ICO, RG2, [0, -1.52, 0.12], [0.2, 0.09, 0.38]],
+    [CONE, '#f4efe2', [-0.1, -1.52, 0.5], [0.04, 0.1, 0.04], [Math.PI / 2, 0, 0]], [CONE, '#f4efe2', [0.1, -1.52, 0.5], [0.04, 0.1, 0.04], [Math.PI / 2, 0, 0]]];
+  const trexJawParts = RG2 => { const jawParts = [[ICO, RG2, [0, -0.08, 0.45], [0.38, 0.13, 0.62]], [ICO, '#b8453a', [0, -0.02, 0.4], [0.26, 0.05, 0.44]]];
+    for (let i = 0; i < 4; i++) for (const sx of [-1, 1]) jawParts.push([CONE, '#f4efe2', [sx * 0.27, 0.05, 0.5 + i * 0.12], [0.035, 0.1, 0.035]]); return jawParts; };
+  const trexBodyG = bake(trexPartsFn('#5f8f3f', '#40662b', '#d8c48a'));
+  const trexLegG = bake(trexLegParts('#5f8f3f', '#40662b'));
+  const trexJawG = bake(trexJawParts('#40662b'));
+
+  // ---- 구역 보스 모델 ----
+  const FB_G = {};
+  function fieldBossGeo(kind) {
+    if (FB_G[kind]) return FB_G[kind];
+    let out;
+    if (kind === 'bearchief') {       // 불곰대장: 붉은 곰 + 금관 + 등 가시
+      const body = bearParts('#8a2f1a', '#4a1a0e', '#e8a070');
+      body.push([CYL, '#f2c14e', [0, 1.7, 0.95], [0.24, 0.12, 0.24]]);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283; body.push([CONE, '#f2c14e', [Math.cos(a) * 0.2, 1.84, 0.95 + Math.sin(a) * 0.2], [0.05, 0.16, 0.05]]); }
+      for (let i = 0; i < 5; i++) body.push([CONE, '#ff7a2a', [0, 1.45 - i * 0.04, 0.4 - i * 0.3], [0.1, 0.32, 0.1], [-0.4, 0, 0]]);
+      out = { body: bake(body), leg: bake(bearLegParts('#8a2f1a', '#4a1a0e')) };
+    } else if (kind === 'rexking') {  // 티라노 킹: 보랏빛 몸 + 붉은 가시 + 금관
+      const body = trexPartsFn('#5a4a6e', '#33284a', '#cbb4dc');
+      body.push([CYL, '#f2c14e', [0, 3.08, 1.3], [0.3, 0.12, 0.3]]);
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; body.push([CONE, '#f2c14e', [Math.cos(a) * 0.26, 3.24, 1.3 + Math.sin(a) * 0.26], [0.06, 0.2, 0.06]]); }
+      for (let i = 0; i < 7; i++) body.push([CONE, '#d8452a', [0, 2.7 - i * 0.05, 0.9 - i * 0.42], [0.13, 0.4, 0.16]]);
+      out = { body: bake(body), leg: bake(trexLegParts('#5a4a6e', '#33284a')), jaw: bake(trexJawParts('#33284a')) };
+    } else if (kind === 'woodking') { // 우드킹: 나무 몸통 + 빛나는 눈 + 잎 왕관 + 가지 팔
+      const B = '#6b4a2b', B2 = '#4a3220', LF = '#4f9a45', LF2 = '#3f7d3a';
+      const body = [[CYL, B, [0, 1.2, 0], [0.7, 2.3, 0.62]], [ICO, B2, [0.3, 1.0, 0.5], [0.22, 0.3, 0.12]], [ICO, B2, [-0.35, 1.5, 0.48], [0.18, 0.26, 0.12]],
+        [SPH, '#c8ff6a', [-0.24, 1.85, 0.6], [0.13, 0.1, 0.06]], [SPH, '#c8ff6a', [0.24, 1.85, 0.6], [0.13, 0.1, 0.06]], [SPH, '#2a1a10', [0, 1.45, 0.62], [0.28, 0.1, 0.05]],
+        [ICO, LF, [0, 2.8, 0], [1.1, 0.75, 1.0]], [ICO, LF2, [-0.7, 2.55, 0.2], [0.6, 0.5, 0.55]], [ICO, LF2, [0.7, 2.6, -0.1], [0.62, 0.5, 0.55]], [ICO, LF, [0, 3.35, -0.1], [0.6, 0.45, 0.55]],
+        [SPH, '#ff8fc8', [0.4, 3.1, 0.6], 0.1], [SPH, '#ffe14a', [-0.45, 3.0, 0.55], 0.09], [SPH, '#ffffff', [0.05, 3.55, 0.35], 0.08]];
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; body.push([CONE, B2, [Math.cos(a) * 0.7, 0.15, Math.sin(a) * 0.7], [0.14, 0.5, 0.14], [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9]]); }
+      out = { body: bake(body), arm: bake([[CYL, B, [0, -0.6, 0], [0.13, 1.2, 0.13]], [ICO, LF2, [0, -1.25, 0.05], [0.36, 0.3, 0.36]], [CONE, B2, [0.15, -1.3, 0.3], [0.05, 0.25, 0.05], [1.2, 0, 0]], [CONE, B2, [-0.15, -1.3, 0.3], [0.05, 0.25, 0.05], [1.2, 0, 0]]]) };
+    } else {                          // 바위골렘: 돌 몸 + 빛나는 핵 + 이끼
+      const G1 = '#7d7f84', G2 = '#5f6166';
+      const body = [[ICO, G1, [0, 1.65, 0], [0.95, 0.85, 0.7]], [ICO, G2, [0, 2.55, 0.12], [0.45, 0.4, 0.42]], [SPH, '#ff9a3a', [-0.16, 2.6, 0.5], 0.07], [SPH, '#ff9a3a', [0.16, 2.6, 0.5], 0.07],
+        [SPH, '#ffb050', [0, 1.75, 0.62], [0.26, 0.26, 0.12]], [ICO, '#5a9e46', [0.4, 2.25, 0.3], [0.3, 0.1, 0.3]], [ICO, '#5a9e46', [-0.5, 1.9, -0.3], [0.3, 0.1, 0.35]],
+        [ICO, G2, [-0.42, 0.5, 0], [0.34, 0.55, 0.36]], [ICO, G2, [0.42, 0.5, 0], [0.34, 0.55, 0.36]], [ICO, G1, [0, 1.05, 0], [0.7, 0.3, 0.5]]];
+      out = { body: bake(body), arm: bake([[ICO, G1, [0, -0.5, 0], [0.35, 0.55, 0.35]], [ICO, G2, [0, -1.25, 0.05], [0.5, 0.45, 0.5]], [SPH, '#ff9a3a', [0, -1.25, 0.5], 0.06]]) };
+    }
+    return (FB_G[kind] = out);
+  }
 
   // 뿌잉뿌잉: 둥근 몸 + 팔 2개
   const PB = '#f07ab4', PB2 = '#cf5a95', PBL = '#f9c3dc', GOLD = '#f2c14e';
@@ -1426,9 +1584,23 @@
       zone: () => [0, 6], zMin: -30, zMax: 34, xMax: 40, inZone: () => true },
     chief: { raider: true, name: '부족장', hp: 20000, chase: 2.0, aggro: 8, reach: 2.8, hitR: 2.0, dmg: 18, cd: 1.9, knock: 16, siege: 15, bounty: 800, cry: '우오오!', drops: [], respawn: 0, scale: 1.9, barY: 5.4, barW: 2.4,
       zone: () => [0, 6], zMin: -30, zMax: 34, xMax: 40, inZone: () => true },
+    woodking: { field: true, anim: 'arms', heavy: true, name: '우드킹', hp: 5000, wander: 0.8, chase: 2.6, aggro: 16, reach: 2.6, hitR: 1.9, dmg: 5, cd: 1.6, knock: 12, drops: [], respawn: 0, scale: 1.6, barY: 0, barW: 0,
+      gold: 3000, mats: ['knot', 'sprout'], region: [-34, -14, -20, 9], spawn: [-20, -4], skill: 'roots', cost: { w: 150 } },
+    bearchief: { field: true, anim: 'quad', heavy: true, name: '불곰대장', hp: 15000, wander: 1.0, chase: 3.4, aggro: 16, reach: 2.4, hitR: 2.2, dmg: 9, cd: 1.3, knock: 14, drops: [], respawn: 0, scale: 2.2, barY: 0, barW: 0,
+      gold: 8000, mats: ['claw', 'firehide'], region: [-33, 33, -45, -24], spawn: [14, -36], skill: 'charge', cost: { m: 80 } },
+    golem: { field: true, anim: 'arms', heavy: true, name: '바위골렘', hp: 40000, wander: 0.7, chase: 2.0, aggro: 16, reach: 2.8, hitR: 2.3, dmg: 13, cd: 1.8, knock: 16, drops: [], respawn: 0, scale: 1.8, barY: 0, barW: 0,
+      gold: 20000, mats: ['shard', 'core'], region: [38, 58, -20, 16], spawn: [48, 2], skill: 'boulder', cost: { s: 120 } },
+    rexking: { field: true, anim: 'biped', heavy: true, name: '티라노 킹', hp: 100000, wander: 1.2, chase: 3.8, aggro: 18, reach: 3.6, hitR: 3.0, dmg: 20, cd: 1.6, knock: 18, drops: [], respawn: 0, scale: 2.4, barY: 0, barW: 0,
+      gold: 50000, mats: ['fang', 'fossil'], region: [-33, 33, -77, -50], spawn: [10, -64], skill: 'roar', cost: { d: 40 } },
     boss: { hp: 60000, wander: 0.8, chase: 2.6, aggro: 60, reach: 4.6, hitR: 4, dmg: 16, cd: 1.7, knock: 18, drops: [], respawn: 120, scale: 2.3, barY: 11, barW: 0,
             zone: () => [rand(-8, 8), rand(-98, -90)], zMin: -104, zMax: BOSS_Z - 4, xMax: 26, inZone: z => z < BOSS_Z },
   };
+  for (const k in BEAST) {
+    const d = BEAST[k]; if (!d.field) continue;
+    const [x0, x1, z0, z1] = d.region;
+    d.zone = () => [rand(x0 + 2, x1 - 2), rand(z0 + 2, z1 - 2)]; d.inZone = () => true; d.xMax = 99; d.zMin = z0; d.zMax = z1;
+  }
+  const inReg = (r, x, z, m) => x > r[0] - m && x < r[1] + m && z > r[2] - m && z < r[3] + m;
   const bears = [];
   function addBeast(kind) {
     const def = BEAST[kind], [x, z] = def.zone();
@@ -1444,6 +1616,17 @@
       legR = bmesh(trexLegG, BEAST_M.low); legR.position.set(0.45, 1.6, -0.1);
       jaw = bmesh(trexJawG, BEAST_M.low); jaw.position.set(0, 2.52, 1.05);
       body.add(legL, legR, jaw);
+    } else if (def.field) {
+      const G = fieldBossGeo(kind);
+      body.add(bmesh(G.body, BEAST_M.low));
+      if (def.anim === 'quad') legs = [[-0.36, 0.5], [0.36, 0.5], [-0.36, -0.5], [0.36, -0.5]].map(([x, z]) => { const l = bmesh(G.leg, BEAST_M.low); l.position.set(x, 0.75, z); body.add(l); return l; });
+      else if (def.anim === 'biped') {
+        legL = bmesh(G.leg, BEAST_M.low); legL.position.set(-0.45, 1.6, -0.1); legR = bmesh(G.leg, BEAST_M.low); legR.position.set(0.45, 1.6, -0.1);
+        jaw = bmesh(G.jaw, BEAST_M.low); jaw.position.set(0, 2.52, 1.05); body.add(legL, legR, jaw);
+      } else {
+        const ax = kind === 'golem' ? 1.1 : 0.85, ay = kind === 'golem' ? 2.1 : 2.0;
+        armL = bmesh(G.arm, BEAST_M.low); armL.position.set(-ax, ay, 0.1); armR = bmesh(G.arm, BEAST_M.low); armR.position.set(ax, ay, 0.1); body.add(armL, armR);
+      }
     } else if (def.raider) {
       const G = raiderGeo(kind);
       body.add(bmesh(G.body, BEAST_M.low));
@@ -1482,7 +1665,7 @@
   function hitBear(b, dmg, fromX, fromZ, noKb) {
     if (!b.alive) return 0;
     b.hp -= dmg; b.bump = 0.15;
-    if (!noKb && b.kind !== 'boss') {
+    if (!noKb && b.kind !== 'boss' && !b.def.heavy) {
       const a = Math.atan2(b.z - fromZ, b.x - fromX), kb = b.kind === 'dino' ? 0.12 : 0.4;
       b.x += Math.cos(a) * kb; b.z += Math.sin(a) * kb;
     }
@@ -1500,10 +1683,14 @@
       stats.boss++;
       const g = first ? 50000 : Math.round(15000 * (1 + 0.5 * tier)), gm = first ? 30 : 10, st = tier >= 5 ? 2 : 1;
       gold += g; gems += gm; evoStones += st; bumpGold(); shake = 1;
+      const orb = Math.random() < 0.15 * (1 + 0.1 * perkLv('hunter')); mats.heart += 2; if (orb) mats.orb++;
       for (let i = 0; i < 40; i++) { const a = rand(0, 6.28); emit(pick(['#ff4fd8', '#f2c14e', '#5aa0ff', '#ffffff']), b.x, 4, b.z, Math.cos(a) * rand(3, 9), rand(3, 10), Math.sin(a) * rand(3, 9), 1.2, 0.35); }
       SFX.level();
-      toast(`뿌잉뿌잉 ★${tier + 1} 격파! +${fmt(g)}G, 보석 +${gm}, 진화석 +${st}` + (tier < BOSS_TIER_MAX ? ` · 다음은 ★${Math.min(BOSS_TIER_MAX, tier + 1) + 1}` : ''));
+      toast(`뿌잉뿌잉 ★${tier + 1} 격파! +${fmt(g)}G, 보석 +${gm}, 진화석 +${st}, 뿌잉 하트 +2${orb ? ', 무지개 구슬!' : ''}` + (tier < BOSS_TIER_MAX ? ` · 다음은 ★${Math.min(BOSS_TIER_MAX, tier + 1) + 1}` : ''));
+    } else if (b.def.field) {
+      fieldBossReward(b);
     } else if (b.def.raider) {
+      if (b.kind === 'chief') { mats.totem++; floatText('부족 토템 +1', b.x, 3.2, b.z, 'note'); }
       const g = Math.round(b.def.bounty * b.mul);
       gold += g; stats.earned += g; bumpGold(); floatText(`${b.def.name} 처치 +${fmt(g)}G`, b.x, 2.4, b.z, b.kind === 'chief' ? 'note big' : 'note');
       if (b.kind === 'chief') { shake = 0.6; SFX.level(); }
@@ -1515,7 +1702,7 @@
       const def = b.def;
       for (let i = 0; i < 12; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
       if (!b.alive) {
-        if (def.raider) continue;
+        if (def.raider || def.field) continue;
         b.respawnT -= dt;
         if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); if (b.kind === 'boss') syncBossTier(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
         continue;
@@ -1527,7 +1714,7 @@
         b.dotAcc += dps * dt; b.dotT += dt;
         if (b.dotT > 0.5) {
           b.dotT = 0;
-          const col = b.dots.some(d => d.type === 'f') ? '#ff7a2a' : '#6fd04a';
+          const col = b.dots.some(d => d.type === 'b') ? '#e0243a' : b.dots.some(d => d.type === 'f') ? '#ff7a2a' : '#6fd04a';
           emit(col, b.x + rand(-0.5, 0.5), 1 + rand(0, 1), b.z + rand(-0.5, 0.5), 0, 2, 0, 0.5, 0.2);
           const v = b.dotAcc; b.dotAcc = 0;
           dealDirect(b, v, activeSkills(), b.x, b.z, true);
@@ -1535,10 +1722,11 @@
         }
       }
       if (b.slowT > 0) b.slowT -= dt;
-      const slow = b.slowT > 0 ? 0.5 : 1;
+      if (b.rootT > 0) { b.rootT -= dt; if (Math.random() < dt * 10) emit(pick(['#6fd04a', '#3f8a3a']), b.x + rand(-0.6, 0.6), rand(0.2, 1.2), b.z + rand(-0.6, 0.6), 0, 1.2, 0, 0.4, 0.14); }
+      const slow = b.rootT > 0 ? 0 : b.slowT > 0 ? 0.5 : 1;
       if (def.raider) { raiderAI(b, dt, slow); continue; }
       const dx = player.x - b.x, dz = player.z - b.z, d = Math.hypot(dx, dz);
-      const chase = !player.dead && def.inZone(player.z) && d < def.aggro;
+      const chase = !player.dead && (def.region ? inReg(def.region, player.x, player.z, 3) : def.inZone(player.z)) && d < def.aggro;
       const enraged = b.kind === 'boss' && b.hp < b.maxHp * 0.35;
       let mx = 0, mz = 0, sp = 0;
       if (chase) {
@@ -1547,12 +1735,14 @@
           if (b.kind === 'boss') { SFX.puing(); floatText('뿌잉뿌잉!!', b.x, 12, b.z, 'bad big'); }
         }
         b.angry = true;
-        if (d > def.reach - 0.3 && b.jump <= 0) { mx = dx / d; mz = dz / d; sp = def.chase * (enraged ? 1.3 : 1) * slow; }
+        const ov = def.field ? fieldSkill(b, dt, d, dx, dz) : null;
+        if (ov) { mx = ov.mx; mz = ov.mz; sp = ov.sp; }
+        else if (d > def.reach - 0.3 && b.jump <= 0) { mx = dx / d; mz = dz / d; sp = def.chase * (enraged ? 1.3 : 1) * slow; }
         b.atkCd -= dt;
-        if (d < def.reach && b.atkCd <= 0) {
+        if (!ov && d < def.reach && b.atkCd <= 0) {
           b.atkCd = def.cd * (enraged ? 0.75 : 1); b.bite = 0.3;
           const k = d > 0.01 ? 1 / d : 0;
-          damagePlayer(def.dmg * (b.kind === 'boss' ? bossDmgMul() : 1), dx * k * def.knock, dz * k * def.knock, b.kind === 'boss' ? '뿌잉!' : b.kind === 'dino' ? '콱!' : '쿵!');
+          damagePlayer(def.dmg * (b.kind === 'boss' ? bossDmgMul() : 1), dx * k * def.knock, dz * k * def.knock, b.kind === 'boss' ? '뿌잉!' : def.field ? def.name + '!' : b.kind === 'dino' ? '콱!' : '쿵!');
           if (b.kind === 'dino') SFX.trex(); else if (b.kind === 'bear') SFX.roar();
         }
         // 보스: 점프 후 충격파
@@ -1590,19 +1780,21 @@
         }
       }
       b.x += mx * sp * dt; b.z += mz * sp * dt;
-      b.x = Math.max(-def.xMax, Math.min(def.xMax, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z));
+      if (def.region) { b.x = Math.max(def.region[0], Math.min(def.region[1], b.x)); b.z = Math.max(def.region[2], Math.min(def.region[3], b.z)); }
+      else { b.x = Math.max(-def.xMax, Math.min(def.xMax, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z)); }
       if (sp > 0) b.face = lerpAngle(b.face, Math.atan2(mx, mz), dt * 8);
       else if (chase) b.face = lerpAngle(b.face, Math.atan2(dx, dz), dt * 6);
       b.walk += sp * dt;
       if (b.bump > 0) b.bump -= dt;
       if (b.bite > 0) b.bite -= dt;
       b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
-      if (b.kind === 'dino') {
+      const an = def.anim || (b.kind === 'dino' ? 'biped' : b.kind === 'boss' ? 'arms' : 'quad');
+      if (an === 'biped') {
         const s = sp > 0 ? Math.sin(b.walk * 2.2) : 0;
         b.legL.rotation.x = s * 0.5; b.legR.rotation.x = -s * 0.5;
         b.body.position.y = sp > 0 ? Math.abs(Math.cos(b.walk * 2.2)) * 0.08 : 0;
         b.jaw.rotation.x = b.bite > 0 ? 0.6 : (b.angry ? 0.25 + Math.sin(b.walk * 6) * 0.1 : 0.05);
-      } else if (b.kind === 'boss') {
+      } else if (an === 'arms') {
         const s = Math.sin(b.walk * 1.6);
         b.armL.rotation.x = b.bite > 0 ? -1.6 : s * 0.3; b.armR.rotation.x = b.bite > 0 ? -1.6 : -s * 0.3;
         if (b.jump <= 0) b.body.scale.set(1 + Math.sin(clock * 3) * 0.02, 1 - Math.sin(clock * 3) * 0.02, 1);
@@ -1672,6 +1864,10 @@
       glow: [[-2.4, 10, -2.4, 4.8, 1.4, 4.8, '#ffe14a'], [-2.2, 11.4, -1.6, 1.2, 2.4, 1.2, '#ffe14a'], [-0.6, 11.4, -2, 1.2, 3.4, 1.2, '#fff07a'], [1, 11.4, -1.6, 1.2, 2.6, 1.2, '#ffe14a'],
         [-1.8, 8, -3, 3.6, 3, 1.2, '#ffe14a'], [-1, 9.4, -3.9, 2, 2.8, 1, '#fff07a'], [-3.1, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [2.2, 9.2, -1, 0.9, 2, 1.4, '#ffe14a'], [-0.4, 10.6, 2, 0.8, 1.2, 0.6, '#fff07a'],
         [-3.7, 3.4, -1.1, 1.2, 0.6, 2.2, '#f2c14e'], [2.5, 3.4, -1.1, 1.2, 0.6, 2.2, '#f2c14e']] } },
+    // 환생 전용 (구매 불가, 환생 횟수로 해금)
+    { name: '환생자', price: 0, rb: 1, desc: '첫 환생의 증표. 푸른 별빛', fx: 'sparkle', look: { model: 'Knight', tint: '#dff0ff', tintAmt: 0.5, emi: '#1a3a6a', shirt: '#bfe0ff', arm: '#bfe0ff', pants: '#3a5a8a', hair: '#e8f4ff' } },
+    { name: '성자', price: 0, rb: 5, desc: '다섯 번 환생한 성자의 금빛 옷', fx: 'gold', look: { model: 'Mage', tint: '#fff0b0', tintAmt: 0.55, emi: '#5a4000', shirt: '#fff0b0', arm: '#fff0b0', pants: '#c9a13a', hair: '#ffffff' } },
+    { name: '초월자', price: 0, rb: 10, desc: '열 번 환생한 초월자. 보랏빛 번개', fx: 'salas', scale: 1.12, look: { model: 'Barbarian', tint: '#e0c8ff', tintAmt: 0.6, emi: '#4a1a6a', shirt: '#6a3cc0', arm: '#6a3cc0', pants: '#2a1a4a', hair: '#e0c8ff' } },
   ];
 
   let pg = null, stackG = new THREE.Group(), handW = null;
@@ -1696,10 +1892,11 @@
       }
     }
   }
+  // 등짐: 최대 2줄 x 4단(8개)만 쌓아 보이고, 나머지는 개수 표시로 대신한다
   function rebuildStack(g, list, maxShow) {
     while (g.children.length) g.remove(g.children[0]);
-    const n = Math.min(list.length, maxShow);
-    for (let i = 0; i < n; i++) { const m = itemMesh(list[i]); m.position.y = i * 0.26; m.rotation.y = (i % 3 - 1) * 0.08; g.add(m); }
+    const n = Math.min(list.length, Math.min(maxShow, 8));
+    for (let i = 0; i < n; i++) { const m = itemMesh(list[list.length - n + i]); m.position.set(0, Math.floor(i / 2) * 0.24, (i % 2 ? -0.17 : 0.17)); m.rotation.y = (i % 3 - 1) * 0.08; g.add(m); }
   }
   // 회전 도끼 / 곡괭이
   const axes = [], picks = [];
@@ -1708,8 +1905,8 @@
     const D = derived(), aw = eqW('axe');
     let h, e, key, big = null, mat = null, sc;
     if (aw) {
-      const G = GRADES[aw.grade]; h = G.col; e = aw.grade === 'ancient' ? '#ffffff' : '#fff2b0'; key = 'g' + aw.grade; big = aw.grade === 'legend' || aw.grade === 'ancient' ? G.col2 : null;
-      if (aw.grade === 'ancient') mat = ANCIENT;
+      const G = GRADES[aw.grade]; h = G.col; e = aw.grade === 'ancient' ? '#ffffff' : '#fff2b0'; key = 'g' + aw.grade; big = ['legend', 'ancient', 'boss', 'mythic'].includes(aw.grade) ? G.col2 : null;
+      if (aw.grade === 'ancient') mat = ANCIENT; else if (aw.grade === 'mythic') mat = MYTHM;
       sc = 1.5 + GRADE_ORDER.indexOf(aw.grade) * 0.12;
     } else { const t = Math.min(3, Math.floor(L.axeDmg / 3)); [h, e] = TOOL_COL[t]; key = 't' + t; sc = 1.35 + 0.12 * t; }
     sc += 0.35 * D.sk.filter(s => s === 'giant').length;
@@ -1723,7 +1920,7 @@
           // 모델 도끼: 눕혀서 칼날이 바깥을 향하게 돌린다. 등급·강화 색은 재질에 살짝 입힌다
           m = new THREE.Group();
           const a = prop(ak, sc * (big ? 1.2 : 1.1)); a.rotation.z = Math.PI / 2;
-          if (aw || h !== TOOL_COL[0][0]) tintObj(a, h, mat ? '#ff00ff' : big ? big : null, aw ? 0.55 : 0.4);
+          if (aw || h !== TOOL_COL[0][0]) tintObj(a, h, mat === MYTHM ? '#ffa000' : mat ? '#ff00ff' : big ? big : null, aw ? 0.55 : 0.4);
           m.add(a);
         } else { m = vmesh(axeGeo(h, e, key, big), true, mat); m.scale.setScalar(sc); }
         scene.add(m); axes.push(m);
@@ -1818,6 +2015,12 @@
     { k: 'shopSkin', name: '의상실', x: 7.5, z: 12.5, open: 'skin' },
     { k: 'bank', name: '자동 입금', x: 10.5, z: 12.5, base: 300, mul: 1, max: 1, once: true },
     { k: 'shopMon', name: '몬 부화장', x: -4.5, z: 15.5, open: 'mon' },
+    { k: 'shopForge', name: '대장간', x: 4.5, z: 15.5, open: 'forge' },
+    { k: 'shopRebirth', name: '환생의 제단', x: 10.5, z: 15.5, open: 'rebirth', req: () => raid.runBest >= 3 || rb.count > 0 },
+    { k: 'altarWood', name: '숲의 제단', x: -19, z: 2, open: 'summon', summon: 'woodking' },
+    { k: 'altarBear', name: '곰 숲 제단', x: 14, z: -27, open: 'summon', summon: 'bearchief', req: () => L.gateBear },
+    { k: 'altarGolem', name: '채석장 제단', x: 48, z: 12, open: 'summon', summon: 'golem', req: () => L.gateQuarry },
+    { k: 'altarRex', name: '공룡 계곡 제단', x: 16, z: -54, open: 'summon', summon: 'rexking', req: () => L.gateDino },
     { k: 'beltForest', name: '숲 컨베이어', x: -12, z: 6, base: 200, mul: 1, max: 1, once: true },
     { k: 'gateBear', name: '곰 숲 개방', x: 0, z: -19.5, base: 250, mul: 1, max: 1, once: true },
     { k: 'beltBear', name: '곰숲 컨베이어', x: -6, z: -19.5, base: 600, mul: 1, max: 1, once: true, req: () => L.gateBear },
@@ -1863,6 +2066,9 @@
     if (t !== curTier) { curTier = t; SFX.level(); toast('등급 상승! ' + RANKS[t]); spawnChips(player.x, 1.5, player.z, '#f2c14e', 18); }
   }
   const PAD_DESC = {
+    shopForge: '보스 재료로 보스 무기·신화 무기를 만듭니다', shopRebirth: '강화를 처음부터 다시 하는 대신 영구 보너스를 받습니다',
+    altarWood: '나무를 바쳐 숲의 보스 우드킹을 불러냅니다', altarBear: '고기를 바쳐 불곰대장을 불러냅니다',
+    altarGolem: '광석을 바쳐 바위골렘을 불러냅니다', altarRex: '공룡 고기를 바쳐 티라노 킹을 불러냅니다',
     axeCount: '회전 도끼 +1개', axeDmg: '도끼 피해 +1', spin: '도끼 회전 속도·반경 증가', bag: '나무 +5 · 고기 +3 · 광물 +4칸',
     speed: '이동 속도 +12%', price: '판매가 +20%, 손님 증가', worker: '나무를 베어 납품하는 일꾼', hunter: '곰을 잡아 납품하는 일꾼',
     miner: '바위를 캐서 납품하는 일꾼', cashier: '계산대 자동 판매', lane2: '계산대 한 줄 추가(계산원 포함)', beltSpeed: '컨베이어 속도 증가',
@@ -1875,6 +2081,7 @@
   const padPrice = p => cost(p) - (padPaid[p.k] || 0);
   function buyPad(p) {
     if (!p) return;
+    if (p.summon) { trySummon(p); return; }
     if (p.open) { openShop(p.open, true); return; }
     if (L[p.k] >= p.max || (p.req && !p.req())) return;
     const r = padPrice(p);
@@ -1908,6 +2115,16 @@
     const panel = $('buyPanel');
     panel.hidden = !here || shopOpen;
     if (!here) { buyHtml = ''; return; }
+    if (here.summon) {
+      const def = BEAST[here.summon], alive = fieldBossAlive(here.summon);
+      const cost = Object.keys(def.cost).map(t => { const have = countItem(t), need = def.cost[t]; return `<span style="color:${have >= need ? 'var(--leaf)' : 'var(--danger)'}">${ITEM_NAME[t]} ${have}/${need}</span>`; }).join(' ');
+      const html = `<div class="bt"><b>${here.name}</b><span>${def.name} · 처치 ${fbKills[here.summon] || 0}회</span></div><div class="bd">${PAD_DESC[here.k]}<br>${alive ? '<b>지금 나타나 있습니다</b>' : '바칠 것: ' + cost + ' <small>(가방+판매대 재고)</small>'}</div>`;
+      if (html !== buyHtml) { $('buyInfo').innerHTML = html; buyHtml = html; }
+      const ok = !alive && Object.keys(def.cost).every(t => countItem(t) >= def.cost[t]);
+      $('btnBuy').hidden = alive; $('btnBuy').disabled = !ok; $('btnBuy').textContent = '소환';
+      if (!seen.altar) tip('altar', '구역 보스 제단', '<ul><li>이 발판에서 <b>채집품을 바치면 구역 보스</b>가 나타납니다. 가방과 판매대 재고에서 함께 가져갑니다.</li><li>보스는 특별한 공격을 합니다. <b>바닥의 경고 원</b>을 보면 피하세요.</li><li>잡으면 <b>보스 재료</b>를 주고, 기지의 <b>대장간</b>에서 강한 무기를 만들 수 있습니다.</li></ul>');
+      return;
+    }
     if (here.open) {
       const html = `<div class="bt"><b>${here.name}</b></div><div class="bd">${PAD_DESC[here.k]}</div>`;
       if (html !== buyHtml) { $('buyInfo').innerHTML = html; buyHtml = html; }
@@ -1949,6 +2166,7 @@
   }
   function updateCustomers(dt, t, D) {
     custTimer -= dt;
+    if (raid.phase === 'fight') custTimer = Math.max(custTimer, 1);   // 습격 중에는 손님이 오지 않는다
     if (custTimer <= 0) {
       custTimer = D.custEvery * rand(0.6, 1.4);
       spawnCustomer();
@@ -1966,7 +2184,7 @@
       } else if (c.state !== 'leave') { c.state = 'wait'; c.face = lerpAngle(c.face, Math.PI, dt * 10); }
       if (c.state === 'wait') {
         c.wait += dt;
-        if (c.qi === 0 && laneManned(c.lane) && stock.length > 0) {
+        if (c.qi === 0 && laneManned(c.lane) && stock.length > 0 && raid.phase !== 'fight') {
           c.serveT += dt;
           if (c.serveT > 0.35) {
             const n = Math.min(c.want, stock.length);
@@ -2081,7 +2299,7 @@
         n.p.userData.armR.rotation.x = -1.2 - Math.abs(Math.sin(n.actT * Math.PI / NPC_ACT)) * 1.2;
         if (!o.alive) { o.claimed = null; n.target = null; n.state = 'seek'; }
         else if (n.kind === 'hunter' && dist(o.x, o.z, n.x, n.z) > 1.9) n.state = 'go';
-        else if (n.actT >= NPC_ACT) {
+        else if (n.actT >= NPC_ACT / (1 + 0.1 * perkLv('worker'))) {
           n.actT = 0;
           let got = null;
           // 일꾼 생산량 2배: 한 번 캘 때마다 두 배로 챙긴다
@@ -2105,7 +2323,7 @@
       const dx = gx - n.x, dz = gz - n.z, d = Math.hypot(dx, dz);
       const moving = d > 0.05 && n.state !== 'work';
       if (moving) {
-        const sp = Math.min(d, NPC_SPEED * dt);
+        const sp = Math.min(d, NPC_SPEED * (1 + 0.1 * perkLv('worker')) * dt);
         n.x += dx / d * sp; n.z += dz / d * sp;
         n.face = lerpAngle(n.face, Math.atan2(dx, dz), dt * 10);
       }
@@ -2191,6 +2409,11 @@
   }
   function shotColor(w, sk) {
     if (w.grade === 'ancient') return pick(['#ff4fd8', '#5aa0ff', '#f2c14e', '#8fd06a']);
+    if (w.grade === 'mythic') return pick(['#ffe066', '#ffffff', '#ff9a2a']);
+    if (sk.includes('blaze')) return '#ff5a1a';
+    if (sk.includes('root')) return '#8fe86a';
+    if (sk.includes('quake')) return '#d8a860';
+    if (sk.includes('rend')) return '#ff3a4a';
     if (sk.includes('fire')) return '#ff7a2a';
     if (sk.includes('poison')) return '#6fd04a';
     if (sk.includes('freeze')) return '#8fe8ff';
@@ -2385,9 +2608,12 @@
     b.g.position.set(b.x, 0, b.z);
     puff(b.x, 0.3, b.z, '#6a5a4a', 5, 1);
   }
-  function clearRaiders() {
+  function removeDeadSummons() {
+    for (let i = bears.length - 1; i >= 0; i--) { const b = bears[i]; if ((b.def.raider || b.def.field) && !b.alive) { scene.remove(b.g); if (b.bar) scene.remove(b.bar); bears.splice(i, 1); } }
+  }
+  function clearRaiders(all) {
     for (let i = bears.length - 1; i >= 0; i--) {
-      const b = bears[i]; if (!b.def.raider) continue;
+      const b = bears[i]; if (!b.def.raider && !(all && b.def.field)) continue;
       scene.remove(b.g); if (b.bar) scene.remove(b.bar); bears.splice(i, 1);
     }
   }
@@ -2400,6 +2626,7 @@
   }
   function startRaid() {
     const w = raid.wave;
+    for (const c of custs) if (c.state !== 'leave') { leave(c); floatText('으악!', c.x, 2.3, c.z, 'note'); }   // 손님은 도망간다
     raid.phase = 'fight'; raid.hp = 100; raid.queue = raidPlan(w); raid.spawnT = 0;
     toast(w % 5 === 0 ? `${w}웨이브! 부족장이 이끄는 부족이 쳐들어옵니다!` : `${w}웨이브! 옆마을 부족이 쳐들어옵니다!`);
     SFX.roar(); shake = 0.5;
@@ -2409,7 +2636,8 @@
     if (won) {
       const g = 3000 * w, gm = 1 + Math.floor(w / 3), st = w % 5 === 0 ? 1 + Math.floor(w / 10) : 0;
       gold += g; gems += gm; evoStones += st; bumpGold();
-      raid.best = Math.max(raid.best, w); raid.wave++;
+      raid.best = Math.max(raid.best, w); raid.runBest = Math.max(raid.runBest, w); raid.wave++;
+      if (w === 3 && !rb.count) setTimeout(() => toast('환생의 제단이 열렸습니다! 기지 아래쪽을 확인하세요'), 3200);
       toast(`${w}웨이브 방어 성공! +${fmt(g)}G · 보석 +${gm}` + (st ? ` · 진화석 +${st}` : '') + (w === 5 ? ' · 전설의 용구몬 부화 가능!' : ''));
       sparkleColumn(player.x, player.z, '#ffe08a', 24); SFX.level(); flashT = 0.5;
     } else {
@@ -2428,25 +2656,232 @@
       if (!raidUnlocked()) { $('raidBar').hidden = true; return; }
       raid.phase = 'prep'; raid.t = RAID_PREP;
       if (!raid.best && raid.wave === 1) toast('모든 강화 완료! 옆마을 부족이 쳐들어올 준비를 합니다. 2분 30초 안에 대비하세요!');
+      tip('raid', '습격 모드가 열렸습니다', '<ul><li>왼쪽 위 <b>⚔ 표시</b>의 시간이 다 되면 옆마을 부족이 <b>남쪽 길과 서쪽 숲</b>에서 판매대로 몰려옵니다. [시작]을 누르면 바로 시작합니다.</li><li>적이 판매대에 닿으면 <b>판매대 방어도</b>(100)가 깎입니다. 0이 되면 금괴 30%와 재고 절반을 빼앗깁니다.</li><li>모두 물리치면 금화·보석, 5웨이브마다 진화석. 웨이브가 오를수록 강해집니다.</li><li>습격 중에는 손님이 오지 않습니다. 3웨이브를 막으면 <b>환생</b>이 열립니다.</li></ul>');
     }
     if (raid.phase === 'prep') { raid.t -= dt; if (raid.t <= 0) startRaid(); }
     else {
       raid.spawnT -= dt;
       if (raid.spawnT <= 0 && raid.queue.length) { spawnRaider(raid.queue.shift(), raid.wave); raid.spawnT = raid.queue.length && raid.queue[0] === 'chief' ? 2 : 0.6; }
-      for (let i = bears.length - 1; i >= 0; i--) { const b = bears[i]; if (b.def.raider && !b.alive) { scene.remove(b.g); if (b.bar) scene.remove(b.bar); bears.splice(i, 1); } }
-      raid.left = raid.queue.length + bears.filter(b => b.def.raider).length;
+      raid.left = raid.queue.length + bears.filter(b => b.def.raider && b.alive).length;
       if (raid.hp <= 0) endRaid(false); else if (raid.left === 0) endRaid(true);
     }
     const w = raid.wave, fight = raid.phase === 'fight';
     $('raidBar').hidden = false;
-    $('raidName').textContent = `습격 ${w}웨이브` + (w % 5 === 0 ? ' · 부족장' : '');
-    $('raidInfo').textContent = fight ? `남은 적 ${raid.left}` : `${mmss(raid.t)} 뒤 시작`;
-    $('raidHpBar').hidden = !fight;
-    $('raidFill').style.width = raid.hp + '%';
-    $('raidSub').textContent = fight ? `판매대 방어 ${Math.ceil(raid.hp)}/100` : `최고 기록 ${raid.best}웨이브 · 준비하세요`;
+    $('raidName').textContent = `⚔ ${w}웨이브` + (w % 5 === 0 ? '·부족장' : '');
+    $('raidInfo').textContent = fight ? `남은 적 ${raid.left} · 판매대 ${Math.ceil(raid.hp)}` : `${mmss(raid.t)} 뒤`;
     $('raidGo').hidden = fight;
+    const cd = !fight && raid.t <= 10 && raid.t > 0;
+    $('raidCount').hidden = !cd;
+    if (cd) $('raidCount').textContent = Math.ceil(raid.t);
   }
   $('raidGo').addEventListener('click', () => { if (raid.phase === 'prep') raid.t = 0; });
+
+
+
+  // ================= 신화 무기 궁극기 =================
+  const ultT = { worldtree: 3, thunder: 2, dragon: 3 };
+  let breath = null;
+  function updateUlts(dt, D) {
+    const sk = D.sk, w = eqW('ranged'), base = Math.max(D.dmg, w ? rStats(w).dmg : 0);
+    const near = r => bears.filter(b => b.alive && dist(b.x, b.z, player.x, player.z) < r + b.def.hitR * 0.5);
+    if (player.dead) { breath = null; return; }
+    if (sk.includes('worldtree') && (ultT.worldtree -= dt) <= 0) {
+      const tg = near(7);
+      if (!tg.length) ultT.worldtree = 0.5;
+      else {
+        ultT.worldtree = 7; SFX.meteor(); shake = Math.max(shake, 0.5); flashAt(player.x, 2, player.z, '#8fe86a', 4);
+        rings.push({ x: player.x, z: player.z, r0: 1, r1: 7.5, t: 0, life: 0.5, c: '#8fe86a' }, { x: player.x, z: player.z, r0: 0.5, r1: 5.5, t: 0, life: 0.35, c: '#fff2b0' });
+        for (let i = 0; i < 70; i++) { const a = i / 70 * 6.283, r = rand(1, 7); emit(pick(['#6fd04a', '#c8ff6a', '#3f8a3a', '#fff2b0']), player.x + Math.cos(a) * r, rand(0.4, 2), player.z + Math.sin(a) * r, -Math.sin(a) * 6, rand(1, 3), Math.cos(a) * 6, 0.7, 0.28); }
+        floatText('세계수의 일격!', player.x, 3.4, player.z, 'note big');
+        tg.forEach(b => dealDirect(b, base * 8, sk, player.x, player.z));
+      }
+    }
+    if (sk.includes('thunder') && (ultT.thunder -= dt) <= 0) {
+      const tg = near(14).sort((a, b) => dist(a.x, a.z, player.x, player.z) - dist(b.x, b.z, player.x, player.z)).slice(0, 6);
+      if (!tg.length) ultT.thunder = 0.5;
+      else {
+        ultT.thunder = 5; SFX.zap(); flashT = Math.max(flashT, 0.12);
+        tg.forEach((b, i) => setTimeout(() => {
+          if (!b.alive) return;
+          const hy = b.kind === 'boss' ? 4 : 1.2;
+          boltFx(b.x + rand(-0.5, 0.5), 16, b.z + rand(-0.5, 0.5), b.x, hy, b.z, '#cfeaff'); boltFx(b.x, 16, b.z, b.x + rand(-0.4, 0.4), hy, b.z + rand(-0.4, 0.4), '#8fd8ff');
+          flashAt(b.x, 3, b.z, '#bfe8ff', 4); sparks(b.x, hy, b.z, '#e8f6ff', 16, 7); rings.push({ x: b.x, z: b.z, r0: 0.3, r1: 2, t: 0, life: 0.3, c: '#9fe3ff' });
+          dealDirect(b, base * 5, sk, player.x, player.z); SFX.zap();
+        }, i * 90));
+        floatText('천둥 폭풍!', player.x, 3.4, player.z, 'note big');
+      }
+    }
+    if (sk.includes('dragon')) {
+      if (!breath && (ultT.dragon -= dt) <= 0) {
+        const tg = near(10)[0];
+        if (!tg) ultT.dragon = 0.5;
+        else { ultT.dragon = 6; breath = { t: 0, tick: 0, a: Math.atan2(tg.x - player.x, tg.z - player.z) }; SFX.meteor(); floatText('용의 숨결!', player.x, 3.4, player.z, 'note big'); }
+      }
+      if (breath) {
+        breath.t += dt; breath.tick -= dt;
+        const a = breath.a, fx = Math.sin(a), fz = Math.cos(a);
+        player.aimT = 0.2; player.aimFace = a;
+        for (let i = 0; i < 8; i++) { const sa = a + rand(-0.45, 0.45), sp = rand(8, 14); glow.spawn(pick(['#ff4a1a', '#ff9a2a', '#ffe08a', '#fff2b0']), player.x + fx * 0.8, 1.3, player.z + fz * 0.8, Math.sin(sa) * sp, rand(-0.5, 1.5), Math.cos(sa) * sp, 0.6, rand(0.8, 1.6), 2.2, 0, 0.5, 1.2); }
+        flashAt(player.x + fx * 3, 1.5, player.z + fz * 3, '#ff7a2a', 2.5);
+        if (breath.tick <= 0) {
+          breath.tick = 0.15;
+          for (const b of bears) {
+            if (!b.alive) continue;
+            const dx = b.x - player.x, dz = b.z - player.z, d = Math.hypot(dx, dz);
+            if (d < 9 + b.def.hitR * 0.5 && (dx * fx + dz * fz) / Math.max(d, 0.01) > Math.cos(0.5)) { dealDirect(b, base * 1.2, sk, player.x, player.z, true); addDot(b, 'f', base * 0.3, 2); }
+          }
+        }
+        if (breath.t > 1.2) breath = null;
+      }
+    }
+  }
+
+  // ================= 구역 보스 (제단에 채집품을 바쳐 소환) =================
+  const ITEM_NAME = { w: '나무', m: '고기', s: '광석', d: '공룡 고기' };
+  const countItem = t => player.carry.reduce((n, x) => n + (x === t), 0) + stock.reduce((n, x) => n + (x === t), 0);
+  function takeItems(t, n) {
+    for (let i = player.carry.length - 1; i >= 0 && n > 0; i--) if (player.carry[i] === t) { player.carry.splice(i, 1); n--; }
+    for (let i = stock.length - 1; i >= 0 && n > 0; i--) if (stock[i] === t) { stock.splice(i, 1); n--; }
+    stockDirty = true;
+  }
+  const fieldBossAlive = kind => bears.some(b => b.kind === kind && b.alive);
+  function trySummon(p) {
+    const def = BEAST[p.summon];
+    if (fieldBossAlive(p.summon)) { toast(def.name + '이(가) 이미 나타나 있습니다'); return; }
+    for (const t in def.cost) if (countItem(t) < def.cost[t]) { SFX.hurt(); toast(`${ITEM_NAME[t]}이(가) ${def.cost[t] - countItem(t)}개 부족합니다 (가방 + 판매대 재고)`); return; }
+    for (const t in def.cost) takeItems(t, def.cost[t]);
+    addBeast(p.summon);
+    const b = bears[bears.length - 1];
+    [b.x, b.z] = def.spawn; b.face = Math.atan2(player.x - b.x, player.z - b.z); b.skT = 3; b.g.position.set(b.x, 0, b.z);
+    rings.push({ x: b.x, z: b.z, r0: 0.5, r1: 7, t: 0, life: 0.7, c: '#ffb050' });
+    boomFx(b.x, b.z, 4, '#ffb050'); puff(b.x, 0.3, b.z, '#6a5a4a', 20, 2.5, 0.8); sparkleColumn(b.x, b.z, '#fff2b0', 30); flashAt(b.x, 2, b.z, '#ffd080', 4);
+    shake = 0.7; SFX.roar(); SFX.quake();
+    toast(`${def.name}이(가) 나타났습니다!`);
+    tip('boss_' + p.summon, def.name + ' 등장!', BOSS_TIP[p.summon]);
+    buyHtml = '';
+  }
+  const BOSS_TIP = {
+    woodking: '<ul><li><b>뿌리 공격</b>: 발밑에 초록 원이 나타나면 1초 안에 피하세요. 맞으면 피해를 입고 느려집니다.</li><li>잡으면 <b>단단한 옹이</b>(보스 무기 재료)를 주고, 10% 확률로 희귀 재료 <b>정령의 새싹</b>을 줍니다. 처음 잡을 때는 희귀 재료가 확정입니다.</li></ul>',
+    bearchief: '<ul><li><b>돌진</b>: 몸이 빨갛게 빛나며 멈추면 곧 일직선으로 달려옵니다. 옆으로 피하세요.</li><li>재료: <b>곰 발톱</b>, 희귀 <b>불꽃 가죽</b></li></ul>',
+    golem: '<ul><li><b>바위 던지기</b>: 주황 원이 표시된 곳에 큰 바위가 떨어집니다.</li><li>재료: <b>골렘 파편</b>, 희귀 <b>빛나는 핵</b></li></ul>',
+    rexking: '<ul><li><b>포효</b>: 입을 크게 벌리면 퍼지는 충격파가 옵니다. 맞으면 크게 느려집니다.</li><li>재료: <b>거대 이빨</b>, 희귀 <b>고대 화석</b></li></ul>',
+  };
+  // 보스 전용 공격 패턴. 반환값이 있으면 그동안 일반 공격 대신 그 움직임을 쓴다
+  function fieldSkill(b, dt, d, dx, dz) {
+    const def = b.def;
+    b.skT = (b.skT == null ? 3 : b.skT) - dt;
+    if (def.skill === 'roots') {
+      if (b.skT <= 0) {
+        b.skT = 5; b.bite = 0.5; SFX.quake(); floatText('뿌리 공격!', b.x, 5, b.z, 'bad');
+        addHazard('root', player.x, player.z, 1.6, 0.9, def.dmg * 1.6);
+        for (let i = 0; i < 2; i++) { const a = rand(0, 6.28), r = rand(1.5, 3); addHazard('root', player.x + Math.cos(a) * r, player.z + Math.sin(a) * r, 1.6, 1.1, def.dmg * 1.6); }
+      }
+      return null;
+    }
+    if (def.skill === 'charge') {
+      if (b.skP === 'wind') {
+        b.skW -= dt; b.face = lerpAngle(b.face, Math.atan2(dx, dz), dt * 10);
+        if (Math.random() < dt * 40) emit(pick(['#ff4a2a', '#ffb040']), b.x + rand(-1, 1), rand(0.5, 2.5), b.z + rand(-1, 1), 0, 2, 0, 0.4, 0.2);
+        if (b.skW <= 0) { b.skP = 'dash'; b.skW = 0.55; const k = d > 0.01 ? 1 / d : 0; b.cdx = dx * k; b.cdz = dz * k; b.dashHit = false; SFX.roar(); }
+        return { mx: 0, mz: 0, sp: 0 };
+      }
+      if (b.skP === 'dash') {
+        b.skW -= dt;
+        if (Math.random() < 0.8) dust.spawn('#8a6a4a', b.x + rand(-0.8, 0.8), 0.2, b.z + rand(-0.8, 0.8), 0, 0.6, 0, 0.5, 0.8, 1.6, 0, 1, 0.5);
+        if (!b.dashHit && d < def.hitR + 0.8) { b.dashHit = true; damagePlayer(def.dmg * 2, b.cdx * 22, b.cdz * 22, '돌진!'); shake = 0.6; }
+        if (b.skW <= 0) { b.skP = null; b.skT = 6; }
+        return { mx: b.cdx, mz: b.cdz, sp: 15 };
+      }
+      if (b.skT <= 0 && d < 12) { b.skP = 'wind'; b.skW = 0.8; floatText('돌진!', b.x, 5, b.z, 'bad'); return { mx: 0, mz: 0, sp: 0 }; }
+      return null;
+    }
+    if (def.skill === 'boulder') {
+      if (b.skT <= 0 && d < 16) {
+        b.skT = 4.5; b.bite = 0.6; floatText('바위 던지기!', b.x, 5, b.z, 'bad');
+        addHazard('boulder', player.x + player.vx * 0.5, player.z + player.vz * 0.5, 2.2, 1.2, def.dmg * 1.8, b);
+      }
+      return null;
+    }
+    if (def.skill === 'roar') {
+      if (b.skP === 'wind') {
+        b.skW -= dt; b.bite = 0.2;
+        if (b.skW <= 0) { b.skP = null; b.skT = 7; addHazard('wave', b.x, b.z, 11, 0, def.dmg * 1.5); SFX.trex(); shake = 0.6; }
+        return { mx: 0, mz: 0, sp: 0 };
+      }
+      if (b.skT <= 0 && d < 14) { b.skP = 'wind'; b.skW = 0.7; floatText('크아아앙!!', b.x, 7, b.z, 'bad big'); return { mx: 0, mz: 0, sp: 0 }; }
+      return null;
+    }
+    return null;
+  }
+  // 위험 지역: 경고 원 → 일정 시간 뒤 폭발 / 퍼지는 충격파
+  const hazards = [];
+  const spikeG = bake([[CONE, '#6b4a2b', [0, 0.45, 0], [0.22, 0.9, 0.22]], [CONE, '#4f9a45', [0.35, 0.3, 0.1], [0.14, 0.6, 0.14], [0, 0, -0.3]], [CONE, '#6b4a2b', [-0.3, 0.32, -0.15], [0.16, 0.65, 0.16], [0, 0, 0.35]], [CONE, '#4f9a45', [0.05, 0.28, 0.35], [0.12, 0.55, 0.12], [0.35, 0, 0]]]);
+  const boulderG = bake([[ICO, '#8d8f93', [0, 0, 0], 0.55], [ICO, '#6c6e73', [0.25, 0.15, 0.1], 0.3], [ICO, '#5a9e46', [-0.2, 0.35, 0], [0.25, 0.08, 0.25]]]);
+  function addHazard(type, x, z, r, delay, dmg, from) {
+    const h = { type, x, z, r, delay, t: 0, dmg, hit: false };
+    h.m = ringMesh(type === 'root' ? '#8fe86a' : type === 'boulder' ? '#ffb050' : '#ff5a4a');
+    if (type === 'boulder' && from) { h.rock = bmesh(boulderG, BEAST_M.low); h.fx = from.x; h.fz = from.z; scene.add(h.rock); }
+    hazards.push(h);
+  }
+  function updateHazards(dt) {
+    for (let i = hazards.length - 1; i >= 0; i--) {
+      const h = hazards[i]; h.t += dt;
+      if (h.type === 'wave') {
+        const r = h.t * 11;
+        h.m.position.set(h.x, 0.15, h.z); h.m.scale.setScalar(r); h.m.material.opacity = Math.max(0, 0.9 - r / h.r);
+        const pd = dist(player.x, player.z, h.x, h.z);
+        if (!h.hit && !player.dead && Math.abs(pd - r) < 1 && pd < h.r) { h.hit = true; const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(h.dmg, (player.x - h.x) * k * 12, (player.z - h.z) * k * 12, '포효!'); player.slowT = 2.5; }
+        if (Math.random() < 0.7) { const a = rand(0, 6.28); dust.spawn('#7a5a6a', h.x + Math.cos(a) * r, 0.3, h.z + Math.sin(a) * r, 0, 1, 0, 0.5, 1, 2, 0, 1, 0.5); }
+        if (r >= h.r) { scene.remove(h.m); ringPool.push(h.m); hazards.splice(i, 1); }
+        continue;
+      }
+      if (h.t < h.delay) {
+        // 경고: 원이 깜빡이며 점점 선명해진다
+        const k = h.t / h.delay;
+        h.m.position.set(h.x, 0.12, h.z); h.m.scale.setScalar(h.r); h.m.material.opacity = 0.35 + 0.55 * k * (0.6 + 0.4 * Math.sin(h.t * 30));
+        if (h.rock) { const q = Math.min(1, k); h.rock.position.set(h.fx + (h.x - h.fx) * q, 4 + Math.sin(q * Math.PI) * 6 - q * 3.6, h.fz + (h.z - h.fz) * q); h.rock.rotation.x += dt * 8; }
+        continue;
+      }
+      // 발동
+      scene.remove(h.m); ringPool.push(h.m);
+      const pd = dist(player.x, player.z, h.x, h.z);
+      if (pd < h.r && !player.dead) { const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(h.dmg, (player.x - h.x) * k * 10, (player.z - h.z) * k * 10, h.type === 'root' ? '뿌리!' : '쾅!'); if (h.type === 'root') player.slowT = 1.2; }
+      if (h.type === 'root') {
+        const sp = bmesh(spikeG, BEAST_M.low); sp.position.set(h.x, -1, h.z); sp.scale.setScalar(h.r * 0.9); sp.rotation.y = rand(0, 6); scene.add(sp);
+        spikes.push({ m: sp, t: 0 });
+        puff(h.x, 0.3, h.z, '#6a5a3a', 8, 1.2, 0.5); sparks(h.x, 0.6, h.z, '#8fe86a', 10, 4); SFX.crack();
+      } else {
+        if (h.rock) scene.remove(h.rock);
+        boomFx(h.x, h.z, h.r, '#c9a066'); puff(h.x, 0.3, h.z, '#8d8f93', 16, 1.8, 0.6); spawnChips(h.x, 0.6, h.z, '#8d8f93', 14); shake = Math.max(shake, 0.4); SFX.boom();
+      }
+      hazards.splice(i, 1);
+    }
+    for (let i = spikes.length - 1; i >= 0; i--) {
+      const s = spikes[i]; s.t += dt;
+      s.m.position.y = s.t < 0.15 ? -1 + s.t / 0.15 : s.t < 0.7 ? 0 : -(s.t - 0.7) * 2;
+      if (s.t > 1.2) { scene.remove(s.m); spikes.splice(i, 1); }
+    }
+  }
+  const spikes = [];
+  function fieldBossReward(b) {
+    const def = b.def, first = !fbKills[b.kind], hl = perkLv('hunter');
+    fbKills[b.kind] = (fbKills[b.kind] || 0) + 1;
+    const n = Math.round((3 + irand(3)) * (1 + 0.1 * hl)), rare = first || Math.random() < 0.1 * (1 + 0.1 * hl);
+    mats[def.mats[0]] += n; if (rare) mats[def.mats[1]]++;
+    const g = def.gold; gold += g; bumpGold();
+    shake = 1; flashT = 0.5; SFX.level();
+    boomFx(b.x, b.z, 5, '#ffd080'); sparkleColumn(b.x, b.z, '#fff2b0', 40);
+    for (let i = 0; i < 50; i++) { const a = rand(0, 6.28); emit(pick([MAT[def.mats[0]].col, '#f2c14e', '#ffffff', MAT[def.mats[1]].col]), b.x, 3, b.z, Math.cos(a) * rand(3, 9), rand(4, 11), Math.sin(a) * rand(3, 9), 1.3, 0.35); }
+    floatText(`${def.name} 처치!`, b.x, 6, b.z, 'note big');
+    toast(`${def.name} 처치! +${fmt(g)}G · ${MAT[def.mats[0]].name} ×${n}` + (rare ? ` · ${MAT[def.mats[1]].name}!` : '') + ' — 대장간에서 무기를 만들 수 있어요');
+  }
+  // 화면 위 보스 체력바: 뿌잉뿌잉 경기장 또는 가까운 구역 보스
+  function bossBarTarget() {
+    if (L.gateBoss && player.z < BOSS_Z + 8 && boss.alive) return boss;
+    let best = null, bd = 30;
+    for (const b of bears) if (b.def.field && b.alive) { const d = dist(b.x, b.z, player.x, player.z); if (d < bd) { bd = d; best = b; } }
+    return best;
+  }
 
   // ================= 몬 (동료 몬스터) =================
   const monForm = lv => lv >= 20 ? 2 : lv >= 10 ? 1 : 0;
@@ -2537,6 +2972,7 @@
 
   const mons = [];            // 소환된 몬: { m, lv, form, g, tag, x, y, z, cd }
   const monShots = [];        // 날아가는 탄
+  const monTagT = {};   // 이름표는 부화·진화 직후 3초만 보인다
   function syncMons() {
     for (const mo of mons) { scene.remove(mo.g); mo.tag.remove(); }
     mons.length = 0;
@@ -2545,7 +2981,7 @@
       const form = monForm(lv), g = buildMonMesh(m, form);
       const tag = mkTag(m.legend ? 'mon legend' : 'mon'); tag.innerHTML = `${m.name} <small>Lv.${lv}</small>`;
       g.position.set(player.x, 1, player.z); scene.add(g);
-      mons.push({ m, lv, form, g, tag, x: player.x, y: 1, z: player.z, cd: rand(0, 0.8), slot: i });
+      mons.push({ m, lv, form, g, tag, x: player.x, y: 1, z: player.z, cd: rand(0, 0.8), slot: i, tagT: monTagT[m.k] || 0 });
     });
   }
   function monTarget(mo, range) {
@@ -2570,7 +3006,7 @@
       mo.g.position.set(mo.x, player.dead ? 0.35 : mo.y, mo.z);
       mo.g.rotation.y = lerpAngle(mo.g.rotation.y, player.face, dt * 6);
       mo.g.children[0].scale.y = 1 + Math.sin(t * 6 + i) * 0.04;
-      project(mo.x, mo.y + 0.55 + 0.25 * mo.form, mo.z, mo.tag, -8);
+      if (mo.tagT > 0) { mo.tagT -= dt; monTagT[mo.m.k] = mo.tagT; mo.tag.hidden = false; project(mo.x, mo.y + 0.7 + 0.3 * mo.form, mo.z, mo.tag, -14); } else mo.tag.hidden = true;
       if (player.dead) return;
       mo.cd -= dt;
       if (mo.m.legend && Math.random() < dt * 8) emit(pick(['#ffb040', '#ff6a2a', '#ffe08a']), mo.x + rand(-0.3, 0.3), mo.y + rand(-0.2, 0.4), mo.z + rand(-0.3, 0.3), 0, 0.8, 0, 0.5, 0.12);
@@ -2624,6 +3060,126 @@
       glow.spawn(s.c, s.x, s.y, s.z, 0, 0, 0, 0.18, 0.55 + s.big * 0.2, 0.1, 0, 0, 1.2);
       if (s.aoe) glow.spawn('#ffe08a', s.x + rand(-0.2, 0.2), s.y + rand(-0.2, 0.2), s.z + rand(-0.2, 0.2), 0, 0.5, 0, 0.3, 0.9, 0.2, 0, 0, 1.3);
     }
+  }
+
+
+  // ================= 대장간 (보스 재료 → 보스 무기 / 신화 무기) =================
+  const RECIPES = [
+    { boss: 'woodking', skill: 'root', mult: 4, mat: 'knot', n: 10, items: { w: 200 }, gold: 20000, list: [['axe', '우드킹의 도끼'], ['bow', '덩굴 활'], ['gun', '씨앗 총']] },
+    { boss: 'bearchief', skill: 'blaze', mult: 5, mat: 'claw', n: 10, items: { m: 100 }, gold: 60000, list: [['axe', '불곰 발톱 도끼'], ['bow', '불꽃 가죽 활'], ['gun', '곰 대포']] },
+    { boss: 'golem', skill: 'quake', mult: 6.5, mat: 'shard', n: 10, items: { s: 200 }, gold: 150000, list: [['axe', '골렘 망치도끼'], ['bow', '수정 활'], ['gun', '바위 대포']] },
+    { boss: 'rexking', skill: 'rend', mult: 8, mat: 'fang', n: 10, items: { d: 60 }, gold: 400000, list: [['axe', '티라노 이빨 도끼'], ['bow', '화석 활'], ['gun', '포효포']] },
+  ];
+  const MYTHICS = [
+    { type: 'axe', name: '세계수 도끼', ult: 'worldtree', extra: 'meteor' },
+    { type: 'bow', name: '천둥 활', ult: 'thunder', extra: 'multi' },
+    { type: 'gun', name: '용의 포', ult: 'dragon', extra: 'explode' },
+  ];
+  const MYTH_MATS = { sprout: 2, firehide: 2, core: 2, fossil: 2, heart: 5, orb: 1, totem: 3 }, MYTH_GOLD = 1000000;
+  const smithK = () => 1 - 0.05 * perkLv('smith');
+  const recipeCost = r => ({ gold: Math.round(r.gold * smithK()), items: Object.fromEntries(Object.entries(r.items).map(([t, n]) => [t, Math.ceil(n * smithK())])) });
+  function canCraft(r) { const c = recipeCost(r); return mats[r.mat] >= r.n && gold >= c.gold && Object.entries(c.items).every(([t, n]) => countItem(t) >= n); }
+  const canMyth = () => gold >= Math.round(MYTH_GOLD * smithK()) && Object.entries(MYTH_MATS).every(([k, n]) => mats[k] >= n);
+  function giveWeapon(w) {
+    weapons.push(w);
+    const slot = w.type === 'axe' ? 'axe' : 'ranged';
+    if (!eq[slot]) { eq[slot] = w.id; syncTools(); buildPlayer(); }
+    lastCraft = w;
+    flashT = w.grade === 'mythic' ? 1.2 : 0.6; shake = 0.5; SFX.level();
+    sparkleColumn(player.x, player.z, GRADES[w.grade].col, 40);
+    for (let i = 0; i < 40; i++) { const a = rand(0, 6.28); emit(pick([GRADES[w.grade].col, GRADES[w.grade].col2, '#ffffff']), player.x, 1.5, player.z, Math.cos(a) * rand(2, 6), rand(2, 7), Math.sin(a) * rand(2, 6), 1, 0.3); }
+    toast(`${w.name} 완성!` + (isEquipped(w) ? ' 바로 장착했습니다' : ' · 장비 탭에서 장착하세요'));
+  }
+  let lastCraft = null;
+  function craftBoss(ri, ti) {
+    const r = RECIPES[ri], [type, name] = r.list[ti];
+    if (!shopAtPad || !canCraft(r)) return;
+    const c = recipeCost(r);
+    mats[r.mat] -= r.n; gold -= c.gold; for (const t in c.items) takeItems(t, c.items[t]);
+    const pool = (type === 'axe' ? AXE_POOL : RANGED_POOL).slice().sort(() => Math.random() - 0.5);
+    giveWeapon({ id: nextWid++, type, grade: 'boss', name, skills: [r.skill, pool[0], pool[1]], lv: 1, craft: true, mult: r.mult });
+  }
+  function craftMyth(i) {
+    const m = MYTHICS[i];
+    if (!shopAtPad || !canMyth()) return;
+    for (const k in MYTH_MATS) mats[k] -= MYTH_MATS[k];
+    gold -= Math.round(MYTH_GOLD * smithK());
+    giveWeapon({ id: nextWid++, type: m.type, grade: 'mythic', name: m.name, skills: ['root', 'blaze', 'quake', 'rend', m.ult, m.extra], lv: 1, craft: true });
+    toast(`신화 무기 ${m.name} 완성!!`);
+  }
+  const needSpan = (have, need, label) => `<span class="${have >= need ? 'ok' : 'no'}">${label} ${fmt(have)}/${fmt(need)}</span>`;
+  function forgeHtml() {
+    let h = `<p class="note">구역 보스(제단에서 소환)가 떨어뜨린 재료로 무기를 만듭니다. <b>보스 무기</b>는 보스의 고유 스킬이 붙고, 네 보스의 <b>희귀 재료</b>를 모두 모으면 가장 강한 <b>신화 무기</b>를 만들 수 있습니다. 채집품(나무·고기·광석)은 가방과 판매대 재고에서 가져갑니다. 만든 무기는 무기 조각으로 강화합니다.</p>` +
+      (shopAtPad ? '' : '<p class="note warn">제작은 기지의 대장간 발판에서 할 수 있습니다.</p>');
+    h += '<div class="sect">보유 재료</div><div class="mats">' + Object.keys(MAT).map(k => `<span style="border-color:${MAT[k].col}">${MAT[k].rare ? '★' : ''}${MAT[k].name} ${mats[k]}</span>`).join('') + '</div>';
+    if (lastCraft && weapons.includes(lastCraft)) h += '<p class="note">방금 만든 무기</p><div class="cards">' + weaponCard(lastCraft, { reveal: true }) + '</div>';
+    RECIPES.forEach((r, ri) => {
+      const def = BEAST[r.boss], c = recipeCost(r), ok = shopAtPad && canCraft(r);
+      h += `<div class="sect">${def.name} 무기 <small style="color:var(--muted)">· 피해 ×${r.mult} · 고유 스킬 ${SKILLS[r.skill].name}</small></div>`;
+      h += `<div class="card boss"><div class="sd"><b>${SKILLS[r.skill].name}</b> ${SKILLS[r.skill].desc} (+ 무작위 스킬 2개)</div>`;
+      h += `<div class="need">${needSpan(mats[r.mat], r.n, MAT[r.mat].name)} · ${Object.entries(c.items).map(([t, n]) => needSpan(countItem(t), n, ITEM_NAME[t])).join(' · ')} · ${needSpan(gold, c.gold, '금화')}</div>`;
+      h += '<div class="acts">' + r.list.map(([t, name], ti) => `<button class="box btn ${ok ? 'primary' : ''}" data-act="craft" data-r="${ri}" data-i="${ti}" ${ok ? '' : 'disabled'}>${name} (${TYPE_NAME[t]})</button>`).join('') + '</div>';
+      if (!fbKills[r.boss]) h += `<div class="sd">아직 ${def.name}을(를) 잡지 않았습니다. ${PADS.find(p => p.summon === r.boss).name}에서 소환하세요.</div>`;
+      h += '</div>';
+    });
+    const mg = Math.round(MYTH_GOLD * smithK()), okm = shopAtPad && canMyth();
+    h += `<div class="sect">신화 무기 <small style="color:var(--muted)">· 피해 ×14 · 보스 스킬 4개 + 궁극기</small></div><div class="card mythic">`;
+    h += `<div class="need">${Object.entries(MYTH_MATS).map(([k, n]) => needSpan(mats[k], n, (MAT[k].rare ? '★' : '') + MAT[k].name)).join(' · ')} · ${needSpan(gold, mg, '금화')}</div>`;
+    h += '<div class="sd">' + MYTHICS.map(m => `<b>${m.name}</b> — ${SKILLS[m.ult].name}: ${SKILLS[m.ult].desc}`).join('<br>') + '</div>';
+    h += '<div class="acts">' + MYTHICS.map((m, i) => `<button class="box btn ${okm ? 'primary' : ''}" data-act="myth" data-i="${i}" ${okm ? '' : 'disabled'}>${m.name}</button>`).join('') + '</div>';
+    h += '<div class="sd">★ 희귀 재료는 구역 보스를 잡을 때 10% 확률(첫 처치는 확정), 뿌잉 하트·무지개 구슬은 뿌잉뿌잉, 부족 토템은 습격의 부족장에게서 나옵니다.</div></div>';
+    return h;
+  }
+
+  // ================= 환생 =================
+  const PERKS = [
+    { k: 'quick', name: '빠른 출발', desc: '환생 직후 도끼 추가·도끼 강화를 단계마다 1씩 올린 채로 시작', max: 3, cost: 3 },
+    { k: 'rich', name: '부자 출발', desc: '환생 직후 금화 5,000G로 시작 (단계마다 ×3)', max: 5, cost: 2 },
+    { k: 'bag', name: '튼튼한 가방', desc: '가방 칸 +10%', max: 10, cost: 2 },
+    { k: 'worker', name: '숙련 일꾼', desc: '일꾼·사냥꾼·광부 이동·작업 속도 +10%', max: 10, cost: 3 },
+    { k: 'hunter', name: '보스 사냥꾼', desc: '보스 재료 +10%, 희귀 재료 확률 +10%', max: 5, cost: 4 },
+    { k: 'smith', name: '대장장이', desc: '제작에 드는 금화·채집품 -5%', max: 5, cost: 3 },
+  ];
+  const perkCost = (p, lv) => p.cost * (lv + 1);
+  const rbGain = () => Math.floor(Math.sqrt(Math.max(0, stats.earned - rb.earnedBase) / 20000));
+  const RB_NEED = 3;
+  let rbArm = 0;
+  function rebirthHtml() {
+    const ok = raid.runBest >= RB_NEED, gain = rbGain();
+    let h = `<p class="note"><b>환생</b>하면 강화·구역·일꾼·금화·재고가 처음으로 돌아가는 대신 <b>환생석</b>을 받습니다. 환생석 1개마다 <b>모든 판매 수익 +2%</b>가 영구히 붙고(쓰더라도 유지), 아래 <b>환생 상점</b>에서 특전을 살 수 있습니다.</p>`;
+    h += `<table class="tbl"><tr><td>환생 횟수</td><td>${rb.count}회</td></tr><tr><td>환생석</td><td>보유 ${rb.stones} · 누적 ${rb.total} (판매 수익 +${rb.total * 2}%)</td></tr>` +
+      `<tr><td>이번 회차 수입</td><td>${fmt(Math.max(0, stats.earned - rb.earnedBase))}G → 지금 환생하면 환생석 <b>+${gain}</b></td></tr>` +
+      `<tr><td>조건</td><td>${ok ? '충족' : `이번 회차 습격 ${RB_NEED}웨이브 방어 필요 (현재 ${raid.runBest})`}</td></tr></table>`;
+    h += '<p class="note"><b>남는 것</b>: 무기·제작 무기, 몬, 옷, 보석·진화석·보스 재료, 환생석 &nbsp; <b>초기화</b>: 강화 발판, 구역 개방, 일꾼·계산원·컨베이어, 금화·금괴·재고, 뿌잉뿌잉 ★단계, 습격 웨이브</p>';
+    h += '<p class="note">환생 1회·5회·10회에 전용 옷(환생자·성자·초월자)을 받습니다. 환생 직전 진행은 자동 백업에 남습니다.</p>';
+    h += `<div class="acts"><button class="box btn ${rbArm ? 'warn' : 'primary'}" data-act="rebirth" ${ok && shopAtPad ? '' : 'disabled'}>${rbArm ? '정말 환생할까요? 한 번 더 누르세요' : `환생하기 (환생석 +${gain})`}</button></div>`;
+    if (!shopAtPad) h += '<p class="note warn">환생은 기지의 환생의 제단 발판에서 할 수 있습니다. 상점 구매는 어디서나 됩니다.</p>';
+    h += `<div class="sect">환생 상점 · 보유 환생석 ${rb.stones}</div><div class="cards">` + PERKS.map(p => {
+      const lv = perkLv(p.k), max = lv >= p.max, c = perkCost(p, lv);
+      return `<div class="card ${lv ? 'legend' : 'normal'}"><div class="nm"><span>${p.name}</span><span class="grade">${lv}/${p.max}단계</span></div><div class="st">${p.desc}</div>` +
+        `<div class="acts">${max ? '<button class="box btn" disabled>최대</button>' : `<button class="box btn primary" data-act="perk" data-k="${p.k}" ${rb.stones >= c ? '' : 'disabled'}>구매 (환생석 ${c})</button>`}</div></div>`;
+    }).join('') + '</div>';
+    return h;
+  }
+  function doRebirth() {
+    if (raid.runBest < RB_NEED || !shopAtPad) return;
+    autoBackup('환생 직전');
+    const gain = rbGain();
+    rb.count++; rb.stones += gain; rb.total += gain;
+    const s = snapshot(), q = perkLv('quick'), rich = perkLv('rich');
+    s.L = { axeCount: q, axeDmg: q };
+    s.gold = rich ? 5000 * Math.pow(3, rich - 1) : 0; s.cashPile = 0; s.stock = []; s.carry = []; s.npcCarry = []; s.padPaid = {};
+    s.stats = { ...s.stats, boss: 0 };
+    s.raid = { wave: 1, best: raid.best, runBest: 0 };
+    s.skinsOwned = s.skinsOwned.slice();
+    SKINS.forEach((sk, i) => { if (sk.rb && rb.count >= sk.rb && !s.skinsOwned.includes(i)) s.skinsOwned.push(i); });
+    rb.earnedBase = s.stats.earned;
+    s.rb = { ...rb, perks: { ...rb.perks } };
+    rbArm = 0; closeShop();
+    applyState(s); saveLocal(); saveCloud(true);
+    flashT = 1.2; shake = 0.8; SFX.level(); sparkleColumn(player.x, player.z, '#e2d2ff', 50);
+    const newSkin = SKINS.findIndex(sk => sk.rb === rb.count);
+    toast(`${rb.count}번째 환생! 환생석 +${gain} · 판매 수익 +${rb.total * 2}%` + (newSkin >= 0 ? ` · 전용 옷 "${SKINS[newSkin].name}" 획득` : ''));
   }
 
   // ================= 상점 (무기점·뽑기·장비·의상실) =================
@@ -2697,14 +3253,16 @@
   }
   function weaponCard(w, opts) {
     const G = GRADES[w.grade];
-    const up = w.lv < MAX_WLV ? `<button class="box btn" data-act="up" data-id="${w.id}" ${shopAtPad && gold >= upCost(w) ? '' : 'disabled'}>강화 ${fmt(upCost(w))}G</button>` : '<button class="box btn" disabled>최대 강화</button>';
+    const fc = fragCost(w);
+    const up = w.lv < MAX_WLV ? `<button class="box btn" data-act="up" data-id="${w.id}" ${shopAtPad && gold >= upCost(w) && mats.frag >= fc ? '' : 'disabled'}>강화 ${fmt(upCost(w))}G${fc ? ' + 조각 ' + fc : ''}</button>` : '<button class="box btn" disabled>최대 강화</button>';
     const eqd = isEquipped(w);
     const eqBtn = `<button class="box btn ${eqd ? '' : 'primary'}" data-act="eq" data-id="${w.id}">${eqd ? (w.type === 'axe' ? '해제' : '장착 중') : '장착'}</button>`;
-    const scrap = w.shop ? '' : `<button class="box btn ${armedScrap === w.id ? 'warn' : ''}" data-act="scrap" data-id="${w.id}" ${eqd ? 'disabled' : ''}>${armedScrap === w.id ? '한 번 더: 분해' : '분해 +' + fmt(scrapValue(w)) + 'G'}</button>`;
+    const scrap = w.shop ? '' : `<button class="box btn ${armedScrap === w.id ? 'warn' : ''}" data-act="scrap" data-id="${w.id}" ${eqd ? 'disabled' : ''}>${armedScrap === w.id ? '한 번 더: 분해' : '분해 ' + (scrapValue(w) ? '+' + fmt(scrapValue(w)) + 'G ' : '') + '조각 +' + scrapFrags(w)}</button>`;
     return `<div class="card ${w.grade} ${opts && opts.reveal ? 'reveal' : ''}" ${opts && opts.delay ? `style="animation-delay:${opts.delay}s"` : ''}>
       <div class="nm"><span>${esc(w.name)} <small>Lv.${w.lv}</small></span><span class="grade ${w.grade}">${G.name} ${TYPE_NAME[w.type]}</span></div>
       <div class="st">${wStatLine(w)}</div>
       <div class="chips">${skillChips(w)}</div>
+      ${w.shop ? '' : `<div class="sd">${w.skills.filter((k, i, a) => a.indexOf(k) === i).map(k => `<b>${SKILLS[k].name}</b> ${SKILLS[k].desc}`).join(' · ')}</div>`}
       ${opts && opts.noActs ? '' : `<div class="acts">${eqBtn}${up}${scrap}</div>`}
     </div>`;
   }
@@ -2741,6 +3299,10 @@
       if (!weapons.length) h += '<p class="note">아직 무기가 없습니다. 무기점에서 사거나 뽑기로 얻으세요.</p>';
       const list = weapons.slice().sort((x, y) => (isEquipped(y) - isEquipped(x)) || GRADE_ORDER.indexOf(y.grade) - GRADE_ORDER.indexOf(x.grade) || y.lv - x.lv);
       h += '<div class="cards">' + list.map(w => weaponCard(w)).join('') + '</div>';
+    } else if (shopTab === 'forge') {
+      h += forgeHtml();
+    } else if (shopTab === 'rebirth') {
+      h += rebirthHtml();
     } else if (shopTab === 'mon') {
       h += `<p class="note">몬은 주인공을 따라다니며 일을 돕습니다. 10레벨·20레벨에 진화하고, 20레벨 진화에는 뿌잉뿌잉이 주는 <b>진화석 3개</b>가 필요합니다. 보유 진화석 <b>${evoStones}</b>개</p>` +
         (shopAtPad ? '' : '<p class="note warn">부화·레벨업은 기지의 몬 부화장 발판에서 할 수 있습니다.</p>');
@@ -2759,18 +3321,29 @@
         const own = skinsOwned.includes(i), on = skin === i;
         const sw = [s.look.shirt, s.look.pants, s.look.hair].map(c => `<i style="background:${c}"></i>`).join('');
         const btn = on ? '<button class="box btn" disabled>착용 중</button>' : own ? `<button class="box btn primary" data-act="wear" data-i="${i}">착용</button>`
+          : s.rb ? `<button class="box btn" disabled>환생 ${s.rb}회 달성 시</button>`
           : `<button class="box btn primary" data-act="buySkin" data-i="${i}" ${shopAtPad && gold >= s.price ? '' : 'disabled'}>구매 ${fmt(s.price)}G</button>`;
-        return `<div class="card ${i === 9 ? 'ancient' : i >= 7 ? 'legend' : i >= 4 ? 'unique' : 'normal'}"><div class="nm"><span>${s.name}</span><span class="sw">${sw}</span></div><div class="st">${s.desc}</div><div class="acts">${btn}</div></div>`;
+        return `<div class="card ${i >= 10 ? 'mythic' : i === 9 ? 'ancient' : i >= 7 ? 'legend' : i >= 4 ? 'unique' : 'normal'}"><div class="nm"><span>${s.name}</span><span class="sw">${sw}</span></div><div class="st">${s.desc}</div><div class="acts">${btn}</div></div>`;
       }).join('') + '</div>';
     }
     $('shopBody').innerHTML = h;
   }
-  function openShop(tab, atPad) { shopOpen = true; shopTab = tab; shopAtPad = atPad; armedScrap = 0; $('shop').hidden = false; $('buyPanel').hidden = true; renderShop(); }
+  const TAB_TIP = {
+    weapon: ['무기점', '<ul><li><b>활·총</b>을 사면 가까운 적을 자동으로 쏩니다. 적이 없으면 나무·바위를 쏩니다.</li><li>강화하면 피해가 오르고 Lv3·6·9에 스킬이 열립니다.</li><li>뽑기·제작 무기도 여기서 강화합니다.</li></ul>'],
+    gacha: ['뽑기', '<ul><li>보석 5개로 1번. 레어 82% · 유니크 10% · 레전드 5% · 에인션트 3%</li><li>50번 안에 레전드 이상이 안 나오면 확정(천장)</li><li>같은 등급 3개(레전드 5개)를 모으면 장비 탭에서 윗등급으로 <b>합성</b></li><li>남는 무기는 <b>분해</b>해서 무기 조각으로 바꾸세요. 조각은 제작 무기 강화에 씁니다.</li></ul>'],
+    inv: ['장비', '<ul><li>원거리 무기(활·총) 1개와 도끼 1개를 장착할 수 있습니다.</li><li>카드 아래 글씨가 각 스킬의 효과입니다.</li><li>합성·분해도 여기서 합니다.</li></ul>'],
+    skin: ['의상실', '<ul><li>옷은 모습만 바뀌고 능력은 같습니다. 일부 옷은 반짝이·번개 이펙트가 있습니다.</li><li>환생 1·5·10회 전용 옷도 있습니다.</li></ul>'],
+    mon: ['몬 부화장', '<ul><li>몬은 뒤따라 다니며 벌목·채굴·회복·전투를 돕습니다.</li><li>10레벨·20레벨에 모습이 바뀌며 진화합니다. 20레벨 진화에는 <b>진화석</b> 3개가 필요합니다.</li><li>진화석은 뿌잉뿌잉·습격 5웨이브마다 얻습니다.</li></ul>'],
+    forge: ['대장간', '<ul><li>각 구역의 <b>제단</b>에 채집품을 바쳐 보스를 불러내고, 떨어뜨린 재료로 무기를 만듭니다.</li><li><b>보스 무기</b>: 보스 고유 스킬(뿌리 속박·화염 폭발·대지 진동·찢기)</li><li><b>신화 무기</b>: 네 보스의 희귀 재료 + 뿌잉 하트 + 부족 토템. 보스 스킬 4개와 화려한 궁극기</li></ul>'],
+    rebirth: ['환생', '<ul><li>강화를 처음부터 다시 하는 대신 <b>환생석</b>을 받습니다.</li><li>환생석마다 판매 수익 +2% (영구), 상점에서 특전 구매</li><li>무기·몬·옷·재료는 그대로 남습니다.</li></ul>'],
+  };
+  function tabTip(tab) { const t = TAB_TIP[tab]; if (t) tip('tab_' + tab, t[0], t[1]); }
+  function openShop(tab, atPad) { shopOpen = true; shopTab = tab; shopAtPad = atPad; armedScrap = 0; rbArm = 0; $('shop').hidden = false; $('buyPanel').hidden = true; renderShop(); tabTip(tab); }
   function closeShop() { shopOpen = false; $('shop').hidden = true; for (const k in keys) keys[k] = false; }
   $('shopTabs').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.id === 'shopClose') { closeShop(); return; }
-    if (b.dataset.tab) { shopTab = b.dataset.tab; armedScrap = 0; renderShop(); }
+    if (b.dataset.tab) { shopTab = b.dataset.tab; armedScrap = 0; rbArm = 0; renderShop(); tabTip(shopTab); }
   });
   $('shop').addEventListener('click', e => { if (e.target.id === 'shop') closeShop(); });
   $('shopBody').addEventListener('click', e => {
@@ -2782,9 +3355,9 @@
       gold -= S.price; const nw = { id: nextWid++, type: t, grade: 'normal', name: S.name, skills: [], lv: 1, shop: true };
       weapons.push(nw); eq.ranged = nw.id; buildPlayer(); SFX.buy(); toast(S.name + ' 구매·장착!');
     } else if (act === 'up' && w) {
-      const c = upCost(w);
-      if (!shopAtPad || gold < c || w.lv >= MAX_WLV) return;
-      gold -= c; w.lv++; SFX.level();
+      const c = upCost(w), fc = fragCost(w);
+      if (!shopAtPad || gold < c || mats.frag < fc || w.lv >= MAX_WLV) return;
+      gold -= c; mats.frag -= fc; w.lv++; SFX.level();
       const un = w.shop && SHOP_W[w.type].unlock.find(([lv]) => lv === w.lv);
       if (un) toast(`${SKILLS[un[1]].name} 스킬 해금!`);
       syncTools();
@@ -2792,22 +3365,31 @@
     else if (act === 'scrap' && w) {
       if (isEquipped(w)) return;
       if (armedScrap !== w.id) { armedScrap = w.id; renderShop(); return; }
-      armedScrap = 0; gold += scrapValue(w); weapons = weapons.filter(x => x !== w); lastPull = lastPull.filter(x => x !== w); SFX.cash(); bumpGold();
+      armedScrap = 0; gold += scrapValue(w); mats.frag += scrapFrags(w); weapons = weapons.filter(x => x !== w); lastPull = lastPull.filter(x => x !== w); SFX.cash(); bumpGold();
     } else if (act === 'pull') pull(+b.dataset.n);
     else if (act === 'merge') merge(b.dataset.g);
     else if (act === 'mergeAll') { let k = 0; while (mergeable(b.dataset.g).length >= MERGE_N[b.dataset.g] && k++ < 40) merge(b.dataset.g); }
     else if (act === 'buySkin') {
       const i = +b.dataset.i, s = SKINS[i];
-      if (!shopAtPad || gold < s.price || skinsOwned.includes(i)) return;
+      if (!shopAtPad || s.rb || gold < s.price || skinsOwned.includes(i)) return;
       gold -= s.price; skinsOwned.push(i); skin = i; buildPlayer(); SFX.level();
       toast(i === 9 ? '살라스 각성!!' : s.name + ' 외형 구매!');
       if (i === 9) { flashT = 1; shake = 0.6; }
     } else if (act === 'wear') { skin = +b.dataset.i; buildPlayer(); SFX.buy(); }
+    else if (act === 'craft') craftBoss(+b.dataset.r, +b.dataset.i);
+    else if (act === 'myth') craftMyth(+b.dataset.i);
+    else if (act === 'rebirth') { if (!rbArm) { rbArm = 1; renderShop(); return; } doRebirth(); return; }
+    else if (act === 'perk') {
+      const p = PERKS.find(x => x.k === b.dataset.k); if (!p) return;
+      const lv = perkLv(p.k), c = perkCost(p, lv);
+      if (lv >= p.max || rb.stones < c) return;
+      rb.stones -= c; rb.perks[p.k] = lv + 1; SFX.buy(); toast(`${p.name} ${lv + 1}단계!`); saveLocal();
+    }
     else if (act === 'monUp') {
       const m = MONS.find(x => x.k === b.dataset.k); if (!m) return;
       const lv = monLv[m.k], c = monCost(m, lv);
       if (!shopAtPad || !m.req() || lv >= MON_MAX || gold < c.gold || evoStones < c.stones) return;
-      gold -= c.gold; evoStones -= c.stones; monLv[m.k] = lv + 1; syncMons(); SFX.level(); bumpGold();
+      gold -= c.gold; evoStones -= c.stones; monLv[m.k] = lv + 1; monTagT[m.k] = 3; syncMons(); SFX.level(); bumpGold();
       const nl = lv + 1, evo = nl === 10 || nl === 20;
       toast(nl === 1 ? `${m.name} 부화!` : evo ? `${m.name}이(가) ${FORM_NAME[monForm(nl)]} 단계로 진화했습니다!` : `${m.name} Lv.${nl}`);
       if (nl === 1 || evo) { sparkleColumn(player.x, player.z, m.col, evo ? 30 : 16); flashT = evo ? 0.6 : 0.3; }
@@ -2841,7 +3423,15 @@
     { txt: '1만 골드로 최종 보스 경기장을 여세요', done: () => L.gateBoss >= 1, target: () => padOf('gateBoss') },
     { txt: '최종 보스 뿌잉뿌잉을 쓰러뜨리세요', done: () => stats.boss >= 1, target: () => boss.alive ? boss : null },
     { txt: '모든 강화를 MAX로, 살라스가 되어 보세요', done: () => PADS.every(p => p.open || L[p.k] >= p.max) && skinsOwned.includes(9), target: () => null },
-    { txt: '숲의 주인이 되었습니다!', done: () => false, target: () => null },
+    { txt: '몬 부화장에서 몬을 부화시키세요', done: () => MONS.some(m => monLv[m.k] > 0), target: () => padOf('shopMon') },
+    { txt: '숲의 제단에 나무를 바쳐 우드킹을 쓰러뜨리세요', done: () => (fbKills.woodking | 0) > 0, target: () => bears.find(b => b.kind === 'woodking' && b.alive) || padOf('altarWood') },
+    { txt: '대장간에서 보스 무기를 만들어 보세요', done: () => weapons.some(w => w.grade === 'boss' || w.grade === 'mythic'), target: () => padOf('shopForge') },
+    { txt: '습격을 3웨이브까지 막아 내세요', done: () => raid.best >= 3, target: () => null },
+    { txt: '환생의 제단에서 첫 환생을 해 보세요', done: () => rb.count > 0, target: () => padOf('shopRebirth') },
+    { txt: '네 구역 보스를 모두 쓰러뜨리세요', done: () => ['woodking', 'bearchief', 'golem', 'rexking'].every(k => fbKills[k] > 0), target: () => null },
+    { txt: '신화 무기를 만들어 보세요', done: () => weapons.some(w => w.grade === 'mythic'), target: () => padOf('shopForge') },
+    { txt: '전설의 몬 용구몬을 부화시키세요', done: () => monLv.yonggu > 0, target: () => padOf('shopMon') },
+    { txt: '숲의 주인이 되었습니다! 습격 웨이브 기록에 도전하세요', done: () => false, target: () => null },
   ];
   let goalShown = -1;
   function updateGoal(t) {
@@ -2914,7 +3504,7 @@
     return {
       v: 3, gold, cashPile, goal, gems, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
       stock: stock.concat(beltItems.map(b => b.type)), carry: player.carry.slice(), npcCarry: npcs.flatMap(n => n.carry),
-      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, mons: { ...monLv }, evoStones, raid: { wave: raid.wave, best: raid.best }, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
+      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, mons: { ...monLv }, evoStones, raid: { wave: raid.wave, best: raid.best, runBest: raid.runBest }, seen: { ...seen }, mats: { ...mats }, fbKills: { ...fbKills }, rb: { ...rb, perks: { ...rb.perks } }, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
     };
   }
   function saveLocal() {
@@ -2960,8 +3550,14 @@
     skin = s && skinsOwned.includes(s.skin) ? s.skin : 0;
     for (const m of MONS) monLv[m.k] = Math.max(0, Math.min(MON_MAX, (s && s.mons && s.mons[m.k]) | 0));
     evoStones = Math.max(0, (s && s.evoStones) | 0);
-    clearRaiders();
+    for (const k in seen) delete seen[k]; Object.assign(seen, (s && s.seen) || {});
+    for (const k in MAT) mats[k] = Math.max(0, (s && s.mats && s.mats[k]) | 0);
+    for (const k in fbKills) delete fbKills[k]; Object.assign(fbKills, (s && s.fbKills) || {});
+    const sr = (s && s.rb) || {};
+    rb.count = sr.count | 0; rb.stones = sr.stones | 0; rb.total = sr.total | 0; rb.earnedBase = sr.earnedBase || 0; rb.perks = { ...(sr.perks || {}) };
+    clearRaiders(true); hazards.forEach(h => h.m && scene.remove(h.m)); hazards.length = 0;
     raid.wave = Math.max(1, (s && s.raid && s.raid.wave) | 0); raid.best = Math.max(0, (s && s.raid && s.raid.best) | 0); raid.phase = 'off'; raid.queue = [];
+    raid.runBest = s && s.raid && s.raid.runBest != null ? s.raid.runBest | 0 : raid.best;
     // 이전 버전 호환: 대검은 없어져서 쓴 돈을 돌려주고, 발판으로 산 활은 무기점 활로 바꿔 준다
     const notes = [];
     if (sl.sword > 0) { const r = SWORD_COST(sl.sword); gold += r; notes.push(`대검 환불 +${fmt(r)}G`); }
@@ -3010,7 +3606,7 @@
     if (!st) { toast('저장한 기록이 없습니다. 먼저 저장을 눌러 주세요'); return; }
     if (Date.now() - loadArm > 4000) { loadArm = Date.now(); toast(`${hhmm(st.savedAt)}에 저장한 진행으로 돌아갑니다. 한 번 더 누르세요`); return; }
     loadArm = 0;
-    applyState(st); saveLocal(); await saveCloud(true);
+    autoBackup('불러오기 직전'); applyState(st); saveLocal(); await saveCloud(true);
     toast('저장한 시점으로 불러왔습니다');
   });
   $('btnBuy').addEventListener('click', () => buyPad(curPad));
@@ -3021,7 +3617,7 @@
     const b = $('btnReset');
     if (resetArm > 0) {
       resetArm = 0; b.textContent = '처음부터'; b.classList.remove('warn');
-      applyState(null); saveLocal(); await saveCloud(true);
+      autoBackup('처음부터 직전'); applyState(null); saveLocal(); await saveCloud(true); $('backup').hidden = true;
       toast('처음부터 다시 시작합니다');
       return;
     }
@@ -3070,7 +3666,40 @@
     if (!c.startsWith('AXF1.')) return null;
     try { const st = JSON.parse(decodeURIComponent(escape(atob(c.slice(5))))); return st && st.L ? st : null; } catch (e) { return null; }
   }
-  $('btnBackup').addEventListener('click', () => { $('codeOut').value = makeCode(); $('codeIn').value = ''; $('codeMsg').textContent = ''; $('backup').hidden = false; });
+  // 자동 백업: 10분마다(그리고 환생·불러오기 직전) 최근 3개를 이 기기에 따로 보관
+  const AUTO_KEY = 'axeForestAuto';
+  const readAuto = () => { try { const a = JSON.parse(localStorage.getItem(AUTO_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  function autoBackup(why) {
+    try {
+      const a = readAuto(); a.unshift({ at: Date.now(), why: why || '자동', st: snapshot() });
+      localStorage.setItem(AUTO_KEY, JSON.stringify(a.slice(0, 3)));
+    } catch (e) {}
+  }
+  const dayTime = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hhmm(t); };
+  function renderSaveMgr() {
+    $('saveInfo').innerHTML = `이 기기에 4초마다 자동 저장됩니다. 마지막 저장 <b>${savedAt ? hhmm(savedAt) : '-'}</b>`;
+    const a = readAuto();
+    $('autoList').innerHTML = a.length ? a.map((b, i) => `<div class="it"><span>${dayTime(b.at)} · ${esc(b.why)} · 누적 ${fmt((b.st.stats && b.st.stats.earned) | 0)}G</span><button class="box btn" data-auto="${i}">되돌리기</button></div>`).join('')
+      : '<span style="color:var(--muted)">아직 자동 백업이 없습니다 (10분 뒤 생성)</span>';
+  }
+  let autoArm = -1, autoArmT = 0;
+  $('autoList').addEventListener('click', e => {
+    const b = e.target.closest('[data-auto]'); if (!b) return;
+    const i = +b.dataset.auto, it = readAuto()[i]; if (!it) return;
+    if (autoArm !== i || Date.now() - autoArmT > 4000) { autoArm = i; autoArmT = Date.now(); b.textContent = '한 번 더 누르면 되돌림'; b.classList.add('warn'); return; }
+    autoArm = -1; autoBackup('되돌리기 직전'); applyState(it.st); saveLocal(); saveCloud(true);
+    $('backup').hidden = true; toast(dayTime(it.at) + ' 백업으로 되돌렸습니다');
+  });
+  $('btnBackup').addEventListener('click', () => { $('codeOut').value = makeCode(); $('codeIn').value = ''; $('codeMsg').textContent = ''; renderSaveMgr(); $('backup').hidden = false; });
+  // 도움말 · 처음 보는 기능 안내 (한 번만)
+  $('btnHelp').addEventListener('click', () => { $('help').hidden = false; });
+  $('btnCloseHelp').addEventListener('click', () => { $('help').hidden = true; });
+  $('help').addEventListener('click', e => { if (e.target.id === 'help') $('help').hidden = true; });
+  $('btnTipOk').addEventListener('click', () => { $('tip').hidden = true; });
+  function tip(key, title, html) {
+    if (seen[key]) return false;
+    seen[key] = 1; $('tipTitle').textContent = title; $('tipBody').innerHTML = html; $('tip').hidden = false; return true;
+  }
   $('btnCloseBackup').addEventListener('click', () => { $('backup').hidden = true; });
   $('btnCopy').addEventListener('click', () => {
     const t = $('codeOut');
@@ -3084,7 +3713,7 @@
     if (!st) { $('codeMsg').textContent = '코드가 올바르지 않습니다. AXF1. 로 시작하는 코드를 통째로 붙여 넣으세요.'; return; }
     if (Date.now() - importArm > 4000) { importArm = Date.now(); $('codeMsg').textContent = `판매 누적 ${fmt((st.stats && st.stats.earned) | 0)}G 진행입니다. 지금 진행을 덮어씁니다. 한 번 더 누르면 불러옵니다.`; return; }
     importArm = 0;
-    applyState(st); saveLocal(); await saveCloud(true);
+    autoBackup('코드 불러오기 직전'); applyState(st); saveLocal(); await saveCloud(true);
     $('backup').hidden = true; toast('백업 코드로 불러왔습니다');
   });
 
@@ -3097,7 +3726,7 @@
     if (secs < 60) return null;
     const l = st.L;
     const belts = (l.beltForest ? 1 : 0) + (l.beltBear ? 1 : 0) + (l.beltQuarry ? 1 : 0);
-    const rate = ((l.worker | 0) * 1.2 + (l.hunter | 0) * 3 + (l.miner | 0) * 1.5) * (1 + 0.2 * (l.price | 0)) * (l.cashier ? 1 : 0.5) * (1 + 0.05 * belts);
+    const rate = ((l.worker | 0) * 1.2 + (l.hunter | 0) * 3 + (l.miner | 0) * 1.5) * (1 + 0.2 * (l.price | 0)) * (1 + 0.02 * ((st.rb && st.rb.total) | 0)) * (l.cashier ? 1 : 0.5) * (1 + 0.05 * belts);
     const g = Math.round(rate * OFFLINE_RATE * secs), gm = Math.min(OFFLINE_GEM_MAX, Math.floor((l.miner | 0) * secs / 3600));
     if (g <= 0 && gm <= 0) return null;
     return { secs, gold: g, gems: gm, capped: (Date.now() - st.lastSeen) / 1000 > OFFLINE_CAP };
@@ -3123,13 +3752,16 @@
 
   // ================= 시작 =================
   let shownCarry = 0, clock = 0, flashT = 0;
+  const carryTag = mkTag('info'); carryTag.hidden = true;
   applyState(localState);
+  if (!localState) setTimeout(() => tip('welcome', '빙글도끼 숲에 오신 걸 환영해요!', '<ul><li>화면을 끌거나 <b>WASD</b>로 움직입니다. 캐릭터 주위를 도는 <b>도끼</b>가 나무를 저절로 벱니다.</li><li>나무를 모아 노란 <b>판매대 발판</b>에 내려놓고, 초록 <b>계산대</b>에서 손님에게 파세요.</li><li>번 돈으로 기지의 <b>발판</b>에 올라가 강화하세요.</li><li>화면 위 <b>목표</b>와 노란 화살표를 따라가면 됩니다. 자세한 설명은 오른쪽 위 <b>도움말</b>.</li></ul>'), 800);
   showOffline(localState);
-  if (location.hash === '#debug') window.__dbg = { PADS, player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
+  if (location.hash === '#debug') window.__dbg = { applyHit, dealDirect, PADS, mats, rb, fbKills, buyPad, hazards, get lastCraft() { return lastCraft; }, player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
     get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
     MODELS, MODEL_H, get pg() { return pg; }, scene, renderer, monLv, mons, bossTier, offlineCalc, raid, startRaid, get evoStones() { return evoStones; }, set evoStones(v) { evoStones = v; },
     get cashPile() { return cashPile; }, merge, offlineCalc, showOffline, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
+  let autoT = 0;
   let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
   const camGoal = new THREE.Vector3(), camPos = new THREE.Vector3(player.x, 30 * zoom, player.z + 22 * zoom), camLook = new THREE.Vector3(player.x, 0, player.z);
 
@@ -3163,7 +3795,7 @@
   function frame(now) {
     adaptRes((now - last) / 1000);
     const dt = Math.min(0.066, (now - last) / 1000); last = now; frameDt = dt;   // 15fps까지는 게임 속도가 느려지지 않게
-    if (shopOpen) {                 // 상점이 열려 있으면 게임은 멈춘다
+    if (shopOpen || !$('tip').hidden || !$('help').hidden || !$('backup').hidden) {   // 상점·안내창이 열려 있으면 게임은 멈춘다
       renderer.render(scene, camera);
       requestAnimationFrame(frame);
       return;
@@ -3194,7 +3826,9 @@
       if (player.calm > 4) player.hp = Math.min(D.maxHp, player.hp + dt * (2 + D.maxHp * 0.02));
       player.hp = Math.min(player.hp, D.maxHp);
     }
-    const tvx = mx * D.speed * mag, tvz = mz * D.speed * mag;
+    if (player.slowT > 0) { player.slowT -= dt; if (Math.random() < dt * 12) emit('#9fe3ff', player.x + rand(-0.4, 0.4), 0.3, player.z + rand(-0.4, 0.4), 0, 0.6, 0, 0.4, 0.1); }
+    const pslow = player.slowT > 0 ? 0.55 : 1;
+    const tvx = mx * D.speed * mag * pslow, tvz = mz * D.speed * mag * pslow;
     const acc = 1 - Math.exp(-(mag > 0 ? 12 : 16) * dt);
     player.vx += (tvx - player.vx) * acc; player.vz += (tvz - player.vz) * acc;
     const spd = Math.hypot(player.vx, player.vz);
@@ -3230,7 +3864,7 @@
         if (!tr.alive || tr.hitCd[ci] > 0 || Math.abs(tr.x - x) > 1.6 || Math.abs(tr.z - z) > 1.6) continue;
         if (dist(tr.x, tr.z, x, z) < (tr.big ? 1.1 : 0.85) + hitR) { tr.hitCd[ci] = 0.25; applyHit(tr, D.dmg, sk); }
       }
-      if (player.z < BEAR_Z + 3 || raid.phase === 'fight') for (const b of bears) {
+      for (const b of bears) {
         if (!b.alive || b.hitCd[ci] > 0 || Math.abs(b.x - x) > 6 || Math.abs(b.z - z) > 6) continue;
         if (dist(b.x, b.z, x, z) < b.def.hitR + hitR) { b.hitCd[ci] = 0.3; applyHit(b, D.dmg, sk); }
       }
@@ -3248,6 +3882,7 @@
     });
 
     updateRanged(dt, D);
+    updateUlts(dt, D);
     updateWorld(dt, clock);
     updateBears(dt);
 
@@ -3313,6 +3948,8 @@
     updateFx(dt);
     updateMons(dt, clock);
     updateRaid(dt);
+    updateHazards(dt);
+    removeDeadSummons();
 
     // ---- 파편 / 코인 / 이펙트 ----
     for (let i = chips.length - 1; i >= 0; i--) {
@@ -3367,6 +4004,8 @@
     if (!chkTag.hidden) project(CHECK[0].x + 0.4, 0, CHECK[0].z - 1.0, chkTag, -24);
     stockTag.textContent = '재고 ' + stock.length + ' · 손님 ' + custs.filter(c => c.state !== 'leave').length;
     project(STALL.x, 3.1, STALL.z, stockTag, -26);
+    carryTag.hidden = player.carry.length <= 8 || player.dead;
+    if (!carryTag.hidden) { const t = '짐 ' + player.carry.length; if (carryTag.textContent !== t) carryTag.textContent = t; project(player.x - Math.sin(player.face) * 0.6, 2.9, player.z - Math.cos(player.face) * 0.6, carryTag, -8); }
     cashTag.hidden = cashPile <= 0;
     if (!cashTag.hidden) { cashTag.innerHTML = `<div class="c"><i class="coin"></i>${fmt(cashPile)}</div>`; project(CASH.x + 1.9, 0, CASH.z, cashTag, -12); }
     BELTS.forEach((b, i) => { hopTags[i].hidden = !L[b.k]; if (L[b.k]) project(b.hop.x, 1, b.hop.z + 1, hopTags[i]); });
@@ -3388,9 +4027,9 @@
     $('hRank').textContent = RANKS[curTier] + ' · ' + (SKINS[skin] || SKINS[0]).name;
     $('hHp').textContent = Math.ceil(Math.max(0, player.hp)) + '/' + D.maxHp;
     $('hHpBar').style.width = Math.max(0, Math.min(100, player.hp / D.maxHp * 100)) + '%';
-    const showBoss = L.gateBoss && player.z < BOSS_Z + 8 && boss.alive;
+    const bb = bossBarTarget(), showBoss = !!bb;
     $('bossBar').hidden = !showBoss;
-    if (showBoss) { $('bossName').textContent = '뿌잉뿌잉 ★' + (bossTier() + 1); $('bossFill').style.width = (boss.hp / boss.maxHp * 100) + '%'; $('bossHp').textContent = fmt(Math.max(0, boss.hp)) + ' / ' + fmt(boss.maxHp); }
+    if (showBoss) { $('bossName').textContent = bb === boss ? '뿌잉뿌잉 ★' + (bossTier() + 1) : bb.def.name; $('bossFill').style.width = (bb.hp / bb.maxHp * 100) + '%'; $('bossHp').textContent = fmt(Math.max(0, bb.hp)) + ' / ' + fmt(bb.maxHp); }
     if (goldBumpT > 0) { goldBumpT -= dt; if (goldBumpT <= 0) $('goldBox').classList.remove('bump'); }
     if (player.hurtT > 0) player.hurtT -= dt;
     $('hurt').style.opacity = Math.max(0, player.hurtT / 0.35);
@@ -3400,6 +4039,7 @@
     if (clock > 8) $('hint').hidden = true;
 
     saveT += dt; if (saveT > 4) { saveT = 0; saveLocal(); }
+    autoT += dt; if (autoT > 600) { autoT = 0; autoBackup('자동'); }
     cloudT += dt; if (cloudT > 30) { cloudT = 0; saveCloud(); }
     requestAnimationFrame(frame);
   }
