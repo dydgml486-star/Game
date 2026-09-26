@@ -67,6 +67,11 @@
   .bossbar b { font-weight: 400; color: #ff8ac4; letter-spacing: .04em; }
   .bossbar .bar { height: 10px; }
   .bossbar .bar > i { background: linear-gradient(90deg, #ff4f8a, #ffb0d0); }
+  .raidbar { top: calc(140px + env(safe-area-inset-top, 0px)); }
+  .raidbar b { color: #ffb070; }
+  .raidbar .bar > i { background: linear-gradient(90deg, #3fae5a, #a8e88a); }
+  .raidbar .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .raidbar button { pointer-events: auto; font-size: 13px; padding: 3px 10px; }
 
   .hint {
     position: fixed; left: 16px; right: 72px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
@@ -88,6 +93,7 @@
   .tag.info { background: rgba(17,13,9,.72); }
   .tag.shop { background: rgba(60,30,80,.9); color: #f1dcff; }
   .tag.mon { background: rgba(24,52,36,.85); color: #eaffe0; font-size: 11px; border-width: 1px; }
+  .tag.mon.legend { background: rgba(90,30,10,.9); color: #ffe08a; }
   .float {
     position: absolute; left: 0; top: 0;
     font-family: "Silkscreen", "Do Hyeon", sans-serif; font-size: 15px; color: var(--gold);
@@ -173,6 +179,7 @@
     .btn { font-size: 13px; padding: 4px 7px; }
     .btns { max-width: 190px; }
     .bossbar { top: calc(236px + env(safe-area-inset-top, 0px)); }
+    .raidbar { top: calc(292px + env(safe-area-inset-top, 0px)); }
   }
 </style>
 
@@ -206,6 +213,11 @@
   </div>
 </div>
 
+<div class="box bossbar raidbar" id="raidBar" hidden>
+  <div class="top"><b id="raidName">습격</b><span id="raidInfo"></span></div>
+  <div class="bar" id="raidHpBar"><i id="raidFill"></i></div>
+  <div class="row"><span id="raidSub"></span><button class="box btn primary" id="raidGo">지금 시작</button></div>
+</div>
 <div class="box bossbar" id="bossBar" hidden>
   <div class="top"><b id="bossName">뿌잉뿌잉</b><span id="bossHp"></span></div>
   <div class="bar"><i id="bossFill"></i></div>
@@ -924,7 +936,18 @@
       desc: '가까운 바위에 수정 탄을 날려 캡니다' },
     { k: 'yeonjun', name: '연준몬', role: '전투', price: 20000, col: '#ff8a3a', col2: '#d8452a', belly: '#fff0d0', req: () => L.gateDino, reqTxt: '공룡 계곡을 열면 부화할 수 있습니다',
       desc: '곰·공룡·보스에게 불꽃 탄을 쏩니다' },
+    { k: 'mal', name: '말몬', role: '달리기·짐', price: 5000, col: '#b9804e', col2: '#6b4426', belly: '#f2dcc0', req: () => L.gateBear, reqTxt: '곰 숲을 열면 부화할 수 있습니다',
+      desc: '이동 속도와 가방 칸을 늘려 줍니다' },
+    { k: 'dongwook', name: '동욱몬', role: '얼음', price: 12000, col: '#8fdcff', col2: '#3f9fe0', belly: '#f4fbff', req: () => L.gateQuarry, reqTxt: '채석장을 열면 부화할 수 있습니다',
+      desc: '주변에 얼음 파동을 퍼뜨려 적을 느리게 하고 피해를 줍니다' },
+    { k: 'hoseon', name: '호선몬', role: '방어', price: 40000, col: '#3fc9b0', col2: '#1f8a78', belly: '#e0fff6', req: () => stats.boss >= 1, reqTxt: '뿌잉뿌잉을 한 번 잡으면 부화할 수 있습니다',
+      desc: '받는 피해를 줄여 줍니다' },
+    { k: 'yonggu', name: '용구몬', role: '전설 · 용의 불꽃', legend: true, price: 300000, hatchStones: 5, lvBase: 60000, col: '#e0443a', col2: '#8a1f1a', belly: '#ffd07a',
+      req: () => raid.best >= 5, reqTxt: '습격 5웨이브를 막으면 부화할 수 있습니다 (300,000G + 진화석 5)',
+      desc: '전설의 용. 거대한 불덩이를 뿜어 주변 적을 한꺼번에 태웁니다' },
   ];
+  // 습격 모드: 모든 강화를 끝내면 옆마을 부족이 주기적으로 쳐들어온다
+  const raid = { wave: 1, best: 0, phase: 'off', t: 0, hp: 100, left: 0, queue: [], spawnT: 0 };
   const MON_MAX = 30, monLv = {};
   let evoStones = 0;
   for (const m of MONS) monLv[m.k] = 0;
@@ -986,11 +1009,11 @@
       sk, axes: 1 + L.axeCount + 2 * c('more'), dmg: (1 + L.axeDmg) * axeMult,
       spin: 4.4 * (1 + 0.15 * L.spin) * Math.pow(1.4, c('whirl')), radius: 1.8 + 0.3 * L.spin + 0.8 * c('giant'), axeHitR: 0.35 * c('giant'),
       picks: L.gateQuarry ? 1 + Math.floor(L.pick / 2) : 0, pickDmg: 1 + L.pick,
-      caps: { w: 10 + 5 * L.bag, m: 6 + 3 * L.bag, s: 8 + 4 * L.bag },
-      speed: 6.4 * (1 + 0.12 * L.speed), magnet: 4 + 1.6 * L.magnet + monMagnet(),
+      caps: (() => { const k = 1 + monBag(); return { w: Math.round((10 + 5 * L.bag) * k), m: Math.round((6 + 3 * L.bag) * k), s: Math.round((8 + 4 * L.bag) * k) }; })(),
+      speed: 6.4 * (1 + 0.12 * L.speed) * (1 + monSpeed()), magnet: 4 + 1.6 * L.magnet + monMagnet(),
       price: 1 + 0.2 * L.price, custEvery: 1.25 / (1 + 0.25 * L.price),
       beltSpeed: 3 + 1.2 * L.beltSpeed,
-      maxHp: 10 + 8 * L.armor + 3 * curTier, armorRed: 0.04 * L.armor,
+      maxHp: 10 + 8 * L.armor + 3 * curTier, armorRed: Math.min(0.7, 0.04 * L.armor + monArmor()),
     };
   }
   const power = () => L.axeCount + L.axeDmg + L.spin + L.bag + L.speed + L.pick + L.magnet + L.armor;
@@ -1359,11 +1382,50 @@
   const bossArmG = bake([[SPH, PB, [0, -0.85, 0], [0.36, 0.95, 0.36]], [SPH, PB2, [0, -1.8, 0.05], [0.46, 0.42, 0.46]],
     [SPH, GOLD, [-0.2, -1.92, 0.42], 0.1], [SPH, GOLD, [0, -1.95, 0.45], 0.1], [SPH, GOLD, [0.2, -1.92, 0.42], 0.1]]);
 
+  // 습격대 (옆마을 부족): 고블린 / 오크 / 부족장 트롤 — 몸통 + 다리 2개 + 무기 든 오른팔
+  const RAIDER_G = {};
+  function raiderGeo(kind) {
+    if (RAIDER_G[kind]) return RAIDER_G[kind];
+    const T = {
+      goblin: { c: '#6aa84f', c2: '#3f6a2f', h: 1, cloth: '#7a5230', eye: '#ffe14a' },
+      orc: { c: '#6f8a5a', c2: '#44583a', h: 1.25, cloth: '#5a3a20', eye: '#ff4a3a' },
+      chief: { c: '#7a6a8a', c2: '#4a3f5a', h: 1.5, cloth: '#8a2a2a', eye: '#ff4a3a' },
+    }[kind];
+    const h = T.h, body = [
+      [ICO, T.c, [0, 0.78 * h, 0], [0.32 * h, 0.36 * h, 0.26 * h]], [ICO, T.cloth, [0, 0.52 * h, 0], [0.31 * h, 0.13 * h, 0.27 * h]],
+      [ICO, T.c, [0, 1.28 * h, 0.04], [0.3 * h, 0.27 * h, 0.28 * h]], [SPH, T.eye, [-0.11 * h, 1.32 * h, 0.28 * h], 0.05 * h], [SPH, T.eye, [0.11 * h, 1.32 * h, 0.28 * h], 0.05 * h],
+      [ICO, T.c2, [0, 1.22 * h, 0.32 * h], [0.07 * h, 0.06 * h, 0.07 * h]],
+      [CYL, T.c, [-0.36 * h, 0.72 * h, 0.05], [0.07 * h, 0.42 * h, 0.07 * h], [0.3, 0, 0.25]],
+    ];
+    if (kind === 'goblin') body.push([CONE, T.c, [-0.36, 1.33, 0], [0.08, 0.36, 0.06], [0, 0, 1.25]], [CONE, T.c, [0.36, 1.33, 0], [0.08, 0.36, 0.06], [0, 0, -1.25]]);
+    if (kind === 'orc') body.push([CONE, '#f4efe2', [-0.12, 1.18, 0.33], [0.035, 0.12, 0.035]], [CONE, '#f4efe2', [0.12, 1.18, 0.33], [0.035, 0.12, 0.035]],
+      [ICO, '#8d8f93', [-0.42, 1.12, 0], [0.2, 0.12, 0.22]], [ICO, '#2b2320', [0, 1.5, -0.02], [0.3, 0.1, 0.3]]);
+    if (kind === 'chief') {
+      body.push([ICO, '#f4efe2', [0, 1.95, 0.25], [0.3, 0.3, 0.14]], [SPH, INK, [-0.12, 1.98, 0.36], 0.06], [SPH, INK, [0.12, 1.98, 0.36], 0.06],
+        [CONE, '#f4efe2', [-0.38, 2.25, 0], [0.08, 0.4, 0.08], [0, 0, 0.5]], [CONE, '#f4efe2', [0.38, 2.25, 0], [0.08, 0.4, 0.08], [0, 0, -0.5]],
+        [ICO, '#f2c14e', [0, 1.62, 0.2], [0.34, 0.05, 0.2]]);
+      for (let i = 0; i < 5; i++) { const a = -0.8 + i * 0.4; body.push([CONE, i % 2 ? '#ffd04a' : '#d8452a', [Math.sin(a) * 0.3, 2.3 + Math.cos(a) * 0.1, -0.15], [0.07, 0.5, 0.04], [-0.3, 0, -a]]); }
+    }
+    const leg = [[CYL, T.c2, [0, -0.25 * h, 0], [0.09 * h, 0.5 * h, 0.09 * h]], [ICO, '#3a2a1a', [0, -0.5 * h, 0.05 * h], [0.1 * h, 0.05 * h, 0.15 * h]]];
+    const arm = [[CYL, T.c, [0, -0.2 * h, 0], [0.07 * h, 0.42 * h, 0.07 * h]]];
+    if (kind === 'goblin') arm.push([CYL, '#8a5a32', [0, -0.4, 0.3], [0.025, 1.3, 0.025], [Math.PI / 2, 0, 0]], [CONE, '#c7d0d6', [0, -0.4, 1.0], [0.06, 0.2, 0.06], [Math.PI / 2, 0, 0]]);
+    else arm.push([CYL, '#6b4426', [0, -0.45 * h, 0.35 * h], [0.08 * h, 0.8 * h, 0.08 * h], [1.2, 0, 0]], [ICO, kind === 'chief' ? '#5a4a3a' : '#7a5230', [0, -0.3 * h, 0.72 * h], [0.17 * h, 0.17 * h, 0.2 * h]],
+      [CONE, '#c7d0d6', [0.14 * h, -0.28 * h, 0.72 * h], [0.05, 0.14, 0.05], [0, 0, -1.5]], [CONE, '#c7d0d6', [-0.14 * h, -0.28 * h, 0.72 * h], [0.05, 0.14, 0.05], [0, 0, 1.5]]);
+    if (kind === 'chief') arm.push([CYL, '#f2c14e', [0, -0.3 * h, 0.55 * h], [0.1 * h, 0.06, 0.1 * h], [1.2, 0, 0]]);
+    return (RAIDER_G[kind] = { body: bake(body), leg: bake(leg), arm: bake(arm), h });
+  }
+
   const BEAST = {
     bear: { hp: 14, wander: 1.1, chase: 2.7, aggro: 8, reach: 1.6, hitR: 1.25, dmg: 1, cd: 1.3, knock: 9, drops: ['m', 'm', 'm'], respawn: 14, scale: 1.25, barY: 2.6, barW: 1.1,
             zone: () => [rand(-31, 31), rand(-43, -25)], zMin: -45, zMax: BEAR_Z - 1, xMax: 33, inZone: z => z < BEAR_Z && z >= DINO_Z },
     dino: { hp: 220, wander: 1.3, chase: 3.7, aggro: 12, reach: 2.9, hitR: 2.3, dmg: 4, cd: 1.6, knock: 15, drops: ['d', 'd', 'd', 'd'], respawn: 35, scale: 1.7, barY: 5.2, barW: 2.4,
             zone: () => [rand(-30, 30), rand(-75, -52)], zMin: -77, zMax: DINO_Z - 1.5, xMax: 33, inZone: z => z < DINO_Z && z >= BOSS_Z },
+    goblin: { raider: true, name: '고블린', hp: 300, chase: 3.4, aggro: 6, reach: 1.3, hitR: 0.9, dmg: 3, cd: 1.1, knock: 6, siege: 2, bounty: 15, cry: '찌르기!', drops: [], respawn: 0, scale: 1.1, barY: 1.9, barW: 0.9,
+      zone: () => [0, 6], zMin: -30, zMax: 34, xMax: 40, inZone: () => true },
+    orc: { raider: true, name: '오크', hp: 1500, chase: 2.5, aggro: 6, reach: 1.8, hitR: 1.3, dmg: 7, cd: 1.5, knock: 10, siege: 5, bounty: 60, cry: '쾅!', drops: [], respawn: 0, scale: 1.35, barY: 2.6, barW: 1.2,
+      zone: () => [0, 6], zMin: -30, zMax: 34, xMax: 40, inZone: () => true },
+    chief: { raider: true, name: '부족장', hp: 20000, chase: 2.0, aggro: 8, reach: 2.8, hitR: 2.0, dmg: 18, cd: 1.9, knock: 16, siege: 15, bounty: 800, cry: '우오오!', drops: [], respawn: 0, scale: 1.9, barY: 5.4, barW: 2.4,
+      zone: () => [0, 6], zMin: -30, zMax: 34, xMax: 40, inZone: () => true },
     boss: { hp: 60000, wander: 0.8, chase: 2.6, aggro: 60, reach: 4.6, hitR: 4, dmg: 16, cd: 1.7, knock: 18, drops: [], respawn: 120, scale: 2.3, barY: 11, barW: 0,
             zone: () => [rand(-8, 8), rand(-98, -90)], zMin: -104, zMax: BOSS_Z - 4, xMax: 26, inZone: z => z < BOSS_Z },
   };
@@ -1382,6 +1444,13 @@
       legR = bmesh(trexLegG, BEAST_M.low); legR.position.set(0.45, 1.6, -0.1);
       jaw = bmesh(trexJawG, BEAST_M.low); jaw.position.set(0, 2.52, 1.05);
       body.add(legL, legR, jaw);
+    } else if (def.raider) {
+      const G = raiderGeo(kind);
+      body.add(bmesh(G.body, BEAST_M.low));
+      legL = bmesh(G.leg, BEAST_M.low); legL.position.set(-0.14 * G.h, 0.5 * G.h, 0);
+      legR = bmesh(G.leg, BEAST_M.low); legR.position.set(0.14 * G.h, 0.5 * G.h, 0);
+      armR = bmesh(G.arm, BEAST_M.low); armR.position.set(0.36 * G.h, 0.98 * G.h, 0.02);
+      body.add(legL, legR, armR);
     } else {
       body.add(bmesh(bossBodyG, BEAST_M.soft));
       armL = bmesh(bossArmG, BEAST_M.soft); armL.position.set(-1.55, 2.2, 0.2);
@@ -1434,6 +1503,10 @@
       for (let i = 0; i < 40; i++) { const a = rand(0, 6.28); emit(pick(['#ff4fd8', '#f2c14e', '#5aa0ff', '#ffffff']), b.x, 4, b.z, Math.cos(a) * rand(3, 9), rand(3, 10), Math.sin(a) * rand(3, 9), 1.2, 0.35); }
       SFX.level();
       toast(`뿌잉뿌잉 ★${tier + 1} 격파! +${fmt(g)}G, 보석 +${gm}, 진화석 +${st}` + (tier < BOSS_TIER_MAX ? ` · 다음은 ★${Math.min(BOSS_TIER_MAX, tier + 1) + 1}` : ''));
+    } else if (b.def.raider) {
+      const g = Math.round(b.def.bounty * b.mul);
+      gold += g; stats.earned += g; bumpGold(); floatText(`${b.def.name} 처치 +${fmt(g)}G`, b.x, 2.4, b.z, b.kind === 'chief' ? 'note big' : 'note');
+      if (b.kind === 'chief') { shake = 0.6; SFX.level(); }
     } else floatText('곰 사냥!', b.x, 2, b.z, 'note');
     return b.def.drops.length;
   }
@@ -1442,6 +1515,7 @@
       const def = b.def;
       for (let i = 0; i < 12; i++) if (b.hitCd[i] > 0) b.hitCd[i] -= dt;
       if (!b.alive) {
+        if (def.raider) continue;
         b.respawnT -= dt;
         if (b.respawnT <= 0) { [b.x, b.z] = def.zone(); if (b.kind === 'boss') syncBossTier(); b.hp = b.maxHp; b.alive = true; b.g.visible = true; b.claimed = null; b.angry = false; }
         continue;
@@ -1462,6 +1536,7 @@
       }
       if (b.slowT > 0) b.slowT -= dt;
       const slow = b.slowT > 0 ? 0.5 : 1;
+      if (def.raider) { raiderAI(b, dt, slow); continue; }
       const dx = player.x - b.x, dz = player.z - b.z, d = Math.hypot(dx, dz);
       const chase = !player.dead && def.inZone(player.z) && d < def.aggro;
       const enraged = b.kind === 'boss' && b.hp < b.maxHp * 0.35;
@@ -2268,20 +2343,134 @@
   }
 
 
+
+  // ================= 습격 모드 (옆마을 부족) =================
+  const RAID_PREP = 150;          // 준비 시간(초)
+  const raidUnlocked = () => PADS.every(p => p.open || L[p.k] >= p.max);
+  function raiderAI(b, dt, slow) {
+    const def = b.def;
+    const pdx = player.x - b.x, pdz = player.z - b.z, pd = Math.hypot(pdx, pdz);
+    const onPlayer = !player.dead && pd < def.aggro;
+    const tx = onPlayer ? player.x : STALL.x + b.ox, tz = onPlayer ? player.z : STALL.z + 1.5 + b.oz;
+    const dx = tx - b.x, dz = tz - b.z, d = Math.hypot(dx, dz), reach = onPlayer ? def.reach : 0.5;
+    let sp = 0;
+    b.atkCd -= dt;
+    if (d > reach - 0.2) { sp = def.chase * slow; b.x += dx / d * sp * dt; b.z += dz / d * sp * dt; }
+    if (d > 0.01) b.face = lerpAngle(b.face, Math.atan2(dx, dz), dt * 8);
+    if (d < reach + 0.15 && b.atkCd <= 0) {
+      b.atkCd = def.cd; b.bite = 0.3;
+      if (onPlayer) { const k = pd > 0.01 ? 1 / pd : 0; damagePlayer(def.dmg * b.dmul, pdx * k * def.knock, pdz * k * def.knock, def.cry); }
+      else { raid.hp = Math.max(0, raid.hp - def.siege); floatText('판매대 -' + def.siege, b.x, 2.4, b.z, 'bad'); sparks(STALL.x + b.ox * 0.5, 1, STALL.z + 0.8, '#c9a066', 6, 4); SFX.chop(); }
+    }
+    b.x = Math.max(-def.xMax, Math.min(def.xMax, b.x)); b.z = Math.max(def.zMin, Math.min(def.zMax, b.z));
+    b.walk += sp * dt; if (b.bump > 0) b.bump -= dt; if (b.bite > 0) b.bite -= dt;
+    b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
+    const s = sp > 0 ? Math.sin(b.walk * 3.2) : 0;
+    b.legL.rotation.x = s * 0.6; b.legR.rotation.x = -s * 0.6;
+    b.armR.rotation.x = b.bite > 0 ? -1.5 : -0.3 + s * 0.25;
+    b.body.position.y = sp > 0 ? Math.abs(Math.cos(b.walk * 3.2)) * 0.06 : 0;
+    b.g.scale.setScalar(def.scale * (1 + Math.max(0, b.bump) * 0.4));
+    if (b.bar) {
+      b.bar.visible = b.hp < b.maxHp;
+      if (b.bar.visible) { b.bar.position.set(b.x, def.barY, b.z); const k = Math.max(0, b.hp / b.maxHp), w = def.barW - 0.1; b.fill.scale.x = w * k; b.fill.position.x = -w * (1 - k) / 2; }
+    }
+  }
+  function spawnRaider(kind, w) {
+    addBeast(kind);
+    const b = bears[bears.length - 1], west = Math.random() < 0.4;
+    b.x = west ? rand(-34, -30) : rand(-8, 8); b.z = west ? rand(0, 14) : rand(26, 31);
+    b.mul = Math.pow(1.18, w - 1); b.dmul = Math.pow(1.08, w - 1);   // 웨이브마다 체력 +18%, 공격력 +8% (복리)
+    b.maxHp = b.hp = Math.round(b.def.hp * b.mul);
+    b.ox = rand(-1.6, 1.6); b.oz = rand(0, 1.2); b.face = Math.atan2(STALL.x - b.x, STALL.z - b.z);
+    b.g.position.set(b.x, 0, b.z);
+    puff(b.x, 0.3, b.z, '#6a5a4a', 5, 1);
+  }
+  function clearRaiders() {
+    for (let i = bears.length - 1; i >= 0; i--) {
+      const b = bears[i]; if (!b.def.raider) continue;
+      scene.remove(b.g); if (b.bar) scene.remove(b.bar); bears.splice(i, 1);
+    }
+  }
+  function raidPlan(w) {
+    const q = [];
+    for (let i = 0; i < Math.min(40, 5 + 2 * w); i++) q.push('goblin');
+    for (let i = 0; i < (w >= 2 ? Math.floor(w / 2) + 1 : 0); i++) q.splice(Math.floor(Math.random() * (q.length + 1)), 0, 'orc');
+    for (let i = 0; i < (w % 5 === 0 ? w / 5 : 0); i++) q.push('chief');
+    return q;
+  }
+  function startRaid() {
+    const w = raid.wave;
+    raid.phase = 'fight'; raid.hp = 100; raid.queue = raidPlan(w); raid.spawnT = 0;
+    toast(w % 5 === 0 ? `${w}웨이브! 부족장이 이끄는 부족이 쳐들어옵니다!` : `${w}웨이브! 옆마을 부족이 쳐들어옵니다!`);
+    SFX.roar(); shake = 0.5;
+  }
+  function endRaid(won) {
+    const w = raid.wave;
+    if (won) {
+      const g = 3000 * w, gm = 1 + Math.floor(w / 3), st = w % 5 === 0 ? 1 + Math.floor(w / 10) : 0;
+      gold += g; gems += gm; evoStones += st; bumpGold();
+      raid.best = Math.max(raid.best, w); raid.wave++;
+      toast(`${w}웨이브 방어 성공! +${fmt(g)}G · 보석 +${gm}` + (st ? ` · 진화석 +${st}` : '') + (w === 5 ? ' · 전설의 용구몬 부화 가능!' : ''));
+      sparkleColumn(player.x, player.z, '#ffe08a', 24); SFX.level(); flashT = 0.5;
+    } else {
+      const lostCash = Math.floor(cashPile * 0.3), lostStock = Math.floor(stock.length / 2);
+      cashPile -= lostCash; stock.splice(0, lostStock); stockDirty = true;
+      clearRaiders();
+      toast(`판매대가 털렸습니다… 금괴 -${fmt(lostCash)}, 재고 -${lostStock}. ${w}웨이브를 다시 준비하세요`);
+      SFX.hurt();
+    }
+    raid.phase = 'prep'; raid.t = RAID_PREP;
+    saveLocal();
+  }
+  const mmss = t => { t = Math.max(0, Math.ceil(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+  function updateRaid(dt) {
+    if (raid.phase === 'off') {
+      if (!raidUnlocked()) { $('raidBar').hidden = true; return; }
+      raid.phase = 'prep'; raid.t = RAID_PREP;
+      if (!raid.best && raid.wave === 1) toast('모든 강화 완료! 옆마을 부족이 쳐들어올 준비를 합니다. 2분 30초 안에 대비하세요!');
+    }
+    if (raid.phase === 'prep') { raid.t -= dt; if (raid.t <= 0) startRaid(); }
+    else {
+      raid.spawnT -= dt;
+      if (raid.spawnT <= 0 && raid.queue.length) { spawnRaider(raid.queue.shift(), raid.wave); raid.spawnT = raid.queue.length && raid.queue[0] === 'chief' ? 2 : 0.6; }
+      for (let i = bears.length - 1; i >= 0; i--) { const b = bears[i]; if (b.def.raider && !b.alive) { scene.remove(b.g); if (b.bar) scene.remove(b.bar); bears.splice(i, 1); } }
+      raid.left = raid.queue.length + bears.filter(b => b.def.raider).length;
+      if (raid.hp <= 0) endRaid(false); else if (raid.left === 0) endRaid(true);
+    }
+    const w = raid.wave, fight = raid.phase === 'fight';
+    $('raidBar').hidden = false;
+    $('raidName').textContent = `습격 ${w}웨이브` + (w % 5 === 0 ? ' · 부족장' : '');
+    $('raidInfo').textContent = fight ? `남은 적 ${raid.left}` : `${mmss(raid.t)} 뒤 시작`;
+    $('raidHpBar').hidden = !fight;
+    $('raidFill').style.width = raid.hp + '%';
+    $('raidSub').textContent = fight ? `판매대 방어 ${Math.ceil(raid.hp)}/100` : `최고 기록 ${raid.best}웨이브 · 준비하세요`;
+    $('raidGo').hidden = fight;
+  }
+  $('raidGo').addEventListener('click', () => { if (raid.phase === 'prep') raid.t = 0; });
+
   // ================= 몬 (동료 몬스터) =================
   const monForm = lv => lv >= 20 ? 2 : lv >= 10 ? 1 : 0;
   const FORM_NAME = ['아기', '성장', '최종'];
   const monPower = lv => (1 + 0.22 * (lv - 1)) * [1, 2.2, 4.5][monForm(lv)];
+  const FORM_K = [1, 1.3, 1.7];
+  const monBonus = (k, base, per) => { const lv = monLv[k]; return lv ? base + per * lv * FORM_K[monForm(lv)] : 0; };
+  const monSpeed = () => monBonus('mal', 0.08, 0.004);      // 말몬: 이동 속도 +8% ~ +28%
+  const monBag = () => monLv.mal ? 0.1 * (1 + monForm(monLv.mal)) : 0;   // 말몬: 가방 +10/20/30%
+  const monArmor = () => monBonus('hoseon', 0.05, 0.003);   // 호선몬: 받는 피해 -5% ~ -20%
   // 다음 레벨 비용: 9→10, 19→20은 진화라 3배 (19→20은 진화석 3개도 필요)
   function monCost(m, lv) {
-    if (lv <= 0) return { gold: m.price, stones: 0 };
-    const g = Math.round(m.price * 0.35 * Math.pow(1.17, lv - 1)) * (lv === 9 || lv === 19 ? 3 : 1);
+    if (lv <= 0) return { gold: m.price, stones: m.hatchStones || 0 };
+    const g = Math.round((m.lvBase || m.price) * 0.35 * Math.pow(1.17, lv - 1)) * (lv === 9 || lv === 19 ? 3 : 1);
     return { gold: g, stones: lv === 19 ? 3 : 0 };
   }
   function monMagnet() { const lv = monLv.junwoo; return lv ? 1.5 + 0.1 * lv * [1, 1.3, 1.7][monForm(lv)] : 0; }
   function monEffect(m, lv) {
     const p = monPower(lv);
     if (m.k === 'junwoo') return `1.5초마다 체력 +${(0.6 * p).toFixed(1)} · 자석 범위 +${(1.5 + 0.1 * lv * [1, 1.3, 1.7][monForm(lv)]).toFixed(1)}`;
+    if (m.k === 'mal') return `이동 속도 +${Math.round((0.08 + 0.004 * lv * FORM_K[monForm(lv)]) * 100)}% · 가방 +${10 * (1 + monForm(lv))}%`;
+    if (m.k === 'hoseon') return `받는 피해 -${Math.round((0.05 + 0.003 * lv * FORM_K[monForm(lv)]) * 100)}%`;
+    if (m.k === 'dongwook') return `1.2초마다 얼음 파동 · 피해 ${(3 * p).toFixed(1)} · 반경 ${(4.5 + 0.08 * lv).toFixed(1)} · 2초간 느려짐`;
+    if (m.k === 'yonggu') return `1.4초마다 불덩이 · 피해 ${(30 * p).toFixed(0)} (반경 3 폭발) · 사거리 12`;
     const dmg = m.k === 'yeonjun' ? 12 * p : 2.5 * p;
     return `피해 ${dmg.toFixed(1)} · ${m.k === 'yeonjun' ? '0.9' : '0.8'}초마다 · 사거리 ${m.k === 'yeonjun' ? 10 : 7}`;
   }
@@ -2309,13 +2498,40 @@
       add(MON_CONE, monMat('#bfe6ff', { emissive: '#103050', roughness: 0.2 }), 0, 0.42, 0.05, 1, form >= 1 ? 1.3 : 1);
       if (form >= 1) for (const sx of [-1, 1]) add(MON_CONE, monMat('#bfe6ff', { emissive: '#103050', roughness: 0.2 }), sx * 0.17, 0.33, 0, 0.7, 0.8, 0.7, 0, sx * -0.5);
       if (form >= 2) for (let i = 0; i < 3; i++) add(MON_CONE, monMat('#d9b8ff', { emissive: '#301050', roughness: 0.2 }), (i - 1) * 0.14, 0.18, -0.3, 0.8, 1, 0.8, -0.8);
+    } else if (m.k === 'mal') {    // 말: 긴 주둥이·갈기 → 안장 → 날개와 뿔
+      add(MON_BODY, bell, 0, -0.02, 0.33, 0.42, 0.36, 0.5);
+      add(MON_PUP, black, -0.06, 0.0, 0.5); add(MON_PUP, black, 0.06, 0.0, 0.5);
+      for (const sx of [-1, 1]) add(MON_CONE, main, sx * 0.14, 0.4, -0.02, 0.6, 0.6, 0.5, 0, sx * -0.25);
+      for (let i = 0; i < 4; i++) add(MON_CONE, dark, 0, 0.36 - i * 0.07, -0.08 - i * 0.1, 0.7, 0.8, 0.6, -0.6 - i * 0.2);
+      if (form >= 1) add(MON_BODY, monMat('#c8453d'), 0, 0.22, -0.18, 0.5, 0.16, 0.45);
+      if (form >= 2) { for (const sx of [-1, 1]) add(MON_BODY, monMat('#ffffff', { emissive: '#303040' }), sx * 0.38, 0.28, -0.12, 0.55, 0.18, 0.3, 0, sx * -0.5); add(MON_CONE, monMat('#ffe14a', { emissive: '#6a4a00' }), 0, 0.5, 0.15, 0.5, 1.1, 0.5, 0.5); }
+    } else if (m.k === 'dongwook') { // 얼음: 머리 고드름 → 더 많은 고드름 → 얼음 왕관
+      const ice = monMat('#d8f4ff', { emissive: '#2a6aa0', emissiveIntensity: 0.6, roughness: 0.15 });
+      for (let i = -1; i <= 1; i++) add(MON_CONE, ice, i * 0.12, 0.4 - Math.abs(i) * 0.05, 0, 0.8, 1 + (i === 0 ? 0.4 : 0), 0.8, 0, i * -0.4);
+      if (form >= 1) for (const sx of [-1, 1]) add(MON_CONE, ice, sx * 0.3, 0.1, -0.15, 0.7, 0.9, 0.7, 0, sx * -1.1);
+      if (form >= 2) for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; add(MON_CONE, ice, Math.cos(a) * 0.2, 0.36, Math.sin(a) * 0.2, 0.5, 0.8, 0.5); }
+    } else if (m.k === 'hoseon') { // 방패 거북: 등껍질 → 가시 → 금빛 고리
+      add(MON_BODY, dark, 0, 0.05, -0.2, 0.95, 0.8, 0.7);
+      add(new THREE.TorusGeometry(0.3, 0.035, 8, 24), monMat('#f2c14e', { metalness: 0.4, roughness: 0.3 }), 0, 0.05, -0.2, 1, 1, 1, Math.PI / 2 - 0.6);
+      if (form >= 1) for (let i = 0; i < 3; i++) add(MON_CONE, monMat('#f4efe2'), (i - 1) * 0.15, 0.32, -0.3, 0.6, 0.7, 0.6, -0.4);
+      if (form >= 2) add(new THREE.TorusGeometry(0.22, 0.03, 8, 28), monMat('#fff2b0', { emissive: '#a07a00', emissiveIntensity: 1 }), 0, 0.62, 0, 1, 1, 1, Math.PI / 2);
+    } else if (m.k === 'yonggu') { // 전설의 용: 뿔·주둥이·날개·꼬리 → 큰 날개 → 금관과 불꽃
+      const gold = monMat('#ffd04a', { metalness: 0.3, roughness: 0.35, emissive: '#5a3000' });
+      add(MON_BODY, main, 0, 0.02, 0.3, 0.45, 0.36, 0.45);
+      add(MON_PUP, black, -0.07, 0.05, 0.47); add(MON_PUP, black, 0.07, 0.05, 0.47);
+      for (const sx of [-1, 1]) add(MON_CONE, gold, sx * 0.16, 0.42, -0.05, 0.6, 1.1, 0.6, -0.4, sx * -0.35);
+      const ws = form >= 1 ? 1.35 : 1;
+      for (const sx of [-1, 1]) add(MON_BODY, dark, sx * 0.42 * ws, 0.22, -0.18, 0.75 * ws, 0.12, 0.45 * ws, 0, sx * -0.55);
+      add(MON_CONE, dark, 0, -0.05, -0.45, 0.9, 1.6, 0.9, -1.35);
+      for (let i = 0; i < 3; i++) add(MON_CONE, gold, 0, 0.3 - i * 0.08, -0.22 - i * 0.12, 0.45, 0.6, 0.45, -0.7);
+      if (form >= 2) { add(new THREE.TorusGeometry(0.2, 0.04, 8, 20), gold, 0, 0.5, 0, 1, 1, 1, Math.PI / 2); for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283; add(MON_CONE, gold, Math.cos(a) * 0.2, 0.6, Math.sin(a) * 0.2, 0.35, 0.55, 0.35); } }
     } else {                       // 불꽃 머리 → 꼬리 불꽃 → 큰 불꽃
       const fl = monMat('#ffd04a', { emissive: '#ff6a00', emissiveIntensity: 0.9 });
       add(MON_CONE, fl, 0, 0.42, 0, 1.1, form >= 2 ? 1.6 : 1.1);
       if (form >= 1) add(MON_CONE, fl, 0, 0.0, -0.4, 0.9, 1.2, 0.9, -1.2);
       if (form >= 2) for (const sx of [-1, 1]) add(MON_CONE, fl, sx * 0.2, 0.35, -0.05, 0.8, 1.1, 0.8, 0, sx * -0.6);
     }
-    g.scale.setScalar([1, 1.25, 1.55][form]);
+    g.scale.setScalar([1, 1.25, 1.55][form] * (m.legend ? 1.35 : 1));
     return g;
   }
 
@@ -2327,7 +2543,7 @@
     MONS.forEach((m, i) => {
       const lv = monLv[m.k]; if (!lv) return;
       const form = monForm(lv), g = buildMonMesh(m, form);
-      const tag = mkTag('mon'); tag.innerHTML = `${m.name} <small>Lv.${lv}</small>`;
+      const tag = mkTag(m.legend ? 'mon legend' : 'mon'); tag.innerHTML = `${m.name} <small>Lv.${lv}</small>`;
       g.position.set(player.x, 1, player.z); scene.add(g);
       mons.push({ m, lv, form, g, tag, x: player.x, y: 1, z: player.z, cd: rand(0, 0.8), slot: i });
     });
@@ -2337,14 +2553,16 @@
     const consider = o => { if (!o.alive) return; const d = dist(o.x, o.z, mo.x, mo.z); if (d < bd) { bd = d; best = o; } };
     if (mo.m.k === 'yunwoo') trees.forEach(consider);
     else if (mo.m.k === 'chaea') rocks.forEach(consider);
+    else if (mo.m.k === 'yonggu') bears.forEach(consider);
     else bears.forEach(consider);
     return best;
   }
-  const SHOT_COL = { yunwoo: '#8fe86a', chaea: '#9fe0ff', yeonjun: '#ff8a2a' };
+  const SHOT_COL = { yunwoo: '#8fe86a', chaea: '#9fe0ff', yeonjun: '#ff8a2a', yonggu: '#ff5a1a' };
   function updateMons(dt, t) {
     mons.forEach((mo, i) => {
       // 주인공 뒤쪽에 부채꼴로 따라다닌다
-      const a = player.face + Math.PI + (i - (mons.length - 1) / 2) * 0.75, r = 1.5 + 0.15 * mo.form;
+      const row = i < 4 ? 0 : 1, inRow = row ? mons.length - 4 : Math.min(4, mons.length), j = row ? i - 4 : i;
+      const a = player.face + Math.PI + (j - (inRow - 1) / 2) * (row ? 0.5 : 0.75), r = (row ? 2.7 : 1.5) + 0.15 * mo.form;
       const tx = player.x + Math.sin(a) * r, tz = player.z + Math.cos(a) * r;
       const k = 1 - Math.exp(-5 * dt);
       mo.x += (tx - mo.x) * k; mo.z += (tz - mo.z) * k;
@@ -2355,6 +2573,21 @@
       project(mo.x, mo.y + 0.55 + 0.25 * mo.form, mo.z, mo.tag, -8);
       if (player.dead) return;
       mo.cd -= dt;
+      if (mo.m.legend && Math.random() < dt * 8) emit(pick(['#ffb040', '#ff6a2a', '#ffe08a']), mo.x + rand(-0.3, 0.3), mo.y + rand(-0.2, 0.4), mo.z + rand(-0.3, 0.3), 0, 0.8, 0, 0.5, 0.12);
+      if (mo.m.k === 'mal' || mo.m.k === 'hoseon') {   // 효과는 상시 (derived에서 반영)
+        if (mo.m.k === 'hoseon' && player.hurtT > 0.35) { rings.push({ x: player.x, z: player.z, r0: 0.4, r1: 1.4, t: 0, life: 0.35, c: '#7ff0d8' }); }
+        return;
+      }
+      if (mo.m.k === 'dongwook') {
+        if (mo.cd > 0) return;
+        const R = 4.5 + 0.08 * mo.lv, near = bears.filter(b => b.alive && dist(b.x, b.z, player.x, player.z) < R + b.def.hitR * 0.5);
+        if (!near.length) { mo.cd = 0.3; return; }
+        mo.cd = 1.2;
+        rings.push({ x: player.x, z: player.z, r0: 0.5, r1: R, t: 0, life: 0.45, c: '#9fe3ff' });
+        for (let k = 0; k < 10; k++) { const a = rand(0, 6.28), rr = rand(1, R); emit(pick(['#dff6ff', '#9fe3ff']), player.x + Math.cos(a) * rr, 0.4, player.z + Math.sin(a) * rr, 0, 1, 0, 0.5, 0.12); }
+        for (const b of near) { b.slowT = 2; applyHit(b, 3 * monPower(mo.lv), []); }
+        return;
+      }
       if (mo.m.k === 'junwoo') {
         if (mo.cd <= 0) {
           mo.cd = 1.5;
@@ -2365,11 +2598,12 @@
         return;
       }
       if (mo.cd > 0) return;
-      const range = mo.m.k === 'yeonjun' ? 10 : 7, o = monTarget(mo, range);
+      const fire = mo.m.k === 'yeonjun' || mo.m.k === 'yonggu';
+      const range = mo.m.k === 'yonggu' ? 12 : fire ? 10 : 7, o = monTarget(mo, range);
       if (!o) { mo.cd = 0.3; return; }
-      mo.cd = mo.m.k === 'yeonjun' ? 0.9 : 0.8;
-      const dmg = (mo.m.k === 'yeonjun' ? 12 : 2.5) * monPower(mo.lv);
-      monShots.push({ x: mo.x, y: mo.y, z: mo.z, o, dmg, c: SHOT_COL[mo.m.k], big: mo.form });
+      mo.cd = mo.m.k === 'yonggu' ? 1.4 : fire ? 0.9 : 0.8;
+      const dmg = (mo.m.k === 'yonggu' ? 30 : fire ? 12 : 2.5) * monPower(mo.lv);
+      monShots.push({ x: mo.x, y: mo.y, z: mo.z, o, dmg, c: SHOT_COL[mo.m.k], big: mo.form + (mo.m.legend ? 3 : 0), aoe: mo.m.k === 'yonggu' ? 3 : 0 });
       mo.g.children[0].scale.y = 0.8;
     });
     for (let i = monShots.length - 1; i >= 0; i--) {
@@ -2380,10 +2614,15 @@
       if (d <= step + 0.3) {
         applyHit(o, s.dmg, []);
         sparks(o.x, ty, o.z, s.c, 5 + s.big * 3, 4);
+        if (s.aoe) {
+          boomFx(o.x, o.z, s.aoe, '#ff7a2a'); SFX.boom(); flashAt(o.x, 1.5, o.z, '#ff9a40', 2.5);
+          for (const b of bears) if (b !== o && b.alive && dist(b.x, b.z, o.x, o.z) < s.aoe + b.def.hitR * 0.5) dealDirect(b, s.dmg * 0.7, [], o.x, o.z);
+        }
         monShots.splice(i, 1); continue;
       }
       s.x += dx / d * step; s.y += dy / d * step; s.z += dz / d * step;
       glow.spawn(s.c, s.x, s.y, s.z, 0, 0, 0, 0.18, 0.55 + s.big * 0.2, 0.1, 0, 0, 1.2);
+      if (s.aoe) glow.spawn('#ffe08a', s.x + rand(-0.2, 0.2), s.y + rand(-0.2, 0.2), s.z + rand(-0.2, 0.2), 0, 0.5, 0, 0.3, 0.9, 0.2, 0, 0, 1.3);
     }
   }
 
@@ -2508,10 +2747,10 @@
       h += '<div class="cards">' + MONS.map(m => {
         const lv = monLv[m.k], c = monCost(m, lv), can = shopAtPad && gold >= c.gold && evoStones >= c.stones;
         let btn;
-        if (!lv) btn = m.req() ? `<button class="box btn primary" data-act="monUp" data-k="${m.k}" ${can ? '' : 'disabled'}>부화 ${fmt(c.gold)}G</button>` : `<button class="box btn" disabled>${m.reqTxt}</button>`;
+        if (!lv) btn = m.req() ? `<button class="box btn primary" data-act="monUp" data-k="${m.k}" ${can ? '' : 'disabled'}>부화 ${fmt(c.gold)}G${c.stones ? ' + 진화석 ' + c.stones : ''}</button>` : `<button class="box btn" disabled>${m.reqTxt}</button>`;
         else if (lv >= MON_MAX) btn = '<button class="box btn" disabled>최대 레벨</button>';
         else btn = `<button class="box btn primary" data-act="monUp" data-k="${m.k}" ${can ? '' : 'disabled'}>${lv === 9 || lv === 19 ? '진화' : '레벨업'} ${fmt(c.gold)}G${c.stones ? ' + 진화석 ' + c.stones : ''}</button>`;
-        return `<div class="card ${lv >= 20 ? 'ancient' : lv >= 10 ? 'legend' : lv ? 'unique' : 'normal'}"><div class="nm"><span>${m.name}</span><span class="grade">${m.role}${lv ? ' · ' + FORM_NAME[monForm(lv)] + ' Lv.' + lv : ''}</span></div>` +
+        return `<div class="card ${m.legend || lv >= 20 ? 'ancient' : lv >= 10 ? 'legend' : lv ? 'unique' : 'normal'}"><div class="nm"><span>${m.name}</span><span class="grade">${m.role}${lv ? ' · ' + FORM_NAME[monForm(lv)] + ' Lv.' + lv : ''}</span></div>` +
           `<div class="st">${m.desc}</div>${lv ? `<div class="st">${monEffect(m, lv)}</div>` : ''}<div class="acts">${btn}</div></div>`;
       }).join('') + '</div>';
     } else {
@@ -2675,7 +2914,7 @@
     return {
       v: 3, gold, cashPile, goal, gems, L: { ...L }, stats: { ...stats }, padPaid: { ...padPaid },
       stock: stock.concat(beltItems.map(b => b.type)), carry: player.carry.slice(), npcCarry: npcs.flatMap(n => n.carry),
-      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, mons: { ...monLv }, evoStones, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
+      weapons: weapons.map(w => ({ ...w })), eq: { ...eq }, nextWid, mons: { ...monLv }, evoStones, raid: { wave: raid.wave, best: raid.best }, skinsOwned: skinsOwned.slice(), skin, lastSeen: Date.now(),
     };
   }
   function saveLocal() {
@@ -2721,6 +2960,8 @@
     skin = s && skinsOwned.includes(s.skin) ? s.skin : 0;
     for (const m of MONS) monLv[m.k] = Math.max(0, Math.min(MON_MAX, (s && s.mons && s.mons[m.k]) | 0));
     evoStones = Math.max(0, (s && s.evoStones) | 0);
+    clearRaiders();
+    raid.wave = Math.max(1, (s && s.raid && s.raid.wave) | 0); raid.best = Math.max(0, (s && s.raid && s.raid.best) | 0); raid.phase = 'off'; raid.queue = [];
     // 이전 버전 호환: 대검은 없어져서 쓴 돈을 돌려주고, 발판으로 산 활은 무기점 활로 바꿔 준다
     const notes = [];
     if (sl.sword > 0) { const r = SWORD_COST(sl.sword); gold += r; notes.push(`대검 환불 +${fmt(r)}G`); }
@@ -2884,9 +3125,9 @@
   let shownCarry = 0, clock = 0, flashT = 0;
   applyState(localState);
   showOffline(localState);
-  if (location.hash === '#debug') window.__dbg = { player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
+  if (location.hash === '#debug') window.__dbg = { PADS, player, stats, L, stock, trees, bears, rocks, custs, npcs, beltItems, applyState, snapshot, derived, boss, shots, openShop, pull, makeGachaWeapon, equip, rollGrade,
     get weapons() { return weapons; }, get eq() { return eq; }, get gold() { return gold; }, set gold(v) { gold = v; }, get gems() { return gems; }, set gems(v) { gems = v; },
-    MODELS, MODEL_H, get pg() { return pg; }, scene, renderer, monLv, mons, bossTier, offlineCalc,
+    MODELS, MODEL_H, get pg() { return pg; }, scene, renderer, monLv, mons, bossTier, offlineCalc, raid, startRaid, get evoStones() { return evoStones; }, set evoStones(v) { evoStones = v; },
     get cashPile() { return cashPile; }, merge, offlineCalc, showOffline, get skin() { return skin; }, set skin(v) { skin = v; buildPlayer(); }, get skinsOwned() { return skinsOwned; }, damagePlayer, buildPlayer, syncTools };
 
   let spinA = 0, last = performance.now(), saveT = 0, cloudT = 0, walkT = 0, bankT = 0, stepT = 0, noteT = 0;
@@ -2989,7 +3230,7 @@
         if (!tr.alive || tr.hitCd[ci] > 0 || Math.abs(tr.x - x) > 1.6 || Math.abs(tr.z - z) > 1.6) continue;
         if (dist(tr.x, tr.z, x, z) < (tr.big ? 1.1 : 0.85) + hitR) { tr.hitCd[ci] = 0.25; applyHit(tr, D.dmg, sk); }
       }
-      if (player.z < BEAR_Z + 3) for (const b of bears) {
+      if (player.z < BEAR_Z + 3 || raid.phase === 'fight') for (const b of bears) {
         if (!b.alive || b.hitCd[ci] > 0 || Math.abs(b.x - x) > 6 || Math.abs(b.z - z) > 6) continue;
         if (dist(b.x, b.z, x, z) < b.def.hitR + hitR) { b.hitCd[ci] = 0.3; applyHit(b, D.dmg, sk); }
       }
@@ -3071,6 +3312,7 @@
     for (const c of cashiers) if (c) animPerson(c, false, clock);
     updateFx(dt);
     updateMons(dt, clock);
+    updateRaid(dt);
 
     // ---- 파편 / 코인 / 이펙트 ----
     for (let i = chips.length - 1; i >= 0; i--) {
