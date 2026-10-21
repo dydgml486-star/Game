@@ -1,0 +1,922 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>세 아재 영지</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* 한 화면 앱: 고정 머리글(금고·행동력) / 스크롤 본문 / 고정 하단 탭 4개 */
+:root{
+  --bg:#e7eae7; --surface:#f6f8f6; --sunken:#dde2de;
+  --ink:#1a2320; --muted:#5c6b64; --line:#ccd3cd;
+  --brass:#8c5f12; --brass-soft:#e8dcc0;
+  --iron:#3d574f;
+  --danger:#993529; --good:#3c6937;
+  --wood:#87673c; --food:#5f7c33; --metal:#4d7180; --gold:#9c7716;
+  --font-display:'Gowun Batang',Batang,serif;
+  --font-body:'IBM Plex Sans KR','Malgun Gothic',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131917; --surface:#1c2321; --sunken:#0f1413;
+  --ink:#e4eae6; --muted:#8fa09a; --line:#2d3733;
+  --brass:#d7a344; --brass-soft:#3a3122;
+  --iron:#7ea79b;
+  --danger:#d9705c; --good:#82b471;
+  --wood:#c49a63; --food:#9cbd63; --metal:#8db4c4; --gold:#d7b659;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#131917; --surface:#1c2321; --sunken:#0f1413;
+  --ink:#e4eae6; --muted:#8fa09a; --line:#2d3733;
+  --brass:#d7a344; --brass-soft:#3a3122;
+  --iron:#7ea79b;
+  --danger:#d9705c; --good:#82b471;
+  --wood:#c49a63; --food:#9cbd63; --metal:#8db4c4; --gold:#d7b659;
+  color-scheme:dark;
+}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.5;
+  -webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  z-index:20;background:var(--surface)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- 머리글 ---- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.top-in{padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;
+  display:flex;flex-direction:column;gap:8px}
+.brand{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.brand h1{font-family:var(--font-display);font-weight:700;font-size:1.15rem;margin:0;
+  letter-spacing:-.01em}
+.brand .season{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.vault{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;background:var(--sunken);border-radius:3px;
+  padding:3px 7px 3px 4px;min-width:0}
+.mono{width:19px;height:19px;border-radius:3px;display:grid;place-items:center;flex:none;
+  font-family:var(--font-display);font-size:.72rem;font-weight:700;color:#fff}
+.m-wood{background:var(--wood)} .m-food{background:var(--food)}
+.m-iron{background:var(--metal)} .m-gold{background:var(--gold)}
+.chip b{font-weight:600;font-size:.82rem;font-variant-numeric:tabular-nums}
+.chip .gain{font-size:.7rem;color:var(--good);font-variant-numeric:tabular-nums}
+.apbar{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+.apbar .track{flex:1;min-width:0;height:5px;background:var(--sunken);border-radius:3px;overflow:hidden}
+.apbar .fill{height:100%;background:var(--brass)}
+.apbar b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ---- 본문 ---- */
+main{padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px calc(84px + env(safe-area-inset-bottom,0px));
+  max-width:620px;margin:0 auto}
+.sect{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  margin:0}
+h2{font-family:var(--font-display);font-weight:700;font-size:1.25rem;margin:0;
+  text-wrap:balance;letter-spacing:-.01em}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px}
+.row{display:flex;align-items:center;gap:10px;min-width:0}
+.grow{flex:1;min-width:0}
+.btn{background:var(--brass);color:#fff;border:0;border-radius:3px;padding:8px 14px;
+  font-weight:600;font-size:.86rem;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--brass);border:1px solid var(--brass)}
+.btn.wide{width:100%;padding:11px}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.lvl{font-family:var(--font-display);font-size:1.5rem;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--brass);flex:none;width:2.1em;text-align:right}
+.bname{font-weight:600;font-size:.95rem}
+.bsub{font-size:.76rem;color:var(--muted)}
+.cost{display:flex;gap:6px;flex-wrap:wrap;font-size:.76rem;font-variant-numeric:tabular-nums}
+.cost span{color:var(--muted)}
+.cost span.short{color:var(--danger);font-weight:600}
+.locked{opacity:.55}
+
+/* 보스 */
+.boss{background:var(--surface);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.boss-head{padding:14px 12px;display:flex;flex-direction:column;gap:3px;
+  background:var(--brass-soft)}
+.boss-name{font-family:var(--font-display);font-size:1.3rem;font-weight:700;line-height:1.2}
+.boss-tier{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hptrack{height:22px;background:var(--sunken);position:relative}
+.hpfill{height:100%;background:var(--danger);transition:width .4s}
+.hptext{position:absolute;inset:0;display:grid;place-items:center;font-size:.78rem;
+  font-weight:600;font-variant-numeric:tabular-nums;mix-blend-mode:normal}
+.boss-body{padding:12px;display:flex;flex-direction:column;gap:10px}
+.syn{font-size:.8rem;padding:8px 10px;border-radius:3px;background:var(--sunken)}
+.syn.on{background:var(--brass-soft);color:var(--ink);font-weight:500}
+
+/* 역할 */
+.roles{display:grid;gap:8px}
+.role{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:11px;display:flex;flex-direction:column;gap:3px;width:100%}
+.role[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
+.role .rn{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
+.role .rp{font-size:.78rem;color:var(--muted)}
+.role .rt{font-size:.74rem;color:var(--brass);font-weight:600}
+
+/* 멤버·기록 */
+.mlist{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:4px;
+  overflow:hidden;border:1px solid var(--line)}
+.mrow{background:var(--surface);padding:10px 12px;display:flex;align-items:center;gap:10px}
+.mrow .nm{font-weight:600;font-size:.9rem}
+.mrow .rl{font-size:.74rem;color:var(--brass)}
+.mrow .dl{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;
+  text-align:right;flex:none}
+.feed{display:flex;flex-direction:column;gap:0}
+.fitem{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem}
+.fitem:last-child{border-bottom:0}
+.fitem time{flex:none;width:4.4em;color:var(--muted);font-size:.76rem;
+  font-variant-numeric:tabular-nums}
+.empty{padding:22px 12px;text-align:center;color:var(--muted);font-size:.86rem;
+  border:1px dashed var(--line);border-radius:4px}
+
+/* 하단 탭 */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);
+  border-top:1px solid var(--line);display:flex;
+  padding-left:max(8px,env(safe-area-inset-left,0px));
+  padding-right:max(8px,env(safe-area-inset-right,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;background:none;border:0;padding:9px 2px 10px;display:flex;
+  flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:.72rem}
+.tabs button .tl{font-family:var(--font-display);font-size:1.02rem;font-weight:700;line-height:1}
+.tabs button[aria-selected="true"]{color:var(--brass)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:30;
+  background:var(--ink);color:var(--bg);padding:9px 15px;border-radius:4px;font-size:.84rem;
+  max-width:88vw;text-align:center;box-shadow:0 3px 14px rgba(0,0,0,.25)}
+.banner{background:var(--brass-soft);border:1px solid var(--brass);border-radius:4px;
+  padding:10px 12px;font-size:.82rem}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>세 아재 영지</h1>
+      <span class="season" id="seasonLabel">불러오는 중</span>
+    </div>
+    <div class="vault" id="vault"></div>
+    <div class="apbar">
+      <span>행동력</span>
+      <b id="apNum">–</b>
+      <span class="track"><span class="fill" id="apFill" style="width:0"></span></span>
+      <span id="apNext"></span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="statusBanner" hidden></div>
+
+  <section class="sect" id="tab-realm">
+    <div>
+      <p class="eyebrow">공동 금고</p>
+      <h2>영지</h2>
+      <p class="note">건물은 셋이 함께 올립니다. 생산물은 누가 들어와서 거둬도 공동 금고로 들어갑니다 — 최대 8시간까지 쌓입니다.</p>
+    </div>
+    <div class="card" id="harvestCard"></div>
+    <div id="buildings" class="sect"></div>
+  </section>
+
+  <section class="sect" id="tab-raid" hidden>
+    <div>
+      <p class="eyebrow">공유 레이드</p>
+      <h2>토벌</h2>
+      <p class="note">체력은 세 사람이 함께 깎습니다. 다른 사람이 때린 뒤 10분 안에 이어 때리면 합동 보너스가 붙습니다.</p>
+    </div>
+    <div class="boss" id="boss"></div>
+  </section>
+
+  <section class="sect" id="tab-study" hidden>
+    <div>
+      <p class="eyebrow">영구 효과</p>
+      <h2>연구</h2>
+      <p class="note">한 번 올리면 세 사람 전원에게 적용됩니다. 금화와 철을 씁니다.</p>
+    </div>
+    <div id="research" class="sect"></div>
+  </section>
+
+  <section class="sect" id="tab-guild" hidden>
+    <div>
+      <p class="eyebrow">세 사람</p>
+      <h2>길드</h2>
+      <p class="note">역할은 한 사람당 하나, 중복 불가입니다. 행동 자체를 막지는 않고 비용·피해에 보정이 붙습니다.</p>
+    </div>
+    <div class="roles" id="roles"></div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:8px">구성원</p>
+      <div id="members"></div>
+    </div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:8px">최근 기록</p>
+      <div class="card"><div class="feed" id="feed"></div></div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-tab="realm" aria-selected="true"><span class="tl">領</span>영지</button>
+  <button role="tab" data-tab="raid" aria-selected="false"><span class="tl">討</span>토벌</button>
+  <button role="tab" data-tab="study" aria-selected="false"><span class="tl">硏</span>연구</button>
+  <button role="tab" data-tab="guild" aria-selected="false"><span class="tl">盟</span>길드</button>
+</nav>
+
+<script>
+"use strict";
+
+/* ============ 규칙 데이터 ============ */
+var MAXB = 10, MAXR = 5, HARVEST_CAP_H = 8, SYNERGY_WINDOW = 10 * 60 * 1000;
+
+var RES = [
+  { k: "wood", name: "목재", mark: "木", cls: "m-wood" },
+  { k: "food", name: "식량", mark: "食", cls: "m-food" },
+  { k: "iron", name: "철", mark: "鐵", cls: "m-iron" },
+  { k: "gold", name: "금화", mark: "金", cls: "m-gold" }
+];
+var RESNAME = { wood: "목재", food: "식량", iron: "철", gold: "금화" };
+
+var BUILDINGS = [
+  { k: "lumber", name: "벌목장", res: "wood", rate: 16,
+    cost: { food: 30, gold: 90 }, need: null },
+  { k: "farm", name: "농장", res: "food", rate: 14,
+    cost: { wood: 40, gold: 90 }, need: null },
+  { k: "mine", name: "광산", res: "iron", rate: 6,
+    cost: { wood: 120, food: 90, gold: 220 },
+    need: function (s) { return s.buildings.lumber >= 2 && s.buildings.farm >= 2; },
+    needText: "벌목장·농장 2단계 필요" },
+  { k: "market", name: "장터", res: "gold", rate: 11,
+    cost: { wood: 90, food: 120, iron: 25 },
+    need: function (s) { return s.buildings.mine >= 1; },
+    needText: "광산 1단계 필요" }
+];
+
+var RESEARCH = [
+  { k: "farming", name: "영농법", desc: "모든 생산 +8%/단계", cost: { gold: 300, food: 150 } },
+  { k: "forge", name: "단련", desc: "토벌 피해 +12%/단계", cost: { gold: 380, iron: 90 } },
+  { k: "supply", name: "보급", desc: "행동력 최대 +2, 회복 1분 단축/단계", cost: { gold: 340, food: 220 } },
+  { k: "tactics", name: "전술", desc: "합동 보너스 +15%p/단계", cost: { gold: 460, iron: 70, wood: 180 } }
+];
+
+var ROLES = [
+  { k: "warden", name: "대장", perk: "토벌 피해 2배 (40 → 기본 22)" },
+  { k: "steward", name: "집사", perk: "건물 비용 15% 할인" },
+  { k: "scribe", name: "서기", perk: "연구 비용 15% 할인" }
+];
+var ROLENAME = { warden: "대장", steward: "집사", scribe: "서기" };
+
+var BOSSES = [
+  "들판 도적떼", "늙은 숲곰", "강 건너 산적단", "철갑 멧돼지",
+  "옛 성터 망령", "서쪽 오크 전사", "늪지 거인", "검은 늑대 무리"
+];
+
+function bossName(t) { return BOSSES[(t - 1) % BOSSES.length] + (t > BOSSES.length ? " · 재림" : ""); }
+
+/* 체력·피해·보상·생산을 모두 같은 1.30 곡선에 태운다. ★단계가 올라도
+   한 마리에 드는 타수는 거의 그대로, 대신 금고 규모가 커진다. */
+var TIER_CURVE = 1.30;
+function tierScale(t) { return Math.pow(TIER_CURVE, t - 1); }
+function bossMaxHp(t) { return Math.round(2500 * tierScale(t)); }
+function renownMult(kills) { return Math.pow(1.26, kills || 0); }
+function bossReward(t) {
+  var s = tierScale(t);
+  return { gold: Math.round(1100 * s), iron: Math.round(180 * s), food: Math.round(240 * s) };
+}
+
+function defaultState() {
+  return {
+    season: 1, lastTick: Date.now(),
+    res: { wood: 150, food: 150, iron: 40, gold: 320 },
+    buildings: { lumber: 1, farm: 1, mine: 0, market: 0 },
+    research: { farming: 0, forge: 0, supply: 0, tactics: 0 },
+    roles: {}, kills: 0,
+    boss: { tier: 1, hp: bossMaxHp(1), maxHp: bossMaxHp(1), lastHitAt: 0, lastHitBy: "" }
+  };
+}
+
+function buildCost(b, lvl, discount) {
+  var out = {}, mult = Math.pow(1.55, lvl) * (1 - discount);
+  for (var k in b.cost) out[k] = Math.max(1, Math.round(b.cost[k] * mult));
+  return out;
+}
+function researchCost(r, lvl, discount) {
+  var out = {}, mult = Math.pow(2, lvl) * (1 - discount);
+  for (var k in r.cost) out[k] = Math.max(1, Math.round(r.cost[k] * mult));
+  return out;
+}
+function affordable(res, cost) {
+  for (var k in cost) if ((res[k] || 0) < cost[k]) return false;
+  return true;
+}
+function pay(res, cost) { for (var k in cost) res[k] = (res[k] || 0) - cost[k]; }
+
+function apMax(s) { return 12 + 2 * s.research.supply; }
+function apRegenMs(s) { return (10 - s.research.supply) * 60000; }
+
+/* 저장된 행동력 + 경과분 → 현재값. 남은 자투리 시간은 버리지 않는다. */
+function apNow(m, s) {
+  if (!m) return { ap: 0, nextIn: 0 };
+  var max = apMax(s), step = apRegenMs(s);
+  var elapsed = Math.max(0, Date.now() - (m.apAt || 0));
+  var gained = Math.floor(elapsed / step);
+  var ap = Math.min(max, (m.ap || 0) + gained);
+  var rem = elapsed - gained * step;
+  return { ap: ap, nextIn: ap >= max ? 0 : step - rem, rem: rem, max: max, step: step };
+}
+function apAfterSpend(m, s, n) {
+  var cur = apNow(m, s);
+  return { ap: cur.ap - n, apAt: cur.ap - n >= cur.max ? Date.now() : Date.now() - cur.rem };
+}
+
+function prodMult(s) {
+  return (1 + 0.08 * s.research.farming) * Math.pow(1.15, s.kills || 0);
+}
+function pendingHarvest(s) {
+  var hours = Math.min(HARVEST_CAP_H, Math.max(0, (Date.now() - (s.lastTick || Date.now())) / 3600000));
+  var mult = prodMult(s), out = {};
+  BUILDINGS.forEach(function (b) {
+    var lvl = s.buildings[b.k] || 0;
+    if (lvl > 0) out[b.res] = (out[b.res] || 0) + Math.floor(b.rate * lvl * hours * mult);
+  });
+  return { hours: hours, gain: out };
+}
+function hourlyRate(s) {
+  var mult = prodMult(s), out = {};
+  BUILDINGS.forEach(function (b) {
+    var lvl = s.buildings[b.k] || 0;
+    if (lvl > 0) out[b.res] = (out[b.res] || 0) + Math.round(b.rate * lvl * mult);
+  });
+  return out;
+}
+
+function synergyOf(s, uid) {
+  var b = s.boss, base = 1;
+  if (b.lastHitBy && b.lastHitBy !== uid && Date.now() - b.lastHitAt < SYNERGY_WINDOW) {
+    base = 1 + 0.3 + 0.15 * s.research.tactics;
+  }
+  return base;
+}
+function hitDamage(s, role) {
+  return (role === "warden" ? 40 : 22) * (1 + 0.12 * s.research.forge) * renownMult(s.kills);
+}
+
+/* ============ 런타임 상태 ============ */
+var db = null, userCap = null, uid = null, canWrite = null;
+var state = null, members = [], feed = [], names = {};
+var localOnly = false, activeTab = "realm", busy = false;
+
+var $ = function (id) { return document.getElementById(id); };
+
+function toast(msg) {
+  var old = document.querySelector(".toast");
+  if (old) old.remove();
+  var el = document.createElement("div");
+  el.className = "toast"; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.remove(); }, 2600);
+}
+function fmt(n) { return Math.round(n).toLocaleString("ko-KR"); }
+function ago(t) {
+  var d = Date.now() - t;
+  if (d < 60000) return "방금";
+  if (d < 3600000) return Math.floor(d / 60000) + "분 전";
+  if (d < 86400000) return Math.floor(d / 3600000) + "시간 전";
+  return Math.floor(d / 86400000) + "일 전";
+}
+function dur(ms) {
+  if (ms <= 0) return "";
+  var s = Math.ceil(ms / 1000);
+  if (s < 60) return s + "초 후";
+  return Math.floor(s / 60) + "분 " + (s % 60) + "초 후";
+}
+function me() {
+  for (var i = 0; i < members.length; i++) if (members[i].id === uid) return members[i];
+  return null;
+}
+function myRole() { var m = me(); return m ? m.role || "" : ""; }
+
+/* ============ 쓰기 ============ */
+/* 셋이 같은 금고를 만지니 영지 문서는 짧은 리스를 잡고 읽고-고쳐-쓴다. */
+function withRealm(fn, label) {
+  if (busy) return Promise.resolve(false);
+  busy = true; renderAll();
+  var done = function (ok) { busy = false; renderAll(); return ok; };
+
+  if (localOnly) {
+    var r = fn(state);
+    if (r === false) return Promise.resolve(done(false));
+    render();
+    return Promise.resolve(done(true));
+  }
+  var ref = db.doc("realm/state");
+  return ref.acquire({ holder: uid, ttlMs: 6000 }).then(function (res) {
+    if (!res.acquired) { toast("다른 분이 지금 조작 중입니다. 잠시 후 다시 눌러주세요."); return done(false); }
+    return ref.get().then(function (snap) {
+      var s = snap.exists ? JSON.parse(JSON.stringify(snap.data())) : defaultState();
+      var out = fn(s);
+      if (out === false) return done(false);
+      return ref.set(s).then(function () { return done(true); });
+    });
+  }).catch(function (e) {
+    toast(e && e.code === "invalid_argument" ? "이 영지에 쓸 권한이 없습니다." : "저장에 실패했습니다. 다시 시도해주세요.");
+    if (e && e.code === "invalid_argument") canWrite = false;
+    return done(false);
+  });
+}
+
+function logFeed(text) {
+  if (localOnly) {
+    feed.unshift({ t: Date.now(), uid: uid, text: text });
+    feed = feed.slice(0, 40); render(); return Promise.resolve();
+  }
+  var ref = db.doc("realm/feed");
+  return ref.get().then(function (snap) {
+    var items = (snap.exists && Array.isArray(snap.data().items)) ? snap.data().items.slice(0) : [];
+    items.unshift({ t: Date.now(), uid: uid, text: text });
+    return ref.set({ items: items.slice(0, 40) });
+  }).catch(function () { });
+}
+
+function saveMe(patch) {
+  var m = me() || { id: uid };
+  for (var k in patch) m[k] = patch[k];
+  if (localOnly) {
+    if (!me()) members.push(m);
+    render(); return Promise.resolve();
+  }
+  var body = {
+    role: m.role || "", ap: m.ap == null ? apMax(state) : m.ap, apAt: m.apAt || Date.now(),
+    dealt: m.dealt || 0, harvests: m.harvests || 0, builds: m.builds || 0,
+    seenAt: Date.now()
+  };
+  return db.doc("members/" + uid).set(body).catch(function () { });
+}
+
+/* ============ 행동 ============ */
+function actHarvest() {
+  var p = pendingHarvest(state);
+  if (p.hours < 0.05) { toast("아직 거둘 게 없습니다. 3분은 지나야 합니다."); return; }
+  var got = p.gain, any = false;
+  for (var k in got) if (got[k] > 0) any = true;
+  if (!any) { toast("생산 건물을 먼저 올려야 합니다."); return; }
+
+  withRealm(function (s) {
+    var q = pendingHarvest(s);
+    for (var k in q.gain) s.res[k] = (s.res[k] || 0) + q.gain[k];
+    s.lastTick = Date.now();
+    s._lastGain = q.gain;
+    return true;
+  }).then(function (ok) {
+    if (!ok) return;
+    var parts = [];
+    for (var k in got) if (got[k] > 0) parts.push(RESNAME[k] + " " + fmt(got[k]));
+    var m = me() || {};
+    saveMe({ harvests: (m.harvests || 0) + 1 });
+    logFeed("생산물을 거뒀습니다 — " + parts.join(", "));
+    toast("거둠: " + parts.join(", "));
+  });
+}
+
+function actBuild(bkey) {
+  var b = BUILDINGS.filter(function (x) { return x.k === bkey; })[0];
+  var lvl = state.buildings[bkey] || 0;
+  if (lvl >= MAXB) return;
+  var disc = myRole() === "steward" ? 0.15 : 0;
+  var cost = buildCost(b, lvl, disc);
+  if (!affordable(state.res, cost)) { toast("자원이 부족합니다."); return; }
+
+  withRealm(function (s) {
+    var cur = s.buildings[bkey] || 0;
+    if (cur >= MAXB) return false;
+    var c = buildCost(b, cur, disc);
+    if (!affordable(s.res, c)) { toast("방금 다른 분이 자원을 썼습니다. 금고를 다시 확인해주세요."); return false; }
+    pay(s.res, c);
+    s.buildings[bkey] = cur + 1;
+    return true;
+  }).then(function (ok) {
+    if (!ok) return;
+    var m = me() || {};
+    saveMe({ builds: (m.builds || 0) + 1 });
+    logFeed(b.name + " " + (lvl + 1) + "단계 완성");
+    toast(b.name + " " + (lvl + 1) + "단계");
+  });
+}
+
+function actResearch(rkey) {
+  var r = RESEARCH.filter(function (x) { return x.k === rkey; })[0];
+  var lvl = state.research[rkey] || 0;
+  if (lvl >= MAXR) return;
+  var disc = myRole() === "scribe" ? 0.15 : 0;
+  var cost = researchCost(r, lvl, disc);
+  if (!affordable(state.res, cost)) { toast("자원이 부족합니다."); return; }
+
+  withRealm(function (s) {
+    var cur = s.research[rkey] || 0;
+    if (cur >= MAXR) return false;
+    var c = researchCost(r, cur, disc);
+    if (!affordable(s.res, c)) { toast("방금 다른 분이 자원을 썼습니다. 금고를 다시 확인해주세요."); return false; }
+    pay(s.res, c);
+    s.research[rkey] = cur + 1;
+    return true;
+  }).then(function (ok) {
+    if (!ok) return;
+    logFeed(r.name + " " + (lvl + 1) + "단계 연구 완료");
+    toast(r.name + " " + (lvl + 1) + "단계");
+  });
+}
+
+function actAttack(n) {
+  var m = me();
+  var cur = apNow(m, state);
+  if (cur.ap < n) { toast("행동력이 부족합니다."); return; }
+
+  var role = myRole();
+  var killed = false, dealtTotal = 0, tierBefore = state.boss.tier, reward = null;
+
+  withRealm(function (s) {
+    var syn = synergyOf(s, uid);
+    var per = hitDamage(s, role) * syn;
+    var dmg = Math.round(per * n);
+    dealtTotal = Math.min(dmg, s.boss.hp);
+    s.boss.hp = Math.max(0, s.boss.hp - dmg);
+    s.boss.lastHitAt = Date.now();
+    s.boss.lastHitBy = uid;
+    if (s.boss.hp <= 0) {
+      killed = true;
+      var t = s.boss.tier;
+      reward = bossReward(t);
+      for (var k in reward) s.res[k] = (s.res[k] || 0) + reward[k];
+      s.kills = (s.kills || 0) + 1;
+      var nt = t + 1;
+      s.boss = { tier: nt, hp: bossMaxHp(nt), maxHp: bossMaxHp(nt), lastHitAt: 0, lastHitBy: "" };
+    }
+    s._syn = syn;
+    return true;
+  }).then(function (ok) {
+    if (!ok) return;
+    var spend = apAfterSpend(m, state, n);
+    saveMe({ ap: spend.ap, apAt: spend.apAt, dealt: ((m && m.dealt) || 0) + dealtTotal });
+    if (killed) {
+      var rp = [];
+      for (var k in reward) rp.push(RESNAME[k] + " " + fmt(reward[k]));
+      logFeed(bossName(tierBefore) + " 토벌 완료 — " + rp.join(", "));
+      toast(bossName(tierBefore) + " 토벌! " + rp.join(", "));
+    } else {
+      logFeed(bossName(tierBefore) + "에게 " + fmt(dealtTotal) + " 피해");
+      toast("피해 " + fmt(dealtTotal));
+    }
+  });
+}
+
+function actRole(rkey) {
+  if (myRole() === rkey) return;
+  var taken = state.roles[rkey];
+  if (taken && taken !== uid) { toast(ROLENAME[rkey] + "는 이미 다른 분이 맡고 있습니다."); return; }
+
+  withRealm(function (s) {
+    if (s.roles[rkey] && s.roles[rkey] !== uid) {
+      toast(ROLENAME[rkey] + "는 이미 다른 분이 맡고 있습니다."); return false;
+    }
+    for (var k in s.roles) if (s.roles[k] === uid) delete s.roles[k];
+    s.roles[rkey] = uid;
+    return true;
+  }).then(function (ok) {
+    if (!ok) return;
+    saveMe({ role: rkey });
+    logFeed(ROLENAME[rkey] + " 역할을 맡았습니다");
+    toast(ROLENAME[rkey] + " 역할");
+  });
+}
+
+function actFound() {
+  withRealm(function (s) {
+    if (s.season) return false;
+    var d = defaultState();
+    for (var k in d) s[k] = d[k];
+    return true;
+  }).then(function (ok) { if (ok) logFeed("영지를 개간했습니다"); });
+}
+
+/* ============ 그리기 ============ */
+function renderVault() {
+  var v = $("vault");
+  if (!state) { v.innerHTML = '<span class="note">금고를 불러오는 중…</span>'; return; }
+  var rate = hourlyRate(state), p = pendingHarvest(state);
+  v.innerHTML = RES.map(function (r) {
+    var pend = p.gain[r.k] || 0;
+    return '<span class="chip"><span class="mono ' + r.cls + '">' + r.mark + '</span>' +
+      '<b>' + fmt(state.res[r.k] || 0) + '</b>' +
+      (pend > 0 ? '<span class="gain">+' + fmt(pend) + '</span>' : (rate[r.k] ? '<span class="gain">' + fmt(rate[r.k]) + '/h</span>' : '')) +
+      '</span>';
+  }).join("");
+  $("seasonLabel").textContent = "시즌 " + state.season + " · 무훈 " + (state.kills || 0);
+}
+
+function renderAp() {
+  if (!state) return;
+  var cur = apNow(me(), state);
+  $("apNum").textContent = cur.ap + " / " + cur.max;
+  $("apFill").style.width = (cur.max ? (cur.ap / cur.max * 100) : 0) + "%";
+  $("apNext").textContent = cur.nextIn ? dur(cur.nextIn) : "가득";
+}
+
+function renderHarvest() {
+  var c = $("harvestCard");
+  if (!state) { c.innerHTML = '<p class="note">불러오는 중…</p>'; return; }
+  var p = pendingHarvest(state);
+  var parts = [];
+  RES.forEach(function (r) { if (p.gain[r.k] > 0) parts.push(RESNAME[r.k] + " " + fmt(p.gain[r.k])); });
+  var capped = p.hours >= HARVEST_CAP_H;
+  c.innerHTML =
+    '<div class="row" style="flex-wrap:wrap;gap:10px">' +
+      '<div class="grow">' +
+        '<div class="bname">쌓인 생산물</div>' +
+        '<div class="bsub">' + (parts.length ? parts.join(" · ") : "아직 없습니다") +
+          (capped ? ' <span style="color:var(--danger);font-weight:600">· 8시간 한도 도달</span>' : '') + '</div>' +
+      '</div>' +
+      '<button class="btn" id="btnHarvest"' + (parts.length && canWrite !== false && !busy ? '' : ' disabled') + '>거두기</button>' +
+    '</div>';
+  var b = $("btnHarvest"); if (b) b.onclick = actHarvest;
+}
+
+function costHtml(cost, res) {
+  return '<div class="cost">' + Object.keys(cost).map(function (k) {
+    var short = (res[k] || 0) < cost[k];
+    return '<span class="' + (short ? "short" : "") + '">' + RESNAME[k] + " " + fmt(cost[k]) + '</span>';
+  }).join("") + '</div>';
+}
+
+function renderBuildings() {
+  var host = $("buildings");
+  if (!state) { host.innerHTML = ""; return; }
+  var disc = myRole() === "steward" ? 0.15 : 0;
+  host.innerHTML = BUILDINGS.map(function (b) {
+    var lvl = state.buildings[b.k] || 0;
+    var open = !b.need || b.need(state);
+    var maxed = lvl >= MAXB;
+    var cost = buildCost(b, lvl, disc);
+    var rate = Math.round(b.rate * lvl * prodMult(state));
+    return '<div class="card' + (open ? '' : ' locked') + '">' +
+      '<div class="row" style="flex-wrap:wrap;gap:10px">' +
+        '<span class="lvl">' + lvl + '</span>' +
+        '<div class="grow">' +
+          '<div class="bname">' + b.name + '</div>' +
+          '<div class="bsub">' + (open
+            ? (lvl ? RESNAME[b.res] + " " + fmt(rate) + "/시간" : "아직 비어 있습니다")
+            : b.needText) + '</div>' +
+        '</div>' +
+        (open && !maxed
+          ? '<button class="btn ghost" data-build="' + b.k + '"' +
+            (affordable(state.res, cost) && canWrite !== false && !busy ? '' : ' disabled') + '>올리기</button>'
+          : (maxed ? '<span class="bsub">최대</span>' : '')) +
+      '</div>' +
+      (open && !maxed ? costHtml(cost, state.res) : '') +
+    '</div>';
+  }).join("");
+  Array.prototype.forEach.call(host.querySelectorAll("[data-build]"), function (btn) {
+    btn.onclick = function () { actBuild(btn.getAttribute("data-build")); };
+  });
+}
+
+function renderResearch() {
+  var host = $("research");
+  if (!state) { host.innerHTML = ""; return; }
+  var disc = myRole() === "scribe" ? 0.15 : 0;
+  host.innerHTML = RESEARCH.map(function (r) {
+    var lvl = state.research[r.k] || 0, maxed = lvl >= MAXR;
+    var cost = researchCost(r, lvl, disc);
+    return '<div class="card">' +
+      '<div class="row" style="flex-wrap:wrap;gap:10px">' +
+        '<span class="lvl">' + lvl + '</span>' +
+        '<div class="grow"><div class="bname">' + r.name + '</div>' +
+          '<div class="bsub">' + r.desc + '</div></div>' +
+        (maxed ? '<span class="bsub">최대</span>'
+          : '<button class="btn ghost" data-res="' + r.k + '"' +
+            (affordable(state.res, cost) && canWrite !== false && !busy ? '' : ' disabled') + '>연구</button>') +
+      '</div>' + (maxed ? '' : costHtml(cost, state.res)) +
+    '</div>';
+  }).join("");
+  Array.prototype.forEach.call(host.querySelectorAll("[data-res]"), function (btn) {
+    btn.onclick = function () { actResearch(btn.getAttribute("data-res")); };
+  });
+}
+
+function renderBoss() {
+  var host = $("boss");
+  if (!state) { host.innerHTML = '<div class="boss-body"><p class="note">불러오는 중…</p></div>'; return; }
+  var b = state.boss, pct = Math.max(0, b.hp / b.maxHp * 100);
+  var role = myRole(), syn = synergyOf(state, uid);
+  var per = hitDamage(state, role) * syn;
+  var cur = apNow(me(), state);
+  var synOn = syn > 1;
+  var lastName = b.lastHitBy ? (names[b.lastHitBy] || "다른 분") : "";
+  var burst = Math.min(10, cur.ap);
+
+  host.innerHTML =
+    '<div class="boss-head">' +
+      '<span class="boss-tier">★ ' + b.tier + '단계</span>' +
+      '<span class="boss-name">' + bossName(b.tier) + '</span>' +
+    '</div>' +
+    '<div class="hptrack"><div class="hpfill" style="width:' + pct + '%"></div>' +
+      '<span class="hptext">' + fmt(b.hp) + ' / ' + fmt(b.maxHp) + '</span></div>' +
+    '<div class="boss-body">' +
+      '<div class="syn' + (synOn ? ' on' : '') + '">' +
+        (synOn
+          ? '합동 보너스 적용 중 — ' + lastName + '이(가) ' + ago(b.lastHitAt) + ' 때렸습니다. 피해 ×' + syn.toFixed(2)
+          : (b.lastHitAt
+              ? '합동 보너스 없음 — 마지막 공격 ' + ago(b.lastHitAt) + '. 다른 분이 때린 뒤 10분 안에 이어 때리면 붙습니다.'
+              : '합동 보너스 없음 — 두 사람 이상이 10분 안에 이어 때리면 붙습니다.')) +
+      '</div>' +
+      '<div class="row" style="flex-wrap:wrap;gap:8px">' +
+        '<div class="grow"><div class="bsub">1회 피해 ' + fmt(per) + ' · 행동력 1 소모' +
+          (role === "warden" ? ' · 대장 보정' : (role ? '' : ' · 역할 없음')) +
+          (state.kills ? ' · 무훈 ×' + renownMult(state.kills).toFixed(2) : '') + '</div></div>' +
+      '</div>' +
+      '<button class="btn wide" id="btnHit1"' + (cur.ap >= 1 && canWrite !== false && !busy ? '' : ' disabled') + '>' +
+        '한 번 공격 (행동력 1)</button>' +
+      '<button class="btn ghost wide" id="btnHitN"' + (burst >= 2 && canWrite !== false && !busy ? '' : ' disabled') + '>' +
+        '총공세 (행동력 ' + burst + ' · 피해 ' + fmt(per * burst) + ')</button>' +
+    '</div>';
+  var h1 = $("btnHit1"); if (h1) h1.onclick = function () { actAttack(1); };
+  var hn = $("btnHitN"); if (hn) hn.onclick = function () { actAttack(burst); };
+}
+
+function renderRoles() {
+  var host = $("roles");
+  if (!state) { host.innerHTML = ""; return; }
+  host.innerHTML = ROLES.map(function (r) {
+    var holder = state.roles[r.k];
+    var mine = holder === uid;
+    var taken = holder && !mine;
+    return '<button class="role" data-role="' + r.k + '" aria-pressed="' + (mine ? "true" : "false") + '"' +
+      (taken || canWrite === false || busy ? ' disabled' : '') + '>' +
+      '<span class="rn">' + r.name + '</span>' +
+      '<span class="rp">' + r.perk + '</span>' +
+      '<span class="rt">' + (mine ? "내 역할" : (taken ? (names[holder] || "다른 분") + " 담당" : "비어 있음")) + '</span>' +
+    '</button>';
+  }).join("");
+  Array.prototype.forEach.call(host.querySelectorAll("[data-role]"), function (btn) {
+    btn.onclick = function () { actRole(btn.getAttribute("data-role")); };
+  });
+}
+
+function renderMembers() {
+  var host = $("members");
+  if (!members.length) {
+    host.innerHTML = '<div class="empty">아직 들어온 사람이 없습니다. 링크를 공유하면 여기에 쌓입니다.</div>';
+    return;
+  }
+  var sorted = members.slice(0).sort(function (a, b) { return (b.dealt || 0) - (a.dealt || 0); });
+  host.innerHTML = '<div class="mlist">' + sorted.map(function (m) {
+    return '<div class="mrow">' +
+      '<div class="grow"><div class="nm">' + (names[m.id] || "이름 없음") + (m.id === uid ? " (나)" : "") + '</div>' +
+      '<div class="rl">' + (m.role ? ROLENAME[m.role] : "역할 없음") + '</div></div>' +
+      '<div class="dl">누적 피해<br><b>' + fmt(m.dealt || 0) + '</b></div>' +
+    '</div>';
+  }).join("") + '</div>';
+}
+
+function renderFeed() {
+  var host = $("feed");
+  if (!feed.length) { host.innerHTML = '<p class="note" style="margin:0">아직 기록이 없습니다.</p>'; return; }
+  host.innerHTML = feed.slice(0, 20).map(function (f) {
+    return '<div class="fitem"><time>' + ago(f.t) + '</time>' +
+      '<span class="grow">' + (names[f.uid] || "누군가") + " — " + f.text + '</span></div>';
+  }).join("");
+}
+
+function renderBanner() {
+  var el = $("statusBanner");
+  if (localOnly) {
+    el.hidden = false; el.className = "banner";
+    el.textContent = "혼자 둘러보기 모드입니다. 이 화면의 진행은 저장되지 않고 다른 사람에게도 보이지 않습니다.";
+    return;
+  }
+  if (canWrite === false) {
+    el.hidden = false; el.className = "banner";
+    el.textContent = "관전만 가능합니다. 함께 플레이하려면 이 아티팩트를 Contributor 이상으로 공유받아야 합니다.";
+    return;
+  }
+  if (state && !state.season) {
+    el.hidden = false; el.className = "banner";
+    el.innerHTML = '아직 개간되지 않은 땅입니다. <button class="btn" id="btnFound" style="margin-top:8px">영지 개간</button>';
+    var b = $("btnFound"); if (b) b.onclick = actFound;
+    return;
+  }
+  el.hidden = true;
+}
+
+function render() {
+  renderBanner(); renderVault(); renderAp(); renderHarvest();
+  renderBuildings(); renderResearch(); renderBoss(); renderRoles();
+  renderMembers(); renderFeed();
+}
+function renderAll() { render(); }
+
+/* ============ 탭 ============ */
+function setTab(t) {
+  activeTab = t;
+  ["realm", "raid", "study", "guild"].forEach(function (k) {
+    $("tab-" + k).hidden = k !== t;
+  });
+  Array.prototype.forEach.call($("tabs").querySelectorAll("button"), function (b) {
+    b.setAttribute("aria-selected", b.getAttribute("data-tab") === t ? "true" : "false");
+  });
+  window.scrollTo(0, 0);
+}
+Array.prototype.forEach.call($("tabs").querySelectorAll("button"), function (b) {
+  b.onclick = function () { setTab(b.getAttribute("data-tab")); };
+});
+
+/* ============ 부팅 ============ */
+function resolveNames() {
+  if (!userCap || !userCap.profiles) return Promise.resolve();
+  var ids = {}; members.forEach(function (m) { ids[m.id] = 1; });
+  feed.forEach(function (f) { if (f.uid) ids[f.uid] = 1; });
+  if (state) for (var k in state.roles) ids[state.roles[k]] = 1;
+  var list = Object.keys(ids);
+  if (!list.length) return Promise.resolve();
+  return userCap.profiles(list).then(function (ps) {
+    list.forEach(function (id) { names[id] = (ps[id] && ps[id].name) || "이름 없음"; });
+  }).catch(function () { });
+}
+
+function startLocal() {
+  localOnly = true;
+  state = defaultState();
+  uid = "local";
+  names["local"] = "나";
+  members = [{ id: "local", role: "", ap: apMax(state), apAt: Date.now(), dealt: 0 }];
+  render();
+}
+
+function boot() {
+  state = null; render();
+
+  if (!window.claude || typeof window.claude.use !== "function") { startLocal(); return; }
+
+  var timeout = setTimeout(function () { if (!db) startLocal(); }, 11000);
+
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (caps) {
+    clearTimeout(timeout);
+    db = caps[0]; userCap = caps[1];
+    if (!db) { startLocal(); return; }
+
+    Promise.resolve(userCap && userCap.id ? userCap.id() : null).then(function (id) {
+      uid = id || "anon";
+      return Promise.resolve(userCap && userCap.can ? userCap.can("data.write") : null);
+    }).then(function (w) {
+      canWrite = w;
+
+      db.doc("realm/state").onSnapshot(function (snap) {
+        state = snap.exists ? snap.data() : { season: 0, res: {}, buildings: {}, research: {}, roles: {}, boss: { tier: 1, hp: 1, maxHp: 1, lastHitAt: 0, lastHitBy: "" }, kills: 0, lastTick: Date.now() };
+        if (!state.res) state.res = {};
+        if (!state.buildings) state.buildings = {};
+        if (!state.research) state.research = { farming: 0, forge: 0, supply: 0, tactics: 0 };
+        if (!state.roles) state.roles = {};
+        resolveNames().then(render);
+        render();
+      }, function () { toast("영지 정보를 받지 못했습니다. 새로 고쳐주세요."); });
+
+      db.doc("realm/feed").onSnapshot(function (snap) {
+        feed = (snap.exists && Array.isArray(snap.data().items)) ? snap.data().items : [];
+        resolveNames().then(render);
+      }, function () { });
+
+      db.collection("members").onSnapshot(function (snap) {
+        members = snap.docs.map(function (d) {
+          var o = d.data() || {}; o.id = d.id; return o;
+        });
+        resolveNames().then(render);
+      }, function () { });
+
+      /* 처음 들어온 사람은 구성원으로 등록된다. 이미 있으면 방문 시각만 갱신. */
+      db.doc("members/" + uid).get().then(function (s) {
+        if (!s.exists) {
+          return db.doc("members/" + uid).set({
+            role: "", ap: 12, apAt: Date.now(), dealt: 0, harvests: 0, builds: 0, seenAt: Date.now()
+          }).then(function () { logFeed("영지에 합류했습니다"); });
+        }
+        return db.doc("members/" + uid).update({ seenAt: Date.now() });
+      }).catch(function () { });
+    });
+  }).catch(function () { clearTimeout(timeout); startLocal(); });
+}
+
+setInterval(function () {
+  if (!state) return;
+  renderVault(); renderAp();
+  if (activeTab === "realm") renderHarvest();
+  if (activeTab === "raid") renderBoss();
+}, 1000);
+
+var hot = window.claude && window.claude.hot;
+function start(data) {
+  if (data && data.tab) setTab(data.tab);
+  boot();
+}
+if (hot && hot.snapshot) hot.snapshot(function () { return { tab: activeTab }; });
+if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+</script>
